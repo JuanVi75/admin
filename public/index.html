@@ -4,7 +4,7 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>CONFIGURACIONES / CRM WEB</title>
+   <title>CRM WEB - CONFIG</title>
 
    <style>
       body {
@@ -14,7 +14,6 @@
          color: white;
       }
 
-      /* TOPBAR */
       .topbar {
          padding: 16px;
          background: #0f172a;
@@ -28,11 +27,12 @@
          gap: 10px;
          padding: 12px;
          background: #0b1220;
+         overflow-x: auto;
          border-bottom: 1px solid #1e293b;
-         flex-wrap: wrap;
       }
 
       .tab {
+         flex: 0 0 auto;
          padding: 10px 14px;
          background: #111827;
          border: 1px solid #1e293b;
@@ -40,7 +40,7 @@
          cursor: pointer;
       }
 
-      /* GRID 2 FILAS DE 4 */
+      /* GRID SIEMPRE VISIBLE */
       .grid {
          display: grid;
          grid-template-columns: repeat(4, 1fr);
@@ -54,17 +54,16 @@
          border: 1px solid #1e293b;
          border-radius: 12px;
          padding: 15px;
-         transition: 0.2s;
-         cursor: pointer;
-         min-height: 110px;
-         display: flex;
-         flex-direction: column;
-         justify-content: space-between;
       }
 
-      .card:hover {
-         transform: translateY(-3px);
-         border-color: #3b82f6;
+      /* PANEL DINÁMICO ABAJO */
+      .panel {
+         margin: 0 15px 15px 15px;
+         background: #0f172a;
+         border: 1px solid #1e293b;
+         border-radius: 12px;
+         padding: 15px;
+         min-height: 120px;
       }
 
       .title {
@@ -77,20 +76,14 @@
          opacity: 0.8;
       }
 
-      /* BOTON CRM */
       .crm-btn {
          display: inline-block;
-         padding: 10px 12px;
+         margin-top: 10px;
+         padding: 10px 14px;
          background: #2563eb;
          color: white;
-         border-radius: 8px;
+         border-radius: 10px;
          text-decoration: none;
-         font-weight: bold;
-         text-align: center;
-      }
-
-      .crm-btn:hover {
-         background: #1d4ed8;
       }
    </style>
 </head>
@@ -101,74 +94,85 @@
       ⚙ CONFIGURACIONES / CRM WEB
    </div>
 
+   <!-- MENU -->
    <div class="menu">
-      <div class="tab" onclick="load('dashboard')">🏠 Inicio</div>
+
+      <div class="tab" onclick="load('inicio')">🏠 Inicio</div>
       <div class="tab" onclick="load('ciudades')">🌆 Ciudades</div>
       <div class="tab" onclick="load('departamentos')">🏢 Departamentos</div>
+      <div class="tab" onclick="load('sectores')">📍 Sectores</div>
+      <div class="tab" onclick="load('contactos')">👥 Contactos</div>
+      <div class="tab" onclick="load('sucursales')">🏬 Sucursales</div>
       <div class="tab" onclick="load('usuarios')">👤 Usuarios</div>
+      <div class="tab" onclick="load('mensajes')">✉ Mensajes</div>
+
    </div>
 
-   <!-- DASHBOARD -->
+   <!-- DASHBOARD (NO SE BORRA NUNCA) -->
    <div class="grid">
-
-      <!-- 1. CRM -->
-      <div class="card">
-         <div>
-            <div class="title">CRM WEB</div>
-            <div class="small">Sistema principal</div>
-         </div>
-         <a class="crm-btn" href="https://crmweb.ecopanche.com/" target="_blank">
-            IR AL CRM →
-         </a>
-      </div>
 
       <div class="card">
          <div class="title">Ciudades</div>
          <div class="small">Registros: 0</div>
-         <div class="small">Última act: --</div>
       </div>
 
       <div class="card">
          <div class="title">Departamentos</div>
          <div class="small">Registros: 0</div>
-         <div class="small">Última act: --</div>
       </div>
 
       <div class="card">
          <div class="title">Sectores</div>
          <div class="small">Registros: 0</div>
-         <div class="small">Última act: --</div>
       </div>
 
       <div class="card">
          <div class="title">Contactos</div>
          <div class="small">Registros: 0</div>
-         <div class="small">Última act: --</div>
       </div>
 
       <div class="card">
          <div class="title">Sucursales</div>
          <div class="small">Registros: 0</div>
-         <div class="small">Última act: --</div>
       </div>
 
       <div class="card">
          <div class="title">Usuarios</div>
          <div class="small">Registros: 0</div>
-         <div class="small">Última act: --</div>
       </div>
 
       <div class="card">
          <div class="title">Mensajes</div>
          <div class="small">Plantillas: 0</div>
-         <div class="small">Última act: --</div>
+      </div>
+
+      <div class="card">
+         <div class="title">CRM PRINCIPAL</div>
+         <a class="crm-btn" href="https://crmweb.ecopanche.com/" target="_blank">
+            IR AL CRM →
+         </a>
       </div>
 
    </div>
 
+   <!-- PANEL DINÁMICO -->
+   <div class="panel" id="panel">
+      Selecciona un módulo del menú superior
+   </div>
+
    <script>
-      function load(m) {
-         alert("Módulo: " + m);
+      function load(page) {
+
+         if (page === 'inicio') {
+            document.getElementById("panel").innerHTML =
+               "Estás en el dashboard principal";
+            return;
+         }
+
+         document.getElementById("panel").innerHTML = `
+    <div class="title">MÓDULO: ${page.toUpperCase()}</div>
+    <div class="small">Aquí irá el CRUD conectado a la base de datos</div>
+  `;
       }
    </script>
 
