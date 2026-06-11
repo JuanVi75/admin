@@ -176,8 +176,7 @@
          justify-content: center;
          align-items: center;
          gap: 10px;
-         padding: 18px 10px 6px 10px;
-         /* 🔥 BAJÉ LAS FLECHAS */
+         padding: 12px 10px 4px 10px;
          border-top: 1px solid #1e293b;
       }
 
@@ -235,14 +234,17 @@
             <div class="title">Sectores</div>
             <div class="small">Registros: 0</div>
          </div>
+
          <div class="card">
             <div class="title">Contactos</div>
             <div class="small">Registros: 0</div>
          </div>
+
          <div class="card">
             <div class="title">Sucursales</div>
             <div class="small">Registros: 0</div>
          </div>
+
          <div class="card">
             <div class="title">Usuarios</div>
             <div class="small">Registros: 0</div>
@@ -290,7 +292,7 @@
 
       let selectedId = null;
       let currentPage = 1;
-      let rowsPerPage = 10;
+      let rowsPerPage = 12;   // 🔥 FIX: MÁS POR DEFECTO
       let departamentosData = [];
 
       let actividadHoy = [];
@@ -303,14 +305,9 @@
          document.getElementById("actividad-box").innerText = texto;
       }
 
+      /* 🔥 FIX PAGINACIÓN ROBUSTA */
       function calcularRows() {
-         const container = document.querySelector(".table-wrapper");
-         if (!container) return 15;   // 🔥 MÁS REGISTROS POR DEFECTO
-
-         const height = container.clientHeight || 500;
-         const rowHeight = 24;        // 🔥 MÁS DENSO
-
-         return Math.max(10, Math.floor(height / rowHeight)); // 🔥 SUBIDO
+         return rowsPerPage; // estable (no cambia solo)
       }
 
       async function cargarMetaDepartamentos() {
@@ -327,99 +324,91 @@
          document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
          document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
 
-         // 🔥 FIX ACTIVIDAD REAL
-         const hayActividad =
-            (data.ingresados_hoy + data.modificados_hoy + data.eliminados_hoy) > 0;
-
-         if (!hayActividad) {
-            document.getElementById("actividad").innerText = "Sin actividad hoy";
-            document.getElementById("actividad-box").innerText = "Sin actividad hoy";
-         }
+         registrarActividad("Sistema actualizado");
       }
 
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
          departamentosData = await res.json();
+
+         currentPage = 1; // 🔥 FIX: reset real
          renderTabla();
       }
 
+      /* 🔥 FIX PAGINACIÓN SIN PERDIDA */
       function renderTabla() {
-
-         rowsPerPage = calcularRows();
 
          const start = (currentPage - 1) * rowsPerPage;
          const end = start + rowsPerPage;
+
          const pageData = departamentosData.slice(start, end);
 
          let html = `
-         <div class="departamentos-layout">
+   <div class="departamentos-layout">
 
-            <div class="table-container">
+      <div class="table-container">
 
-               <div class="title">DEPARTAMENTOS</div><br>
+         <div class="title">DEPARTAMENTOS</div><br>
 
-               <div class="table-wrapper">
-               <table>
-                  <thead>
-                     <tr><th>ID</th><th>Departamento</th></tr>
-                  </thead>
-                  <tbody>
-         `;
+         <div class="table-wrapper">
+         <table>
+            <thead>
+               <tr><th>ID</th><th>Departamento</th></tr>
+            </thead>
+            <tbody>
+   `;
 
          pageData.forEach(d => {
             html += `<tr onclick="selectRow(${d.id}, '${d.depto}')">
-                        <td>${d.id}</td>
-                        <td>${d.depto}</td>
-                     </tr>`;
+               <td>${d.id}</td>
+               <td>${d.depto}</td>
+            </tr>`;
          });
 
+         const totalPages = Math.ceil(departamentosData.length / rowsPerPage);
+
          html += `
-                  </tbody>
-               </table>
-               </div>
+            </tbody>
+         </table>
+         </div>
 
-               <div class="pagination">
-                  <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
-                  <span>Página ${currentPage}</span>
-                  <button class="page-btn" onclick="nextPage()" ${end >= departamentosData.length ? 'disabled' : ''}>➡</button>
-               </div>
+         <div class="pagination">
+            <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
+            <span>Página ${currentPage} / ${totalPages}</span>
+            <button class="page-btn" onclick="nextPage()" ${currentPage >= totalPages ? 'disabled' : ''}>➡</button>
+         </div>
 
-            </div>
+      </div>
 
-            <div class="card">
-               <div class="title">FORMULARIO</div>
+      <div class="card">
+         <div class="title">FORMULARIO</div>
 
-               <input class="btn" id="dep-id" placeholder="ID">
-               <input class="btn" id="dep-name" placeholder="Departamento">
+         <input class="btn" id="dep-id" placeholder="ID">
+         <input class="btn" id="dep-name" placeholder="Departamento">
 
-               <div class="form-actions">
-                  <button class="btn primary" onclick="crear()">Crear</button>
-                  <button class="btn warn" onclick="modificar()">Modificar</button>
-                  <button class="btn danger" onclick="borrar()">Borrar</button>
-                  <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
-               </div>
+         <div class="form-actions">
+            <button class="btn primary" onclick="crear()">Crear</button>
+            <button class="btn warn" onclick="modificar()">Modificar</button>
+            <button class="btn danger" onclick="borrar()">Borrar</button>
+            <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
+         </div>
 
-            </div>
+      </div>
 
-         </div>`;
+   </div>`;
 
          document.getElementById("panel").innerHTML = html;
       }
 
       function nextPage() {
-         currentPage++;
+         const totalPages = Math.ceil(departamentosData.length / rowsPerPage);
+         if (currentPage < totalPages) currentPage++;
          renderTabla();
       }
 
       function prevPage() {
-         currentPage--;
+         if (currentPage > 1) currentPage--;
          renderTabla();
-      }
-
-      function limpiarForm() {
-         selectedId = null;
-         document.getElementById("dep-id").value = "";
-         document.getElementById("dep-name").value = "";
       }
 
       function selectRow(id, depto) {
@@ -432,7 +421,6 @@
          if (page === 'inicio') location.reload();
 
          if (page === 'departamentos') {
-            currentPage = 1;
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
             registrarActividad("Ingreso a departamentos");
