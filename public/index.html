@@ -176,7 +176,8 @@
          justify-content: center;
          align-items: center;
          gap: 10px;
-         padding: 10px;
+         padding: 18px 10px 6px 10px;
+         /* 🔥 BAJÉ LAS FLECHAS */
          border-top: 1px solid #1e293b;
       }
 
@@ -212,7 +213,6 @@
 
    <div class="panel" id="panel">
 
-      <!-- ===== TODOS LOS CARDS SIN ELIMINAR NINGUNO ===== -->
       <div class="grid">
 
          <div class="card">
@@ -299,59 +299,42 @@
          const hoy = new Date().toISOString().split("T")[0];
          actividadHoy.push({ fecha: hoy, texto });
 
-         const a = document.getElementById("actividad");
-         const b = document.getElementById("actividad-box");
-
-         if (a) a.innerText = texto;
-         if (b) b.innerText = texto;
-      }
-
-      function renderActividad() {
-         const hoy = new Date().toISOString().split("T")[0];
-         const hoyData = actividadHoy.filter(a => a.fecha === hoy);
-
-         const targetA = document.getElementById("actividad");
-         const targetB = document.getElementById("actividad-box");
-
-         if (!targetA || !targetB) return;
-
-         if (hoyData.length === 0) {
-            targetA.innerText = "Sin actividad hoy";
-            targetB.innerText = "Sin actividad hoy";
-            return;
-         }
-
-         const last = hoyData[hoyData.length - 1].texto;
-         targetA.innerText = last;
-         targetB.innerText = last;
+         document.getElementById("actividad").innerText = texto;
+         document.getElementById("actividad-box").innerText = texto;
       }
 
       function calcularRows() {
          const container = document.querySelector(".table-wrapper");
-         if (!container) return 10;
+         if (!container) return 15;   // 🔥 MÁS REGISTROS POR DEFECTO
 
-         const height = container.clientHeight || 400;
-         const rowHeight = 28;
+         const height = container.clientHeight || 500;
+         const rowHeight = 24;        // 🔥 MÁS DENSO
 
-         return Math.max(5, Math.floor(height / rowHeight));
+         return Math.max(10, Math.floor(height / rowHeight)); // 🔥 SUBIDO
       }
 
       async function cargarMetaDepartamentos() {
-         try {
-            const res = await fetch("/departamentos/stats");
-            const data = await res.json();
+         const res = await fetch("/departamentos/stats");
+         const data = await res.json();
 
-            document.getElementById("count-departamentos").innerText =
-               "Registros: " + (data.total ?? 0);
+         document.getElementById("count-departamentos").innerText =
+            "Registros: " + (data.total ?? 0);
 
-            document.getElementById("last-update").innerText =
-               (data.ultima_actualizacion || "-").toString().split("T")[0];
+         document.getElementById("last-update").innerText =
+            (data.ultima_actualizacion || "-").toString().split("T")[0];
 
-            document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
-            document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
-            document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
+         document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
+         document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
+         document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
 
-         } catch (e) { }
+         // 🔥 FIX ACTIVIDAD REAL
+         const hayActividad =
+            (data.ingresados_hoy + data.modificados_hoy + data.eliminados_hoy) > 0;
+
+         if (!hayActividad) {
+            document.getElementById("actividad").innerText = "Sin actividad hoy";
+            document.getElementById("actividad-box").innerText = "Sin actividad hoy";
+         }
       }
 
       async function cargarDepartamentos() {
@@ -421,7 +404,6 @@
          </div>`;
 
          document.getElementById("panel").innerHTML = html;
-         renderActividad();
       }
 
       function nextPage() {
@@ -447,7 +429,6 @@
       }
 
       async function load(page) {
-
          if (page === 'inicio') location.reload();
 
          if (page === 'departamentos') {
