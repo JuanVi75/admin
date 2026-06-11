@@ -147,13 +147,37 @@
 
    </div>
 
+   <!-- 🔥 AHORA EL PANEL TAMBIÉN ES VISUAL -->
    <div class="panel" id="panel">
-      Cargando dashboard...
+
+      <div class="grid">
+
+         <div class="card">
+            <div class="title">Resumen Sistema</div>
+            <div class="small">Panel de control administrativo</div>
+         </div>
+
+         <div class="card">
+            <div class="title">Actividad</div>
+            <div class="small">Sin eventos recientes</div>
+         </div>
+
+         <div class="card">
+            <div class="title">Estado API</div>
+            <div class="small">Conectado</div>
+         </div>
+
+         <div class="card">
+            <div class="title">Base de Datos</div>
+            <div class="small">MySQL activo</div>
+         </div>
+
+      </div>
+
    </div>
 
    <script>
 
-      // 🔥 CARGAR DEPARTAMENTOS REALES
       async function cargarDepartamentos() {
          try {
             const res = await fetch("/departamentos");
@@ -171,12 +195,6 @@
       cargarDepartamentos();
 
       function load(page) {
-
-         if (page === 'inicio') {
-            document.getElementById("panel").innerHTML =
-               "Estás en el dashboard principal";
-            return;
-         }
 
          if (page === 'departamentos') {
             fetch("/departamentos")
@@ -211,8 +229,14 @@
          }
 
          document.getElementById("panel").innerHTML = `
-            <div class="title">MÓDULO: ${page.toUpperCase()}</div>
-            <div class="small">Aquí irá el CRUD conectado a la base de datos</div>
+            <div class="grid">
+
+               <div class="card">
+                  <div class="title">Módulo: ${page.toUpperCase()}</div>
+                  <div class="small">Sistema en desarrollo</div>
+               </div>
+
+            </div>
          `;
       }
 
