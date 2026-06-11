@@ -212,6 +212,7 @@
 
    <div class="panel" id="panel">
 
+      <!-- TODAS LAS CARDS SE CONSERVAN IGUAL -->
       <div class="grid">
          <div class="card">
             <div class="title">Ciudades</div>
@@ -252,7 +253,7 @@
 
          <div class="card">
             <div class="title">Mensajes</div>
-            <div class="small" id="actividad-box">Sin eventos recientes</div>
+            <div class="small" id="actividad-box">Sin actividad hoy</div>
          </div>
 
          <div class="card">
@@ -266,14 +267,17 @@
             <div class="title">Resumen Sistema</div>
             <div class="small">Panel de control administrativo</div>
          </div>
+
          <div class="card">
             <div class="title">Actividad</div>
-            <div class="small" id="actividad">Sin eventos recientes</div>
+            <div class="small" id="actividad">Sin actividad hoy</div>
          </div>
+
          <div class="card">
             <div class="title">Estado API</div>
             <div class="small">Conectado</div>
          </div>
+
          <div class="card">
             <div class="title">Base de Datos</div>
             <div class="small">MySQL activo</div>
@@ -289,44 +293,63 @@
       let rowsPerPage = 10;
       let departamentosData = [];
 
-      const actividadLog = [];
+      let actividadHoy = [];
 
-      /* SAFE DOM */
-      function safe(id, value) {
-         const el = document.getElementById(id);
-         if (el) el.innerText = value;
-      }
-
-      /* ACTIVIDAD */
+      /* ACTIVIDAD (TABLA + HOY) */
       function registrarActividad(texto) {
-         const time = new Date().toLocaleTimeString();
-         actividadLog.unshift(`[${time}] ${texto}`);
-         const vista = actividadLog.slice(0, 5).join("<br>");
-         safe("actividad", vista);
-         safe("actividad-box", vista);
+         const hoy = new Date().toISOString().split("T")[0];
+
+         actividadHoy.push({
+            texto: "TABLA: DEPARTAMENTOS - " + texto,
+            fecha: hoy
+         });
+
+         renderActividad();
       }
 
-      /* ROWS DINÁMICAS */
+      function renderActividad() {
+         const hoy = new Date().toISOString().split("T")[0];
+
+         const hoyData = actividadHoy.filter(a => a.fecha === hoy);
+
+         if (hoyData.length === 0) {
+            document.getElementById("actividad").innerText = "Sin actividad hoy";
+            document.getElementById("actividad-box").innerText = "Sin actividad hoy";
+            return;
+         }
+
+         const last = hoyData[hoyData.length - 1].texto;
+
+         document.getElementById("actividad").innerText = last;
+         document.getElementById("actividad-box").innerText = last;
+      }
+
+      /* PAGINACIÓN DINÁMICA */
       function calcularRows() {
-         const el = document.querySelector(".table-container");
-         if (!el) return 10;
-         const h = el.offsetHeight;
-         return Math.max(5, Math.floor((h - 120) / 34));
+         const container = document.querySelector(".table-wrapper");
+         if (!container) return 10;
+
+         const height = container.clientHeight;
+         const rowHeight = 28;
+
+         return Math.max(5, Math.floor(height / rowHeight));
       }
 
-      /* STATS */
+      /* META */
       async function cargarMetaDepartamentos() {
          try {
             const res = await fetch("/departamentos/stats");
             const data = await res.json();
 
-            safe("count-departamentos", "Registros: " + (data.total ?? 0));
-            safe("last-update", (data.ultima_actualizacion || "-").split("T")[0]);
-            safe("inserted", data.ingresados_hoy ?? 0);
-            safe("updated", data.modificados_hoy ?? 0);
-            safe("deleted", data.eliminados_hoy ?? 0);
+            document.getElementById("count-departamentos").innerText =
+               "Registros: " + (data.total ?? 0);
 
-            registrarActividad("Actualización de estadísticas departamentos");
+            document.getElementById("last-update").innerText =
+               (data.ultima_actualizacion || "-").split("T")[0];
+
+            document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
+            document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
+            document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
 
          } catch (e) { }
       }
@@ -335,7 +358,6 @@
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
          departamentosData = await res.json();
-         registrarActividad("Carga de tabla departamentos");
          renderTabla();
       }
 
@@ -376,9 +398,9 @@
          </div>
 
          <div class="pagination">
-            <button onclick="prev()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
-            <span>${currentPage}</span>
-            <button onclick="next()" ${end >= departamentosData.length ? 'disabled' : ''}>➡</button>
+            <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
+            <span>Página ${currentPage}</span>
+            <button class="page-btn" onclick="nextPage()" ${end >= departamentosData.length ? 'disabled' : ''}>➡</button>
          </div>
 
       </div>
@@ -386,12 +408,15 @@
       <div class="card">
          <div class="title">FORMULARIO</div>
 
-         <input class="btn" id="dep-id">
-         <input class="btn" id="dep-name">
+         <input class="btn" id="dep-id" placeholder="ID">
+         <input class="btn" id="dep-name" placeholder="Departamento">
 
-         <button class="btn primary" onclick="crear()">Crear</button>
-         <button class="btn warn" onclick="modificar()">Modificar</button>
-         <button class="btn danger" onclick="borrar()">Borrar</button>
+         <div class="form-actions">
+            <button class="btn primary" onclick="crear()">Crear</button>
+            <button class="btn warn" onclick="modificar()">Modificar</button>
+            <button class="btn danger" onclick="borrar()">Borrar</button>
+            <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
+         </div>
 
       </div>
 
@@ -401,8 +426,15 @@
       }
 
       /* PAG */
-      function next() { currentPage++; renderTabla(); }
-      function prev() { currentPage--; renderTabla(); }
+      function nextPage() { currentPage++; renderTabla(); }
+      function prevPage() { currentPage--; renderTabla(); }
+
+      /* FORM */
+      function limpiarForm() {
+         selectedId = null;
+         document.getElementById("dep-id").value = "";
+         document.getElementById("dep-name").value = "";
+      }
 
       function selectRow(id, depto) {
          selectedId = id;
@@ -412,9 +444,9 @@
 
       /* LOAD */
       async function load(page) {
-         if (page === "inicio") location.reload();
+         if (page === 'inicio') location.reload();
 
-         if (page === "departamentos") {
+         if (page === 'departamentos') {
             currentPage = 1;
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
@@ -427,7 +459,11 @@
          const id = document.getElementById("dep-id").value;
          const depto = document.getElementById("dep-name").value;
 
-         await fetch("/departamentos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, depto }) });
+         await fetch("/departamentos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, depto })
+         });
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
