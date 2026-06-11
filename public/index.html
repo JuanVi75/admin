@@ -132,26 +132,10 @@
          background: rgba(255, 255, 255, 0.04);
       }
 
-      .pagination {
+      .form-actions {
          display: flex;
-         justify-content: center;
-         align-items: center;
-         gap: 10px;
-         padding: 10px;
-         border-top: 1px solid #1e293b;
-      }
-
-      .page-btn {
-         padding: 6px 10px;
-         background: #111827;
-         border: 1px solid #1e293b;
-         color: white;
-         border-radius: 8px;
-         cursor: pointer;
-      }
-
-      .page-btn:disabled {
-         opacity: 0.4;
+         gap: 8px;
+         margin-top: 10px;
       }
 
       .btn {
@@ -186,6 +170,28 @@
          margin-top: 6px;
          line-height: 1.6;
       }
+
+      .pagination {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         gap: 10px;
+         padding: 10px;
+         border-top: 1px solid #1e293b;
+      }
+
+      .page-btn {
+         padding: 6px 10px;
+         background: #111827;
+         border: 1px solid #1e293b;
+         color: white;
+         border-radius: 8px;
+         cursor: pointer;
+      }
+
+      .page-btn:disabled {
+         opacity: 0.4;
+      }
    </style>
 </head>
 
@@ -195,7 +201,13 @@
 
    <div class="menu">
       <div class="tab" onclick="load('inicio')">🏠 Inicio</div>
+      <div class="tab" onclick="load('ciudades')">🌆 Ciudades</div>
       <div class="tab" onclick="load('departamentos')">🏢 Departamentos</div>
+      <div class="tab" onclick="load('sectores')">📍 Sectores</div>
+      <div class="tab" onclick="load('contactos')">👥 Contactos</div>
+      <div class="tab" onclick="load('sucursales')">🏬 Sucursales</div>
+      <div class="tab" onclick="load('usuarios')">👤 Usuarios</div>
+      <div class="tab" onclick="load('mensajes')">✉ Mensajes</div>
    </div>
 
    <div class="panel" id="panel">
@@ -277,41 +289,37 @@
       const rowsPerPage = 10;
       let departamentosData = [];
 
-      /* FIX seguro DOM */
-      function safe(id, value) {
-         const el = document.getElementById(id);
-         if (el) el.innerText = value;
-      }
-
-      /* ACTIVIDAD REAL */
       function registrarActividad(texto) {
-         safe("actividad", texto);
-         safe("actividad-box", texto);
+         document.getElementById("actividad").innerText = texto;
+         document.getElementById("actividad-box").innerText = texto;
       }
 
-      /* STATS */
       async function cargarMetaDepartamentos() {
          try {
             const res = await fetch("/departamentos/stats");
             const data = await res.json();
 
-            safe("count-departamentos", "Registros: " + (data.total ?? 0));
-            safe("last-update", (data.ultima_actualizacion || "-").split("T")[0]);
-            safe("inserted", data.ingresados_hoy ?? 0);
-            safe("updated", data.modificados_hoy ?? 0);
-            safe("deleted", data.eliminados_hoy ?? 0);
+            document.getElementById("count-departamentos").innerText =
+               "Registros: " + (data.total ?? 0);
 
-         } catch (e) { }
+            document.getElementById("last-update").innerText =
+               (data.ultima_actualizacion || "-").toString().split("T")[0];
+
+            document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
+            document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
+            document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
+
+         } catch (e) {
+            console.error(e);
+         }
       }
 
-      /* DATA */
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
          departamentosData = await res.json();
          renderTabla();
       }
 
-      /* RENDER */
       function renderTabla() {
 
          const start = (currentPage - 1) * rowsPerPage;
@@ -319,60 +327,75 @@
          const pageData = departamentosData.slice(start, end);
 
          let html = `
-   <div class="departamentos-layout">
+         <div class="departamentos-layout">
 
-      <div class="table-container">
+            <div class="table-container">
 
-         <div class="title">DEPARTAMENTOS</div><br>
+               <div class="title">DEPARTAMENTOS</div><br>
 
-         <div class="table-wrapper">
-         <table>
-            <thead>
-               <tr><th>ID</th><th>Departamento</th></tr>
-            </thead>
-            <tbody>
-   `;
+               <div class="table-wrapper">
+               <table>
+                  <thead>
+                     <tr><th>ID</th><th>Departamento</th></tr>
+                  </thead>
+                  <tbody>
+         `;
 
          pageData.forEach(d => {
-            html += `<tr onclick="selectRow(${d.id},'${d.depto}')">
-                  <td>${d.id}</td>
-                  <td>${d.depto}</td>
-               </tr>`;
+            html += `<tr onclick="selectRow(${d.id}, '${d.depto}')">
+                        <td>${d.id}</td>
+                        <td>${d.depto}</td>
+                     </tr>`;
          });
 
          html += `
-            </tbody>
-         </table>
-         </div>
+                  </tbody>
+               </table>
+               </div>
 
-         <div class="pagination">
-            <button onclick="prev()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
-            <span>${currentPage}</span>
-            <button onclick="next()" ${end >= departamentosData.length ? 'disabled' : ''}>➡</button>
-         </div>
+               <div class="pagination">
+                  <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
+                  <span>Página ${currentPage}</span>
+                  <button class="page-btn" onclick="nextPage()" ${end >= departamentosData.length ? 'disabled' : ''}>➡</button>
+               </div>
 
-      </div>
+            </div>
 
-      <div class="card">
-         <div class="title">FORMULARIO</div>
+            <div class="card">
+               <div class="title">FORMULARIO</div>
 
-         <input class="btn" id="dep-id">
-         <input class="btn" id="dep-name">
+               <input class="btn" id="dep-id" placeholder="ID">
+               <input class="btn" id="dep-name" placeholder="Departamento">
 
-         <button class="btn primary" onclick="crear()">Crear</button>
-         <button class="btn warn" onclick="modificar()">Modificar</button>
-         <button class="btn danger" onclick="borrar()">Borrar</button>
+               <div class="form-actions">
+                  <button class="btn primary" onclick="crear()">Crear</button>
+                  <button class="btn warn" onclick="modificar()">Modificar</button>
+                  <button class="btn danger" onclick="borrar()">Borrar</button>
+                  <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
+               </div>
 
-      </div>
+            </div>
 
-   </div>`;
+         </div>`;
 
          document.getElementById("panel").innerHTML = html;
       }
 
-      /* PAG */
-      function next() { currentPage++; renderTabla(); }
-      function prev() { currentPage--; renderTabla(); }
+      function nextPage() {
+         currentPage++;
+         renderTabla();
+      }
+
+      function prevPage() {
+         currentPage--;
+         renderTabla();
+      }
+
+      function limpiarForm() {
+         selectedId = null;
+         document.getElementById("dep-id").value = "";
+         document.getElementById("dep-name").value = "";
+      }
 
       function selectRow(id, depto) {
          selectedId = id;
@@ -380,29 +403,31 @@
          document.getElementById("dep-name").value = depto;
       }
 
-      /* LOAD */
       async function load(page) {
 
-         if (page === "inicio") location.reload();
+         if (page === 'inicio') location.reload();
 
-         if (page === "departamentos") {
+         if (page === 'departamentos') {
             currentPage = 1;
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
-            registrarActividad("Ingreso a departamentos");
+            registrarActividad("Ingreso a módulos de departamentos");
          }
       }
 
-      /* CRUD */
       async function crear() {
          const id = document.getElementById("dep-id").value;
          const depto = document.getElementById("dep-name").value;
 
-         await fetch("/departamentos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, depto }) });
+         await fetch("/departamentos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, depto })
+         });
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Creado: " + depto);
+         registrarActividad("Se creó departamento: " + depto);
       }
 
       async function modificar() {
@@ -418,7 +443,7 @@
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Modificado ID " + selectedId);
+         registrarActividad("Se modificó departamento ID: " + selectedId);
       }
 
       async function borrar() {
@@ -426,12 +451,13 @@
 
          await fetch(`/departamentos/${selectedId}`, { method: "DELETE" });
 
+         limpiarForm();
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Eliminado ID " + selectedId);
+         registrarActividad("Se eliminó un departamento");
       }
 
-      /* INIT */
+      // CARGA INICIAL
       window.onload = async () => {
          await cargarMetaDepartamentos();
       };
