@@ -109,7 +109,6 @@
          padding: 6px;
          border-bottom: 1px solid #334155;
          color: #93c5fd;
-         font-size: 12px;
          position: sticky;
          top: 0;
          background: #0f172a;
@@ -122,46 +121,42 @@
       }
 
       tr:hover {
+         background: rgba(255, 255, 255, 0.04);
+         filter: blur(0.2px);
+      }
+
+      .form-actions {
+         display: flex;
+         gap: 8px;
+         margin-top: 10px;
+      }
+
+      .btn {
+         padding: 8px;
+         border-radius: 8px;
+         border: 1px solid #1e293b;
          background: #111827;
-      }
-
-      /* ========================= */
-      /* FORMULARIO (SOLO AGREGADO) */
-      /* ========================= */
-
-      .form-box input {
-         width: 100%;
-         padding: 8px;
-         margin-bottom: 8px;
-         border-radius: 6px;
-         border: 1px solid #334155;
-         background: #0b1220;
          color: white;
-         font-size: 12px;
-      }
-
-      .form-box button {
-         width: 100%;
-         padding: 8px;
-         margin-bottom: 6px;
-         border-radius: 6px;
-         border: none;
          cursor: pointer;
-         font-size: 12px;
       }
 
-      .btn-create { background: #2563eb; color: white; }
-      .btn-edit { background: #f59e0b; color: black; }
-      .btn-delete { background: #ef4444; color: white; }
-      .btn-clear { background: #374151; color: white; }
+      .primary {
+         background: #2563eb;
+      }
+
+      .danger {
+         background: #dc2626;
+      }
+
+      .warn {
+         background: #f59e0b;
+      }
    </style>
 </head>
 
 <body>
 
-   <div class="topbar">
-      ⚙ CONFIGURACIONES / CRM WEB
-   </div>
+   <div class="topbar">⚙ CONFIGURACIONES / CRM WEB</div>
 
    <div class="menu">
       <div class="tab" onclick="load('inicio')">🏠 Inicio</div>
@@ -176,81 +171,64 @@
 
    <div class="panel" id="panel">
 
+      <!-- DASHBOARD COMPLETO RESTAURADO -->
       <div class="grid">
-
          <div class="card">
             <div class="title">Ciudades</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Departamentos</div>
             <div class="small" id="count-departamentos">Registros: ...</div>
          </div>
-
          <div class="card">
             <div class="title">Sectores</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Contactos</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Sucursales</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Usuarios</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Mensajes</div>
             <div class="small">Plantillas: 0</div>
          </div>
-
          <div class="card">
             <div class="title">CRM PRINCIPAL</div>
-            <a class="crm-btn" href="https://crmweb.ecopanche.com/" target="_blank">
-               IR AL CRM →
-            </a>
+            <a class="crm-btn" href="https://crmweb.ecopanche.com/" target="_blank">IR AL CRM →</a>
          </div>
-
       </div>
 
       <div class="grid">
-
          <div class="card">
             <div class="title">Resumen Sistema</div>
             <div class="small">Panel de control administrativo</div>
          </div>
-
          <div class="card">
             <div class="title">Actividad</div>
             <div class="small">Sin eventos recientes</div>
          </div>
-
          <div class="card">
             <div class="title">Estado API</div>
             <div class="small">Conectado</div>
          </div>
-
          <div class="card">
             <div class="title">Base de Datos</div>
             <div class="small">MySQL activo</div>
          </div>
-
       </div>
 
    </div>
 
    <script>
-
-      let selectedId = null;
 
       async function cargarDepartamentos() {
          try {
@@ -259,11 +237,7 @@
 
             document.getElementById("count-departamentos").innerText =
                "Registros: " + data.length;
-
-         } catch (err) {
-            document.getElementById("count-departamentos").innerText =
-               "Error cargando datos";
-         }
+         } catch (e) { }
       }
 
       cargarDepartamentos();
@@ -278,111 +252,58 @@
          if (page === 'departamentos') {
 
             fetch("/departamentos")
-               .then(res => res.json())
+               .then(r => r.json())
                .then(data => {
 
                   data.sort((a, b) => a.id - b.id);
 
                   let html = `
-                     <div class="departamentos-layout">
+                  <div class="departamentos-layout">
 
-                        <div class="table-container">
-                           <div class="title">DEPARTAMENTOS</div>
-                           <br>
-                           <table>
-                              <thead>
-                                 <tr>
-                                    <th style="width:60px;">ID</th>
-                                    <th>Departamento</th>
-                                 </tr>
-                              </thead>
-                              <tbody>
+                     <div class="table-container">
+                        <div class="title">DEPARTAMENTOS</div><br>
+                        <table>
+                           <thead>
+                              <tr><th style="width:60px;">ID</th><th>Departamento</th></tr>
+                           </thead>
+                           <tbody>
                   `;
 
                   data.forEach(d => {
-                     html += `
-                        <tr onclick="selectRow(${d.id}, '${d.depto}')">
-                           <td>${d.id}</td>
-                           <td>${d.depto}</td>
-                        </tr>
-                     `;
+                     html += `<tr><td>${d.id}</td><td>${d.depto}</td></tr>`;
                   });
 
                   html += `
-                              </tbody>
-                           </table>
-                        </div>
-
-                        <div class="card form-box">
-                           <div class="title">FORMULARIO</div>
-
-                           <input id="id" placeholder="ID" readonly>
-                           <input id="depto" placeholder="Departamento">
-
-                           <button class="btn-create" onclick="crear()">CREAR</button>
-                           <button class="btn-edit" onclick="editar()">EDITAR</button>
-                           <button class="btn-delete" onclick="borrar()">BORRAR</button>
-                           <button class="btn-clear" onclick="limpiar()">LIMPIAR</button>
-                        </div>
-
+                           </tbody>
+                        </table>
                      </div>
-                  `;
+
+                     <div class="card">
+                        <div class="title">FORMULARIO</div>
+                        <input class="btn" placeholder="ID" disabled>
+                        <input class="btn" placeholder="Departamento">
+
+                        <div class="form-actions">
+                           <button class="btn primary">Crear</button>
+                           <button class="btn warn">Modificar</button>
+                           <button class="btn danger">Borrar</button>
+                           <button class="btn">Limpiar</button>
+                        </div>
+                     </div>
+
+                  </div>`;
 
                   document.getElementById("panel").innerHTML = html;
                });
 
             return;
          }
-      }
 
-      function selectRow(id, depto) {
-         document.getElementById("id").value = id;
-         document.getElementById("depto").value = depto;
-         selectedId = id;
-      }
-
-      function limpiar() {
-         document.getElementById("id").value = "";
-         document.getElementById("depto").value = "";
-         selectedId = null;
-      }
-
-      async function crear() {
-         const depto = document.getElementById("depto").value;
-
-         await fetch("/departamentos", {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({ depto })
-         });
-
-         load('departamentos');
-      }
-
-      async function editar() {
-         const id = document.getElementById("id").value;
-         const depto = document.getElementById("depto").value;
-
-         await fetch(`/departamentos/${id}`, {
-            method: "PUT",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({ depto })
-         });
-
-         load('departamentos');
-      }
-
-      async function borrar() {
-         const id = document.getElementById("id").value;
-
-         await fetch(`/departamentos/${id}`, {
-            method: "DELETE"
-         });
-
-         load('departamentos');
+         document.getElementById("panel").innerHTML = `<div class="grid"><div class="card"><div class="title">${page}</div></div></div>`;
       }
 
    </script>
 
 </body>
+
 </html>
