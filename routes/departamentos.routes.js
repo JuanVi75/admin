@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const controller = require("../controllers/departamentos.controller");
-
-// GET - listar departamentos
-router.get("/", controller.listar);
+router.get("/", (req, res) => {
+    res.json([
+        { id: 1, depto: "Antioquia (modular OK)" },
+        { id: 2, depto: "Cundinamarca (modular OK)" }
+    ]);
+});
 
 module.exports = router;
