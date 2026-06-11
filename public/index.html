@@ -130,7 +130,6 @@
          display: flex;
          gap: 8px;
          margin-top: 10px;
-         flex-wrap: wrap;
       }
 
       .btn {
@@ -158,6 +157,14 @@
       .clean {
          background: #6b7280;
       }
+
+      /* 🆕 CARD MÉTRICAS */
+      .meta {
+         font-size: 12px;
+         opacity: 0.85;
+         margin-top: 6px;
+         line-height: 1.6;
+      }
    </style>
 </head>
 
@@ -183,30 +190,44 @@
             <div class="title">Ciudades</div>
             <div class="small">Registros: 0</div>
          </div>
+
+         <!-- 🔥 CARD MODIFICADA -->
          <div class="card">
             <div class="title">Departamentos</div>
             <div class="small" id="count-departamentos">Registros: ...</div>
+
+            <div class="meta">
+               Última actualización: <b id="last-update">2026-06-11</b><br>
+               Registros ingresados: <b id="inserted">1</b><br>
+               Registros modificados: <b id="updated">0</b>
+            </div>
          </div>
+
          <div class="card">
             <div class="title">Sectores</div>
             <div class="small">Registros: 0</div>
          </div>
+
          <div class="card">
             <div class="title">Contactos</div>
             <div class="small">Registros: 0</div>
          </div>
+
          <div class="card">
             <div class="title">Sucursales</div>
             <div class="small">Registros: 0</div>
          </div>
+
          <div class="card">
             <div class="title">Usuarios</div>
             <div class="small">Registros: 0</div>
          </div>
+
          <div class="card">
             <div class="title">Mensajes</div>
             <div class="small">Plantillas: 0</div>
          </div>
+
          <div class="card">
             <div class="title">CRM PRINCIPAL</div>
             <a class="crm-btn" href="https://crmweb.ecopanche.com/" target="_blank">IR AL CRM →</a>
@@ -241,7 +262,8 @@
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
          const data = await res.json();
-         document.getElementById("count-departamentos").innerText = "Registros: " + data.length;
+         document.getElementById("count-departamentos").innerText =
+            "Registros: " + data.length;
       }
 
       cargarDepartamentos();
