@@ -1,10 +1,16 @@
 const db = require("../config/db");
 
 /* =========================
-   LISTAR
+   LISTAR (solo activos)
 ========================= */
 function listarDepartamentos(callback) {
-    const sql = "SELECT * FROM departamentos ORDER BY id ASC";
+    const sql = `
+        SELECT * 
+        FROM departamentos 
+        WHERE is_deleted = 0 
+        ORDER BY id ASC
+    `;
+
     db.query(sql, (err, results) => {
         callback(err, results);
     });
@@ -14,7 +20,10 @@ function listarDepartamentos(callback) {
    CREAR
 ========================= */
 function crearDepartamento(id, depto, callback) {
-    const sql = "INSERT INTO departamentos (id, depto) VALUES (?, ?)";
+    const sql = `
+        INSERT INTO departamentos (id, depto, created_at, is_deleted)
+        VALUES (?, ?, NOW(), 0)
+    `;
 
     db.query(sql, [id, depto], (err, result) => {
         callback(err, result);
@@ -25,7 +34,11 @@ function crearDepartamento(id, depto, callback) {
    MODIFICAR
 ========================= */
 function modificarDepartamento(id, depto, callback) {
-    const sql = "UPDATE departamentos SET depto = ? WHERE id = ?";
+    const sql = `
+        UPDATE departamentos 
+        SET depto = ?, updated_at = NOW()
+        WHERE id = ?
+    `;
 
     db.query(sql, [depto, id], (err, result) => {
         callback(err, result);
@@ -33,10 +46,14 @@ function modificarDepartamento(id, depto, callback) {
 }
 
 /* =========================
-   BORRAR
+   BORRAR (LÓGICO)
 ========================= */
 function borrarDepartamento(id, callback) {
-    const sql = "DELETE FROM departamentos WHERE id = ?";
+    const sql = `
+        UPDATE departamentos 
+        SET is_deleted = 1, deleted_at = NOW()
+        WHERE id = ?
+    `;
 
     db.query(sql, [id], (err, result) => {
         callback(err, result);
