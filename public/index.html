@@ -84,25 +84,29 @@
          text-decoration: none;
       }
 
+      /* 🔥 FIX CRÍTICO: altura controlada real */
       .departamentos-layout {
          display: grid;
          grid-template-columns: 2fr 1fr;
          gap: 15px;
          width: 100%;
          height: calc(100vh - 200px);
+         align-items: stretch;
       }
 
       .table-container {
-         height: calc(100vh - 240px);
-         overflow: hidden;
-         padding-right: 8px;
+         height: 100%;
          display: flex;
          flex-direction: column;
+         padding-right: 8px;
+         overflow: hidden;
       }
 
+      /* 🔥 FIX: aquí estaba el problema del “espacio muerto” */
       .table-wrapper {
          flex: 1;
-         overflow: hidden;
+         overflow-y: auto;
+         min-height: 0;
       }
 
       table {
@@ -171,13 +175,15 @@
          line-height: 1.6;
       }
 
+      /* 🔥 FIX: sin espacio muerto debajo */
       .pagination {
          display: flex;
          justify-content: center;
          align-items: center;
          gap: 10px;
-         padding: 12px 10px 4px 10px;
+         padding: 6px 10px;
          border-top: 1px solid #1e293b;
+         flex-shrink: 0;
       }
 
       .page-btn {
@@ -292,9 +298,8 @@
 
       let selectedId = null;
       let currentPage = 1;
-      let rowsPerPage = 12;   // 🔥 FIX: MÁS POR DEFECTO
+      let rowsPerPage = 12;
       let departamentosData = [];
-
       let actividadHoy = [];
 
       function registrarActividad(texto) {
@@ -303,11 +308,6 @@
 
          document.getElementById("actividad").innerText = texto;
          document.getElementById("actividad-box").innerText = texto;
-      }
-
-      /* 🔥 FIX PAGINACIÓN ROBUSTA */
-      function calcularRows() {
-         return rowsPerPage; // estable (no cambia solo)
       }
 
       async function cargarMetaDepartamentos() {
@@ -330,12 +330,10 @@
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
          departamentosData = await res.json();
-
-         currentPage = 1; // 🔥 FIX: reset real
+         currentPage = 1;
          renderTabla();
       }
 
-      /* 🔥 FIX PAGINACIÓN SIN PERDIDA */
       function renderTabla() {
 
          const start = (currentPage - 1) * rowsPerPage;
@@ -343,59 +341,58 @@
 
          const pageData = departamentosData.slice(start, end);
 
+         const totalPages = Math.ceil(departamentosData.length / rowsPerPage);
+
          let html = `
-   <div class="departamentos-layout">
+         <div class="departamentos-layout">
 
-      <div class="table-container">
+            <div class="table-container">
 
-         <div class="title">DEPARTAMENTOS</div><br>
+               <div class="title">DEPARTAMENTOS</div>
 
-         <div class="table-wrapper">
-         <table>
-            <thead>
-               <tr><th>ID</th><th>Departamento</th></tr>
-            </thead>
-            <tbody>
-   `;
+               <div class="table-wrapper">
+               <table>
+                  <thead>
+                     <tr><th>ID</th><th>Departamento</th></tr>
+                  </thead>
+                  <tbody>`;
 
          pageData.forEach(d => {
             html += `<tr onclick="selectRow(${d.id}, '${d.depto}')">
-               <td>${d.id}</td>
-               <td>${d.depto}</td>
-            </tr>`;
+                        <td>${d.id}</td>
+                        <td>${d.depto}</td>
+                     </tr>`;
          });
 
-         const totalPages = Math.ceil(departamentosData.length / rowsPerPage);
-
          html += `
-            </tbody>
-         </table>
-         </div>
+                  </tbody>
+               </table>
+               </div>
 
-         <div class="pagination">
-            <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
-            <span>Página ${currentPage} / ${totalPages}</span>
-            <button class="page-btn" onclick="nextPage()" ${currentPage >= totalPages ? 'disabled' : ''}>➡</button>
-         </div>
+               <div class="pagination">
+                  <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
+                  <span>Página ${currentPage} / ${totalPages}</span>
+                  <button class="page-btn" onclick="nextPage()" ${currentPage >= totalPages ? 'disabled' : ''}>➡</button>
+               </div>
 
-      </div>
+            </div>
 
-      <div class="card">
-         <div class="title">FORMULARIO</div>
+            <div class="card">
+               <div class="title">FORMULARIO</div>
 
-         <input class="btn" id="dep-id" placeholder="ID">
-         <input class="btn" id="dep-name" placeholder="Departamento">
+               <input class="btn" id="dep-id" placeholder="ID">
+               <input class="btn" id="dep-name" placeholder="Departamento">
 
-         <div class="form-actions">
-            <button class="btn primary" onclick="crear()">Crear</button>
-            <button class="btn warn" onclick="modificar()">Modificar</button>
-            <button class="btn danger" onclick="borrar()">Borrar</button>
-            <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
-         </div>
+               <div class="form-actions">
+                  <button class="btn primary" onclick="crear()">Crear</button>
+                  <button class="btn warn" onclick="modificar()">Modificar</button>
+                  <button class="btn danger" onclick="borrar()">Borrar</button>
+                  <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
+               </div>
 
-      </div>
+            </div>
 
-   </div>`;
+         </div>`;
 
          document.getElementById("panel").innerHTML = html;
       }
