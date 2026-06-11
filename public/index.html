@@ -39,21 +39,20 @@
          cursor: pointer;
       }
 
-      /* 🔥 CARDS MÁS GRANDES Y OCUPANDO MÁS ESPACIO */
+      /* 🔥 GRID BALANCEADO */
       .grid {
          display: grid;
          grid-template-columns: repeat(4, 1fr);
-         gap: 15px;
-         padding: 20px;
-         width: 100%;
+         gap: 12px;
+         padding: 18px;
       }
 
       .card {
          background: #111827;
          border: 1px solid #1e293b;
          border-radius: 12px;
-         padding: 22px;
-         min-height: 160px;
+         padding: 16px;
+         min-height: 110px;
       }
 
       .panel {
@@ -62,7 +61,7 @@
          border: 1px solid #1e293b;
          border-radius: 12px;
          padding: 15px;
-         min-height: 300px;
+         min-height: 320px;
       }
 
       .title {
@@ -85,37 +84,32 @@
          text-decoration: none;
       }
 
-      /* 🔥 CONTENEDOR PARA TABLA + FORMULARIO (FUTURO) */
-      .departamentos-layout {
-         display: grid;
-         grid-template-columns: 2fr 1fr;
-         gap: 15px;
-         width: 100%;
-      }
-
       table {
          width: 100%;
          border-collapse: collapse;
-         font-size: 12px;
-         /* 🔥 MÁS PEQUEÑO */
+         font-size: 13px;
       }
 
       th {
          text-align: left;
-         padding: 6px;
+         padding: 8px;
          border-bottom: 1px solid #334155;
          color: #93c5fd;
-         font-size: 12px;
       }
 
       td {
-         padding: 6px;
+         padding: 8px;
          border-bottom: 1px solid #1e293b;
-         font-size: 12px;
       }
 
       tr:hover {
          background: #111827;
+      }
+
+      .departamentos-layout {
+         display: grid;
+         grid-template-columns: 2fr 1fr;
+         gap: 15px;
       }
    </style>
 </head>
@@ -137,105 +131,68 @@
       <div class="tab" onclick="load('mensajes')">✉ Mensajes</div>
    </div>
 
-   <div class="grid">
-
-      <div class="card">
-         <div class="title">Ciudades</div>
-         <div class="small">Registros: 0</div>
-      </div>
-
-      <div class="card">
-         <div class="title">Departamentos</div>
-         <div class="small" id="count-departamentos">Registros: ...</div>
-      </div>
-
-      <div class="card">
-         <div class="title">Sectores</div>
-         <div class="small">Registros: 0</div>
-      </div>
-
-      <div class="card">
-         <div class="title">Contactos</div>
-         <div class="small">Registros: 0</div>
-      </div>
-
-      <div class="card">
-         <div class="title">Sucursales</div>
-         <div class="small">Registros: 0</div>
-      </div>
-
-      <div class="card">
-         <div class="title">Usuarios</div>
-         <div class="small">Registros: 0</div>
-      </div>
-
-      <div class="card">
-         <div class="title">Mensajes</div>
-         <div class="small">Plantillas: 0</div>
-      </div>
-
-      <div class="card">
-         <div class="title">CRM PRINCIPAL</div>
-         <a class="crm-btn" href="https://crmweb.ecopanche.com/" target="_blank">
-            IR AL CRM →
-         </a>
-      </div>
-
-   </div>
-
-   <!-- PANEL -->
-   <div class="panel" id="panel">
-
-      <div class="grid">
-
-         <div class="card">
-            <div class="title">Resumen Sistema</div>
-            <div class="small">Panel de control administrativo</div>
-         </div>
-
-         <div class="card">
-            <div class="title">Actividad</div>
-            <div class="small">Sin eventos recientes</div>
-         </div>
-
-         <div class="card">
-            <div class="title">Estado API</div>
-            <div class="small">Conectado</div>
-         </div>
-
-         <div class="card">
-            <div class="title">Base de Datos</div>
-            <div class="small">MySQL activo</div>
-         </div>
-
-      </div>
-
-   </div>
+   <!-- SOLO PANEL -->
+   <div class="panel" id="panel"></div>
 
    <script>
 
-      async function cargarDepartamentos() {
-         try {
-            const res = await fetch("/departamentos");
-            const data = await res.json();
+      function renderHome() {
+         document.getElementById("panel").innerHTML = `
+            <div class="grid">
 
-            document.getElementById("count-departamentos").innerText =
-               "Registros: " + data.length;
+               <div class="card">
+                  <div class="title">Resumen Sistema</div>
+                  <div class="small">Panel de control administrativo</div>
+               </div>
 
-         } catch (err) {
-            document.getElementById("count-departamentos").innerText =
-               "Error cargando datos";
-         }
+               <div class="card">
+                  <div class="title">Actividad</div>
+                  <div class="small">Sin eventos recientes</div>
+               </div>
+
+               <div class="card">
+                  <div class="title">Estado API</div>
+                  <div class="small">Conectado</div>
+               </div>
+
+               <div class="card">
+                  <div class="title">Base de Datos</div>
+                  <div class="small">MySQL activo</div>
+               </div>
+
+               <div class="card">
+                  <div class="title">Módulos</div>
+                  <div class="small">8 activos</div>
+               </div>
+
+               <div class="card">
+                  <div class="title">Seguridad</div>
+                  <div class="small">OK</div>
+               </div>
+
+               <div class="card">
+                  <div class="title">Rendimiento</div>
+                  <div class="small">Estable</div>
+               </div>
+
+               <div class="card">
+                  <div class="title">CRM Sistema</div>
+                  <div class="small">Versión inicial</div>
+               </div>
+
+            </div>
+         `;
       }
-
-      cargarDepartamentos();
 
       function load(page) {
 
+         // 🔥 SOLO INICIO MUESTRA CARDS
          if (page === 'inicio') {
+            renderHome();
             return;
          }
 
+         // 🔥 DEPARTAMENTOS
          if (page === 'departamentos') {
 
             fetch("/departamentos")
@@ -247,7 +204,6 @@
                   let html = `
                      <div class="departamentos-layout">
 
-                        <!-- TABLA -->
                         <div>
                            <div class="title">DEPARTAMENTOS</div>
                            <br>
@@ -275,10 +231,9 @@
                            </table>
                         </div>
 
-                        <!-- ESPACIO PARA FORMULARIO FUTURO -->
                         <div class="card">
                            <div class="title">FORMULARIO</div>
-                           <div class="small">Aquí irá crear / editar / eliminar</div>
+                           <div class="small">Aquí irá CRUD</div>
                         </div>
 
                      </div>
@@ -290,6 +245,7 @@
             return;
          }
 
+         // 🔥 OTROS MÓDULOS
          document.getElementById("panel").innerHTML = `
             <div class="grid">
 
@@ -301,6 +257,9 @@
             </div>
          `;
       }
+
+      // INIT
+      renderHome();
 
    </script>
 
