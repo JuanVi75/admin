@@ -130,7 +130,6 @@
 
       tr:hover {
          background: rgba(255, 255, 255, 0.04);
-         filter: blur(0.2px);
       }
 
       .form-actions {
@@ -213,7 +212,6 @@
 
    <div class="panel" id="panel">
 
-      <!-- 🔥 SE MANTIENE TODO TU GRID ORIGINAL -->
       <div class="grid">
          <div class="card">
             <div class="title">Ciudades</div>
@@ -254,7 +252,7 @@
 
          <div class="card">
             <div class="title">Mensajes</div>
-            <div class="small">Plantillas: 0</div>
+            <div class="small" id="actividad-box">Sin eventos recientes</div>
          </div>
 
          <div class="card">
@@ -263,7 +261,6 @@
          </div>
       </div>
 
-      <!-- 🔥 SEGUNDO GRID TAMBIÉN SE MANTIENE -->
       <div class="grid">
          <div class="card">
             <div class="title">Resumen Sistema</div>
@@ -271,7 +268,7 @@
          </div>
          <div class="card">
             <div class="title">Actividad</div>
-            <div class="small">Sin eventos recientes</div>
+            <div class="small" id="actividad">Sin eventos recientes</div>
          </div>
          <div class="card">
             <div class="title">Estado API</div>
@@ -292,17 +289,15 @@
       const rowsPerPage = 10;
       let departamentosData = [];
 
+      function registrarActividad(texto) {
+         document.getElementById("actividad").innerText = texto;
+         document.getElementById("actividad-box").innerText = texto;
+      }
+
       async function cargarMetaDepartamentos() {
          try {
             const res = await fetch("/departamentos/stats");
-
-            if (!res.ok) {
-               console.error("ERROR HTTP:", res.status);
-               return;
-            }
-
             const data = await res.json();
-            console.log("STATS:", data);
 
             document.getElementById("count-departamentos").innerText =
                "Registros: " + (data.total ?? 0);
@@ -310,17 +305,12 @@
             document.getElementById("last-update").innerText =
                (data.ultima_actualizacion || "-").toString().split("T")[0];
 
-            document.getElementById("inserted").innerText =
-               data.ingresados_hoy ?? 0;
+            document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
+            document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
+            document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
 
-            document.getElementById("updated").innerText =
-               data.modificados_hoy ?? 0;
-
-            document.getElementById("deleted").innerText =
-               data.eliminados_hoy ?? 0;
-
-         } catch (err) {
-            console.error("FALLO STATS:", err);
+         } catch (e) {
+            console.error(e);
          }
       }
 
@@ -334,7 +324,6 @@
 
          const start = (currentPage - 1) * rowsPerPage;
          const end = start + rowsPerPage;
-
          const pageData = departamentosData.slice(start, end);
 
          let html = `
@@ -416,15 +405,13 @@
 
       async function load(page) {
 
-         if (page === 'inicio') {
-            location.reload();
-            return;
-         }
+         if (page === 'inicio') location.reload();
 
          if (page === 'departamentos') {
             currentPage = 1;
             await cargarDepartamentos();
-            cargarMetaDepartamentos();
+            await cargarMetaDepartamentos();
+            registrarActividad("Ingreso a módulos de departamentos");
          }
       }
 
@@ -439,7 +426,8 @@
          });
 
          await cargarDepartamentos();
-         cargarMetaDepartamentos();
+         await cargarMetaDepartamentos();
+         registrarActividad("Se creó departamento: " + depto);
       }
 
       async function modificar() {
@@ -454,20 +442,25 @@
          });
 
          await cargarDepartamentos();
-         cargarMetaDepartamentos();
+         await cargarMetaDepartamentos();
+         registrarActividad("Se modificó departamento ID: " + selectedId);
       }
 
       async function borrar() {
          if (!selectedId) return;
 
-         await fetch(`/departamentos/${selectedId}`, {
-            method: "DELETE"
-         });
+         await fetch(`/departamentos/${selectedId}`, { method: "DELETE" });
 
          limpiarForm();
          await cargarDepartamentos();
-         cargarMetaDepartamentos();
+         await cargarMetaDepartamentos();
+         registrarActividad("Se eliminó un departamento");
       }
+
+      // CARGA INICIAL
+      window.onload = async () => {
+         await cargarMetaDepartamentos();
+      };
 
    </script>
 
