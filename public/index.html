@@ -39,7 +39,6 @@
          cursor: pointer;
       }
 
-      /* 🔥 CARDS MÁS PEQUEÑOS */
       .grid {
          display: grid;
          grid-template-columns: repeat(4, 1fr);
@@ -93,7 +92,6 @@
          height: calc(100vh - 200px);
       }
 
-      /* 🔥 TABLA CON SCROLL INDEPENDIENTE */
       .table-container {
          height: calc(100vh - 240px);
          overflow-y: auto;
@@ -126,6 +124,36 @@
       tr:hover {
          background: #111827;
       }
+
+      /* ========================= */
+      /* FORMULARIO (SOLO AGREGADO) */
+      /* ========================= */
+
+      .form-box input {
+         width: 100%;
+         padding: 8px;
+         margin-bottom: 8px;
+         border-radius: 6px;
+         border: 1px solid #334155;
+         background: #0b1220;
+         color: white;
+         font-size: 12px;
+      }
+
+      .form-box button {
+         width: 100%;
+         padding: 8px;
+         margin-bottom: 6px;
+         border-radius: 6px;
+         border: none;
+         cursor: pointer;
+         font-size: 12px;
+      }
+
+      .btn-create { background: #2563eb; color: white; }
+      .btn-edit { background: #f59e0b; color: black; }
+      .btn-delete { background: #ef4444; color: white; }
+      .btn-clear { background: #374151; color: white; }
    </style>
 </head>
 
@@ -222,6 +250,8 @@
 
    <script>
 
+      let selectedId = null;
+
       async function cargarDepartamentos() {
          try {
             const res = await fetch("/departamentos");
@@ -271,8 +301,8 @@
 
                   data.forEach(d => {
                      html += `
-                        <tr>
-                           <td style="width:60px;">${d.id}</td>
+                        <tr onclick="selectRow(${d.id}, '${d.depto}')">
+                           <td>${d.id}</td>
                            <td>${d.depto}</td>
                         </tr>
                      `;
@@ -283,9 +313,16 @@
                            </table>
                         </div>
 
-                        <div class="card">
+                        <div class="card form-box">
                            <div class="title">FORMULARIO</div>
-                           <div class="small">Aquí irá crear / editar / eliminar</div>
+
+                           <input id="id" placeholder="ID" readonly>
+                           <input id="depto" placeholder="Departamento">
+
+                           <button class="btn-create" onclick="crear()">CREAR</button>
+                           <button class="btn-edit" onclick="editar()">EDITAR</button>
+                           <button class="btn-delete" onclick="borrar()">BORRAR</button>
+                           <button class="btn-clear" onclick="limpiar()">LIMPIAR</button>
                         </div>
 
                      </div>
@@ -296,21 +333,56 @@
 
             return;
          }
+      }
 
-         document.getElementById("panel").innerHTML = `
-            <div class="grid">
+      function selectRow(id, depto) {
+         document.getElementById("id").value = id;
+         document.getElementById("depto").value = depto;
+         selectedId = id;
+      }
 
-               <div class="card">
-                  <div class="title">Módulo</div>
-                  <div class="small">${page.toUpperCase()}</div>
-               </div>
+      function limpiar() {
+         document.getElementById("id").value = "";
+         document.getElementById("depto").value = "";
+         selectedId = null;
+      }
 
-            </div>
-         `;
+      async function crear() {
+         const depto = document.getElementById("depto").value;
+
+         await fetch("/departamentos", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ depto })
+         });
+
+         load('departamentos');
+      }
+
+      async function editar() {
+         const id = document.getElementById("id").value;
+         const depto = document.getElementById("depto").value;
+
+         await fetch(`/departamentos/${id}`, {
+            method: "PUT",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ depto })
+         });
+
+         load('departamentos');
+      }
+
+      async function borrar() {
+         const id = document.getElementById("id").value;
+
+         await fetch(`/departamentos/${id}`, {
+            method: "DELETE"
+         });
+
+         load('departamentos');
       }
 
    </script>
 
 </body>
-
 </html>
