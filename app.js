@@ -3,29 +3,21 @@ const path = require("path");
 
 const app = express();
 
-// Middleware JSON
 app.use(express.json());
-
-/* =========================
-   RUTAS DEL SISTEMA
-========================= */
-const departamentosRoutes = require("./routes/departamentos.routes");
-
-// 👉 API departamentos
-app.use("/departamentos", departamentosRoutes);
-
-/* =========================
-   FRONTEND
-========================= */
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+/* TEST DIRECTO SIN ROUTES */
+app.get("/departamentos", (req, res) => {
+  res.json([
+    { id: 1, depto: "TEST ANTIOQUIA" },
+    { id: 2, depto: "TEST CUNDINAMARCA" }
+  ]);
 });
 
-/* =========================
-   SERVER
-========================= */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
