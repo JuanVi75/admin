@@ -297,14 +297,11 @@
 
       /* ACTIVIDAD (TABLA + HOY) */
       function registrarActividad(texto) {
-         const hoy = new Date().toISOString().split("T")[0];
+         const a = document.getElementById("actividad");
+         const b = document.getElementById("actividad-box");
 
-         actividadHoy.push({
-            texto: "TABLA: DEPARTAMENTOS - " + texto,
-            fecha: hoy
-         });
-
-         renderActividad();
+         if (a) a.innerText = texto;
+         if (b) b.innerText = texto;
       }
 
       function renderActividad() {
