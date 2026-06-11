@@ -93,8 +93,8 @@
       }
 
       .table-container {
-         height: calc(100vh - 240px);
-         overflow-y: auto;
+         height: auto;
+         overflow: hidden;
          padding-right: 8px;
       }
 
@@ -164,6 +164,28 @@
          margin-top: 6px;
          line-height: 1.6;
       }
+
+      .pagination {
+         display: flex;
+         justify-content: center;
+         gap: 10px;
+         margin-top: 10px;
+         align-items: center;
+      }
+
+      .page-btn {
+         padding: 6px 10px;
+         background: #111827;
+         border: 1px solid #1e293b;
+         color: white;
+         cursor: pointer;
+         border-radius: 6px;
+      }
+
+      .page-info {
+         font-size: 12px;
+         opacity: 0.8;
+      }
    </style>
 </head>
 
@@ -206,22 +228,18 @@
             <div class="title">Sectores</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Contactos</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Sucursales</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Usuarios</div>
             <div class="small">Registros: 0</div>
          </div>
-
          <div class="card">
             <div class="title">Mensajes</div>
             <div class="small">Plantillas: 0</div>
@@ -258,16 +276,19 @@
 
       let selectedId = null;
 
+      let departamentosData = [];
+      let currentPage = 1;
+      const pageSize = 18;
+
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
-         const data = await res.json();
+         departamentosData = await res.json();
 
          document.getElementById("count-departamentos").innerText =
-            "Registros: " + data.length;
+            "Registros: " + departamentosData.length;
       }
 
       async function cargarMetaDepartamentos() {
-
          const res = await fetch("/departamentos/stats");
          const data = await res.json();
 
@@ -277,42 +298,25 @@
          document.getElementById("last-update").innerText =
             (data.ultima_actualizacion || "-").toString().split("T")[0];
 
-         document.getElementById("inserted").innerText =
-            data.ingresados_hoy ?? 0;
-
-         document.getElementById("updated").innerText =
-            data.modificados_hoy ?? 0;
-
-         document.getElementById("deleted").innerText =
-            data.eliminados_hoy ?? 0;
+         document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
+         document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
+         document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
       }
 
-      cargarDepartamentos();
-      cargarMetaDepartamentos();
+      function renderTabla() {
 
-      function limpiarForm() {
-         selectedId = null;
-         document.getElementById("dep-id").value = "";
-         document.getElementById("dep-name").value = "";
-      }
+         const start = (currentPage - 1) * pageSize;
+         const end = start + pageSize;
 
-      function selectRow(id, depto) {
-         selectedId = id;
-         document.getElementById("dep-id").value = id;
-         document.getElementById("dep-name").value = depto;
-      }
-
-      async function refreshDepartamentos() {
-         const res = await fetch("/departamentos");
-         const data = await res.json();
-
-         data.sort((a, b) => a.id - b.id);
+         const pageData = departamentosData.slice(start, end);
+         const totalPages = Math.ceil(departamentosData.length / pageSize);
 
          let html = `
          <div class="departamentos-layout">
 
             <div class="table-container">
                <div class="title">DEPARTAMENTOS</div><br>
+
                <table>
                   <thead>
                      <tr><th style="width:60px;">ID</th><th>Departamento</th></tr>
@@ -320,7 +324,7 @@
                   <tbody>
          `;
 
-         data.forEach(d => {
+         pageData.forEach(d => {
             html += `<tr onclick="selectRow(${d.id}, '${d.depto}')">
                         <td>${d.id}</td>
                         <td>${d.depto}</td>
@@ -330,6 +334,13 @@
          html += `
                   </tbody>
                </table>
+
+               <div class="pagination">
+                  <button class="page-btn" onclick="prevPage()">⬅</button>
+                  <span class="page-info">Página ${currentPage} de ${totalPages}</span>
+                  <button class="page-btn" onclick="nextPage()">➡</button>
+               </div>
+
             </div>
 
             <div class="card">
@@ -352,6 +363,26 @@
          document.getElementById("panel").innerHTML = html;
       }
 
+      function nextPage() {
+         const totalPages = Math.ceil(departamentosData.length / pageSize);
+         if (currentPage < totalPages) {
+            currentPage++;
+            renderTabla();
+         }
+      }
+
+      function prevPage() {
+         if (currentPage > 1) {
+            currentPage--;
+            renderTabla();
+         }
+      }
+
+      async function refreshDepartamentos() {
+         await cargarDepartamentos();
+         renderTabla();
+      }
+
       async function load(page) {
 
          if (page === 'inicio') {
@@ -364,6 +395,18 @@
             cargarMetaDepartamentos();
             return;
          }
+      }
+
+      function limpiarForm() {
+         selectedId = null;
+         document.getElementById("dep-id").value = "";
+         document.getElementById("dep-name").value = "";
+      }
+
+      function selectRow(id, depto) {
+         selectedId = id;
+         document.getElementById("dep-id").value = id;
+         document.getElementById("dep-name").value = depto;
       }
 
       async function crear() {
