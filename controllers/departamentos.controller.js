@@ -1,4 +1,5 @@
 const Departamentos = require("../models/departamentos.model");
+const db = require("../config/db");
 
 /* =========================
    LISTAR
@@ -66,9 +67,48 @@ function borrar(req, res) {
     });
 }
 
+/* =========================
+   ESTADÍSTICAS DASHBOARD
+========================= */
+function stats(req, res) {
+
+    const sql = `
+        SELECT 
+            COUNT(*) AS total,
+
+            SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
+
+            SUM(CASE 
+                WHEN updated_at IS NOT NULL 
+                AND DATE(updated_at) = CURDATE() 
+                THEN 1 ELSE 0 
+            END) AS modificados_hoy,
+
+            SUM(CASE 
+                WHEN is_deleted = 1 
+                AND DATE(deleted_at) = CURDATE() 
+                THEN 1 ELSE 0 
+            END) AS eliminados_hoy,
+
+            MAX(created_at) AS ultima_actualizacion
+
+        FROM departamentos;
+    `;
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.log("Error stats departamentos:", err);
+            return res.status(500).json({ error: "Error stats" });
+        }
+
+        res.json(result[0]);
+    });
+}
+
 module.exports = {
     listar,
     crear,
     modificar,
-    borrar
+    borrar,
+    stats
 };
