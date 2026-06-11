@@ -3,18 +3,29 @@ const path = require("path");
 
 const app = express();
 
-// Middleware para JSON (futuro CRUD)
+// Middleware JSON
 app.use(express.json());
 
-// 👉 Servir archivos estáticos
+/* =========================
+   RUTAS DEL SISTEMA
+========================= */
+const departamentosRoutes = require("./routes/departamentos.routes");
+
+// 👉 API departamentos
+app.use("/departamentos", departamentosRoutes);
+
+/* =========================
+   FRONTEND
+========================= */
 app.use(express.static(path.join(__dirname, "public")));
 
-// 👉 Ruta principal
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Puerto Hostinger o local
+/* =========================
+   SERVER
+========================= */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
