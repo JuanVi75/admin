@@ -265,6 +265,30 @@
 
       </div>
 
+      <div class="grid">
+
+         <div class="card">
+            <div class="title">Resumen Sistema</div>
+            <div class="small">Panel de control administrativo</div>
+         </div>
+
+         <div class="card">
+            <div class="title">Actividad</div>
+            <div class="small" id="actividad">Sin actividad hoy</div>
+         </div>
+
+         <div class="card">
+            <div class="title">Estado API</div>
+            <div class="small">Conectado</div>
+         </div>
+
+         <div class="card">
+            <div class="title">Base de Datos</div>
+            <div class="small">MySQL activo</div>
+         </div>
+
+      </div>
+
    </div>
 
    <script>
@@ -274,21 +298,11 @@
       let rowsPerPage = 16;
       let departamentosData = [];
 
-      // =========================
-      // CIUDADES (NUEVO MODULO)
-      // =========================
-      let ciudadesData = [];
-      let selectedCiudadId = null;
-      let currentPageCiudades = 1;
-
       function registrarActividad(texto) {
          document.getElementById("actividad").innerText = texto;
          document.getElementById("actividad-box").innerText = texto;
       }
 
-      // =========================
-      // DEPARTAMENTOS (EXISTENTE)
-      // =========================
       async function cargarMetaDepartamentos() {
          const res = await fetch("/departamentos/stats");
          const data = await res.json();
@@ -302,6 +316,18 @@
          document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
          document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
          document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
+
+         const ins = data.ingresados_hoy ?? 0;
+         const upd = data.modificados_hoy ?? 0;
+         const del = data.eliminados_hoy ?? 0;
+
+         let partes = [];
+
+         if (ins > 0) partes.push(`Departamentos: ${ins} creados`);
+         if (upd > 0) partes.push(`Departamentos: ${upd} modificados`);
+         if (del > 0) partes.push(`Departamentos: ${del} eliminados`);
+
+         registrarActividad(partes.length ? partes.join(" | ") : "Sin cambios en departamentos");
       }
 
       async function cargarDepartamentos() {
@@ -353,59 +379,17 @@
 
             </div>
 
-         </div>`;
+            <div class="card">
+               <div class="title">FORMULARIO</div>
 
-         document.getElementById("panel").innerHTML = html;
-      }
+               <input class="btn" id="dep-id" placeholder="ID">
+               <input class="btn" id="dep-name" placeholder="Departamento">
 
-      // =========================
-      // CIUDADES (NUEVO MODULO)
-      // =========================
-      async function cargarCiudades() {
-         const res = await fetch("/ciudades");
-         ciudadesData = await res.json();
-         currentPageCiudades = 1;
-         renderTablaCiudades();
-      }
-
-      function renderTablaCiudades() {
-
-         const start = (currentPageCiudades - 1) * rowsPerPage;
-         const end = start + rowsPerPage;
-
-         const pageData = ciudadesData.slice(start, end);
-         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage);
-
-         let html = `
-         <div class="departamentos-layout">
-
-            <div class="table-container">
-
-               <div class="title">CIUDADES</div>
-
-               <div class="table-wrapper">
-               <table>
-                  <thead>
-                     <tr><th>ID</th><th>Ciudad</th></tr>
-                  </thead>
-                  <tbody>`;
-
-         pageData.forEach(c => {
-            html += `<tr onclick="selectCiudad(${c.id}, '${c.ciudad}')">
-                        <td>${c.id}</td>
-                        <td>${c.ciudad}</td>
-                     </tr>`;
-         });
-
-         html += `
-                  </tbody>
-               </table>
-               </div>
-
-               <div class="pagination">
-                  <button class="page-btn" onclick="prevPageCiudades()" ${currentPageCiudades === 1 ? 'disabled' : ''}>⬅</button>
-                  <span>Página ${currentPageCiudades} / ${totalPages}</span>
-                  <button class="page-btn" onclick="nextPageCiudades()" ${currentPageCiudades >= totalPages ? 'disabled' : ''}>➡</button>
+               <div class="form-actions">
+                  <button class="btn primary" onclick="crear()">Crear</button>
+                  <button class="btn warn" onclick="modificar()">Modificar</button>
+                  <button class="btn danger" onclick="borrar()">Borrar</button>
+                  <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
                </div>
 
             </div>
@@ -415,37 +399,74 @@
          document.getElementById("panel").innerHTML = html;
       }
 
-      function selectCiudad(id, ciudad) {
-         selectedCiudadId = id;
+      function nextPage() {
+         const totalPages = Math.ceil(departamentosData.length / rowsPerPage);
+         if (currentPage < totalPages) currentPage++;
+         renderTabla();
       }
 
-      function nextPageCiudades() {
-         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage);
-         if (currentPageCiudades < totalPages) currentPageCiudades++;
-         renderTablaCiudades();
+      function prevPage() {
+         if (currentPage > 1) currentPage--;
+         renderTabla();
       }
 
-      function prevPageCiudades() {
-         if (currentPageCiudades > 1) currentPageCiudades--;
-         renderTablaCiudades();
+      function selectRow(id, depto) {
+         selectedId = id;
+         document.getElementById("dep-id").value = id;
+         document.getElementById("dep-name").value = depto;
       }
 
-      // =========================
-      // ROUTER
-      // =========================
       async function load(page) {
-
          if (page === 'inicio') location.reload();
 
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
-         }
-
-         if (page === 'ciudades') {
-            await cargarCiudades();
+            registrarActividad("Departamentos: CRUD ejecutado");
          }
       }
+
+      async function crear() {
+         const id = document.getElementById("dep-id").value;
+         const depto = document.getElementById("dep-name").value;
+
+         await fetch("/departamentos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, depto })
+         });
+
+         await cargarDepartamentos();
+         await cargarMetaDepartamentos();
+      }
+
+      async function modificar() {
+         if (!selectedId) return;
+
+         const depto = document.getElementById("dep-name").value;
+
+         await fetch(`/departamentos/${selectedId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ depto })
+         });
+
+         await cargarDepartamentos();
+         await cargarMetaDepartamentos();
+      }
+
+      async function borrar() {
+         if (!selectedId) return;
+
+         await fetch(`/departamentos/${selectedId}`, { method: "DELETE" });
+
+         await cargarDepartamentos();
+         await cargarMetaDepartamentos();
+      }
+
+      window.onload = async () => {
+         await cargarMetaDepartamentos();
+      };
 
    </script>
 
