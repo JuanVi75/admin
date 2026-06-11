@@ -293,18 +293,35 @@
       let departamentosData = [];
 
       async function cargarMetaDepartamentos() {
-         const res = await fetch("/departamentos/stats");
-         const data = await res.json();
+         try {
+            const res = await fetch("/departamentos/stats");
 
-         document.getElementById("count-departamentos").innerText =
-            "Registros: " + data.total;
+            if (!res.ok) {
+               console.error("ERROR HTTP:", res.status);
+               return;
+            }
 
-         document.getElementById("last-update").innerText =
-            (data.ultima_actualizacion || "-").toString().split("T")[0];
+            const data = await res.json();
+            console.log("STATS:", data);
 
-         document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
-         document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
-         document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
+            document.getElementById("count-departamentos").innerText =
+               "Registros: " + (data.total ?? 0);
+
+            document.getElementById("last-update").innerText =
+               (data.ultima_actualizacion || "-").toString().split("T")[0];
+
+            document.getElementById("inserted").innerText =
+               data.ingresados_hoy ?? 0;
+
+            document.getElementById("updated").innerText =
+               data.modificados_hoy ?? 0;
+
+            document.getElementById("deleted").innerText =
+               data.eliminados_hoy ?? 0;
+
+         } catch (err) {
+            console.error("FALLO STATS:", err);
+         }
       }
 
       async function cargarDepartamentos() {
