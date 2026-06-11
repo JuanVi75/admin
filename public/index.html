@@ -81,6 +81,28 @@
          border-radius: 10px;
          text-decoration: none;
       }
+
+      table {
+         width: 100%;
+         border-collapse: collapse;
+         font-size: 13px;
+      }
+
+      th {
+         text-align: left;
+         padding: 10px;
+         border-bottom: 1px solid #334155;
+         color: #93c5fd;
+      }
+
+      td {
+         padding: 10px;
+         border-bottom: 1px solid #1e293b;
+      }
+
+      tr:hover {
+         background: #111827;
+      }
    </style>
 </head>
 
@@ -147,9 +169,9 @@
 
    </div>
 
-   <!-- 🔥 AHORA EL PANEL TAMBIÉN ES VISUAL -->
    <div class="panel" id="panel">
 
+      <!-- INICIO = MISMO DASHBOARD VISUAL -->
       <div class="grid">
 
          <div class="card">
@@ -196,19 +218,55 @@
 
       function load(page) {
 
+         if (page === 'inicio') {
+            document.getElementById("panel").innerHTML = `
+               <div class="grid">
+
+                  <div class="card">
+                     <div class="title">Resumen Sistema</div>
+                     <div class="small">Panel de control administrativo</div>
+                  </div>
+
+                  <div class="card">
+                     <div class="title">Actividad</div>
+                     <div class="small">Sin eventos recientes</div>
+                  </div>
+
+                  <div class="card">
+                     <div class="title">Estado API</div>
+                     <div class="small">Conectado</div>
+                  </div>
+
+                  <div class="card">
+                     <div class="title">Base de Datos</div>
+                     <div class="small">MySQL activo</div>
+                  </div>
+
+               </div>
+            `;
+            return;
+         }
+
          if (page === 'departamentos') {
+
             fetch("/departamentos")
                .then(res => res.json())
                .then(data => {
 
+                  // ORDENAR POR ID
+                  data.sort((a, b) => a.id - b.id);
+
                   let html = `
                      <div class="title">DEPARTAMENTOS</div>
                      <br>
-                     <table style="width:100%; color:white; border-collapse:collapse;">
-                        <tr>
-                           <th style="text-align:left;">ID</th>
-                           <th style="text-align:left;">Departamento</th>
-                        </tr>
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>ID</th>
+                              <th>Departamento</th>
+                           </tr>
+                        </thead>
+                        <tbody>
                   `;
 
                   data.forEach(d => {
@@ -220,7 +278,10 @@
                      `;
                   });
 
-                  html += `</table>`;
+                  html += `
+                        </tbody>
+                     </table>
+                  `;
 
                   document.getElementById("panel").innerHTML = html;
                });
@@ -232,8 +293,8 @@
             <div class="grid">
 
                <div class="card">
-                  <div class="title">Módulo: ${page.toUpperCase()}</div>
-                  <div class="small">Sistema en desarrollo</div>
+                  <div class="title">Módulo</div>
+                  <div class="small">${page.toUpperCase()}</div>
                </div>
 
             </div>
