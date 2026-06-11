@@ -158,7 +158,6 @@
          background: #6b7280;
       }
 
-      /* 🆕 CARD MÉTRICAS */
       .meta {
          font-size: 12px;
          opacity: 0.85;
@@ -191,15 +190,16 @@
             <div class="small">Registros: 0</div>
          </div>
 
-         <!-- 🔥 CARD MODIFICADA -->
+         <!-- 🔥 CARD DINÁMICA -->
          <div class="card">
             <div class="title">Departamentos</div>
             <div class="small" id="count-departamentos">Registros: ...</div>
 
             <div class="meta">
-               Última actualización: <b id="last-update">2026-06-11</b><br>
-               Registros ingresados: <b id="inserted">1</b><br>
-               Registros modificados: <b id="updated">0</b>
+               Última actualización: <b id="last-update">-</b><br>
+               Registros ingresados: <b id="inserted">0</b><br>
+               Registros modificados: <b id="updated">0</b><br>
+               Registros eliminados: <b id="deleted">0</b>
             </div>
          </div>
 
@@ -264,6 +264,27 @@
          const data = await res.json();
          document.getElementById("count-departamentos").innerText =
             "Registros: " + data.length;
+      }
+
+      async function cargarMetaDepartamentos() {
+
+         const res = await fetch("/departamentos/meta");
+         const data = await res.json();
+
+         document.getElementById("count-departamentos").innerText =
+            "Registros: " + data.activos;
+
+         document.getElementById("last-update").innerText =
+            data.ultima_fecha || "-";
+
+         document.getElementById("inserted").innerText =
+            data.total;
+
+         document.getElementById("updated").innerText =
+            data.modificados;
+
+         document.getElementById("deleted").innerText =
+            data.eliminados;
       }
 
       cargarDepartamentos();
@@ -339,6 +360,7 @@
 
          if (page === 'departamentos') {
             refreshDepartamentos();
+            cargarMetaDepartamentos();
             return;
          }
       }
