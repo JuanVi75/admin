@@ -190,7 +190,6 @@
             <div class="small">Registros: 0</div>
          </div>
 
-         <!-- 🔥 CARD DINÁMICA -->
          <div class="card">
             <div class="title">Departamentos</div>
             <div class="small" id="count-departamentos">Registros: ...</div>
@@ -262,29 +261,30 @@
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
          const data = await res.json();
+
          document.getElementById("count-departamentos").innerText =
             "Registros: " + data.length;
       }
 
       async function cargarMetaDepartamentos() {
 
-         const res = await fetch("/departamentos/meta");
+         const res = await fetch("/departamentos/stats");
          const data = await res.json();
 
          document.getElementById("count-departamentos").innerText =
-            "Registros: " + data.activos;
+            "Registros: " + data.total;
 
          document.getElementById("last-update").innerText =
-            data.ultima_fecha || "-";
+            (data.ultima_actualizacion || "-").toString().split("T")[0];
 
          document.getElementById("inserted").innerText =
-            data.total;
+            data.ingresados_hoy ?? 0;
 
          document.getElementById("updated").innerText =
-            data.modificados;
+            data.modificados_hoy ?? 0;
 
          document.getElementById("deleted").innerText =
-            data.eliminados;
+            data.eliminados_hoy ?? 0;
       }
 
       cargarDepartamentos();
