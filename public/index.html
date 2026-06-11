@@ -84,7 +84,7 @@
          text-decoration: none;
       }
 
-      /* 🔥 FIX CRÍTICO: altura controlada real */
+      /* FIX LAYOUT REAL (SIN ESPACIO MUERTO) */
       .departamentos-layout {
          display: grid;
          grid-template-columns: 2fr 1fr;
@@ -98,11 +98,11 @@
          height: 100%;
          display: flex;
          flex-direction: column;
-         padding-right: 8px;
          overflow: hidden;
+         padding-right: 8px;
       }
 
-      /* 🔥 FIX: aquí estaba el problema del “espacio muerto” */
+      /* FIX CLAVE */
       .table-wrapper {
          flex: 1;
          overflow-y: auto;
@@ -175,7 +175,7 @@
          line-height: 1.6;
       }
 
-      /* 🔥 FIX: sin espacio muerto debajo */
+      /* PAGINACIÓN PEGADA A TABLA */
       .pagination {
          display: flex;
          justify-content: center;
@@ -324,7 +324,13 @@
          document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
          document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
 
-         registrarActividad("Sistema actualizado");
+         if ((data.ingresados_hoy + data.modificados_hoy + data.eliminados_hoy) > 0) {
+            registrarActividad(
+               `Departamentos: +${data.ingresados_hoy} / ~${data.modificados_hoy} / -${data.eliminados_hoy}`
+            );
+         } else {
+            registrarActividad("Sin cambios en departamentos");
+         }
       }
 
       async function cargarDepartamentos() {
@@ -420,7 +426,7 @@
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
-            registrarActividad("Ingreso a departamentos");
+            registrarActividad("CRUD departamentos ejecutado");
          }
       }
 
@@ -436,7 +442,6 @@
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Creado: " + depto);
       }
 
       async function modificar() {
@@ -452,7 +457,6 @@
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Modificado ID " + selectedId);
       }
 
       async function borrar() {
@@ -462,7 +466,6 @@
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Eliminado ID " + selectedId);
       }
 
       window.onload = async () => {
