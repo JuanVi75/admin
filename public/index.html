@@ -286,116 +286,123 @@
 
       let selectedId = null;
       let currentPage = 1;
-      const rowsPerPage = 10;
+      let rowsPerPage = 10;
       let departamentosData = [];
 
-      function registrarActividad(texto) {
-         document.getElementById("actividad").innerText = texto;
-         document.getElementById("actividad-box").innerText = texto;
+      const actividadLog = [];
+
+      /* SAFE DOM */
+      function safe(id, value) {
+         const el = document.getElementById(id);
+         if (el) el.innerText = value;
       }
 
+      /* ACTIVIDAD */
+      function registrarActividad(texto) {
+         const time = new Date().toLocaleTimeString();
+         actividadLog.unshift(`[${time}] ${texto}`);
+         const vista = actividadLog.slice(0, 5).join("<br>");
+         safe("actividad", vista);
+         safe("actividad-box", vista);
+      }
+
+      /* ROWS DINÁMICAS */
+      function calcularRows() {
+         const el = document.querySelector(".table-container");
+         if (!el) return 10;
+         const h = el.offsetHeight;
+         return Math.max(5, Math.floor((h - 120) / 34));
+      }
+
+      /* STATS */
       async function cargarMetaDepartamentos() {
          try {
             const res = await fetch("/departamentos/stats");
             const data = await res.json();
 
-            document.getElementById("count-departamentos").innerText =
-               "Registros: " + (data.total ?? 0);
+            safe("count-departamentos", "Registros: " + (data.total ?? 0));
+            safe("last-update", (data.ultima_actualizacion || "-").split("T")[0]);
+            safe("inserted", data.ingresados_hoy ?? 0);
+            safe("updated", data.modificados_hoy ?? 0);
+            safe("deleted", data.eliminados_hoy ?? 0);
 
-            document.getElementById("last-update").innerText =
-               (data.ultima_actualizacion || "-").toString().split("T")[0];
+            registrarActividad("Actualización de estadísticas departamentos");
 
-            document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
-            document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
-            document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
-
-         } catch (e) {
-            console.error(e);
-         }
+         } catch (e) { }
       }
 
+      /* DATA */
       async function cargarDepartamentos() {
          const res = await fetch("/departamentos");
          departamentosData = await res.json();
+         registrarActividad("Carga de tabla departamentos");
          renderTabla();
       }
 
+      /* RENDER */
       function renderTabla() {
+
+         rowsPerPage = calcularRows();
 
          const start = (currentPage - 1) * rowsPerPage;
          const end = start + rowsPerPage;
          const pageData = departamentosData.slice(start, end);
 
          let html = `
-         <div class="departamentos-layout">
+   <div class="departamentos-layout">
 
-            <div class="table-container">
+      <div class="table-container">
 
-               <div class="title">DEPARTAMENTOS</div><br>
+         <div class="title">DEPARTAMENTOS</div><br>
 
-               <div class="table-wrapper">
-               <table>
-                  <thead>
-                     <tr><th>ID</th><th>Departamento</th></tr>
-                  </thead>
-                  <tbody>
-         `;
+         <div class="table-wrapper">
+         <table>
+            <thead>
+               <tr><th>ID</th><th>Departamento</th></tr>
+            </thead>
+            <tbody>
+   `;
 
          pageData.forEach(d => {
-            html += `<tr onclick="selectRow(${d.id}, '${d.depto}')">
-                        <td>${d.id}</td>
-                        <td>${d.depto}</td>
-                     </tr>`;
+            html += `<tr onclick="selectRow(${d.id},'${d.depto}')">
+                  <td>${d.id}</td>
+                  <td>${d.depto}</td>
+               </tr>`;
          });
 
          html += `
-                  </tbody>
-               </table>
-               </div>
+            </tbody>
+         </table>
+         </div>
 
-               <div class="pagination">
-                  <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
-                  <span>Página ${currentPage}</span>
-                  <button class="page-btn" onclick="nextPage()" ${end >= departamentosData.length ? 'disabled' : ''}>➡</button>
-               </div>
+         <div class="pagination">
+            <button onclick="prev()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
+            <span>${currentPage}</span>
+            <button onclick="next()" ${end >= departamentosData.length ? 'disabled' : ''}>➡</button>
+         </div>
 
-            </div>
+      </div>
 
-            <div class="card">
-               <div class="title">FORMULARIO</div>
+      <div class="card">
+         <div class="title">FORMULARIO</div>
 
-               <input class="btn" id="dep-id" placeholder="ID">
-               <input class="btn" id="dep-name" placeholder="Departamento">
+         <input class="btn" id="dep-id">
+         <input class="btn" id="dep-name">
 
-               <div class="form-actions">
-                  <button class="btn primary" onclick="crear()">Crear</button>
-                  <button class="btn warn" onclick="modificar()">Modificar</button>
-                  <button class="btn danger" onclick="borrar()">Borrar</button>
-                  <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
-               </div>
+         <button class="btn primary" onclick="crear()">Crear</button>
+         <button class="btn warn" onclick="modificar()">Modificar</button>
+         <button class="btn danger" onclick="borrar()">Borrar</button>
 
-            </div>
+      </div>
 
-         </div>`;
+   </div>`;
 
          document.getElementById("panel").innerHTML = html;
       }
 
-      function nextPage() {
-         currentPage++;
-         renderTabla();
-      }
-
-      function prevPage() {
-         currentPage--;
-         renderTabla();
-      }
-
-      function limpiarForm() {
-         selectedId = null;
-         document.getElementById("dep-id").value = "";
-         document.getElementById("dep-name").value = "";
-      }
+      /* PAG */
+      function next() { currentPage++; renderTabla(); }
+      function prev() { currentPage--; renderTabla(); }
 
       function selectRow(id, depto) {
          selectedId = id;
@@ -403,31 +410,28 @@
          document.getElementById("dep-name").value = depto;
       }
 
+      /* LOAD */
       async function load(page) {
+         if (page === "inicio") location.reload();
 
-         if (page === 'inicio') location.reload();
-
-         if (page === 'departamentos') {
+         if (page === "departamentos") {
             currentPage = 1;
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
-            registrarActividad("Ingreso a módulos de departamentos");
+            registrarActividad("Ingreso a departamentos");
          }
       }
 
+      /* CRUD */
       async function crear() {
          const id = document.getElementById("dep-id").value;
          const depto = document.getElementById("dep-name").value;
 
-         await fetch("/departamentos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id, depto })
-         });
+         await fetch("/departamentos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, depto }) });
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Se creó departamento: " + depto);
+         registrarActividad("Creado: " + depto);
       }
 
       async function modificar() {
@@ -443,7 +447,7 @@
 
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Se modificó departamento ID: " + selectedId);
+         registrarActividad("Modificado ID " + selectedId);
       }
 
       async function borrar() {
@@ -451,13 +455,12 @@
 
          await fetch(`/departamentos/${selectedId}`, { method: "DELETE" });
 
-         limpiarForm();
          await cargarDepartamentos();
          await cargarMetaDepartamentos();
-         registrarActividad("Se eliminó un departamento");
+         registrarActividad("Eliminado ID " + selectedId);
       }
 
-      // CARGA INICIAL
+      /* INIT */
       window.onload = async () => {
          await cargarMetaDepartamentos();
       };
