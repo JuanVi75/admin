@@ -21,7 +21,6 @@
          font-weight: bold;
       }
 
-      /* MENU */
       .menu {
          display: flex;
          gap: 10px;
@@ -40,7 +39,6 @@
          cursor: pointer;
       }
 
-      /* GRID SIEMPRE VISIBLE */
       .grid {
          display: grid;
          grid-template-columns: repeat(4, 1fr);
@@ -48,7 +46,6 @@
          padding: 15px;
       }
 
-      /* CARD */
       .card {
          background: #111827;
          border: 1px solid #1e293b;
@@ -56,7 +53,6 @@
          padding: 15px;
       }
 
-      /* PANEL DINÁMICO ABAJO */
       .panel {
          margin: 0 15px 15px 15px;
          background: #0f172a;
@@ -94,9 +90,7 @@
       ⚙ CONFIGURACIONES / CRM WEB
    </div>
 
-   <!-- MENU -->
    <div class="menu">
-
       <div class="tab" onclick="load('inicio')">🏠 Inicio</div>
       <div class="tab" onclick="load('ciudades')">🌆 Ciudades</div>
       <div class="tab" onclick="load('departamentos')">🏢 Departamentos</div>
@@ -105,10 +99,8 @@
       <div class="tab" onclick="load('sucursales')">🏬 Sucursales</div>
       <div class="tab" onclick="load('usuarios')">👤 Usuarios</div>
       <div class="tab" onclick="load('mensajes')">✉ Mensajes</div>
-
    </div>
 
-   <!-- DASHBOARD (NO SE BORRA NUNCA) -->
    <div class="grid">
 
       <div class="card">
@@ -118,7 +110,7 @@
 
       <div class="card">
          <div class="title">Departamentos</div>
-         <div class="small">Registros: 0</div>
+         <div class="small" id="count-departamentos">Registros: ...</div>
       </div>
 
       <div class="card">
@@ -155,12 +147,29 @@
 
    </div>
 
-   <!-- PANEL DINÁMICO -->
    <div class="panel" id="panel">
-      Selecciona un módulo del menú superior
+      Cargando dashboard...
    </div>
 
    <script>
+
+      // 🔥 CARGAR DEPARTAMENTOS REALES
+      async function cargarDepartamentos() {
+         try {
+            const res = await fetch("/departamentos");
+            const data = await res.json();
+
+            document.getElementById("count-departamentos").innerText =
+               "Registros: " + data.length;
+
+         } catch (err) {
+            document.getElementById("count-departamentos").innerText =
+               "Error cargando datos";
+         }
+      }
+
+      cargarDepartamentos();
+
       function load(page) {
 
          if (page === 'inicio') {
@@ -169,11 +178,44 @@
             return;
          }
 
+         if (page === 'departamentos') {
+            fetch("/departamentos")
+               .then(res => res.json())
+               .then(data => {
+
+                  let html = `
+                     <div class="title">DEPARTAMENTOS</div>
+                     <br>
+                     <table style="width:100%; color:white; border-collapse:collapse;">
+                        <tr>
+                           <th style="text-align:left;">ID</th>
+                           <th style="text-align:left;">Departamento</th>
+                        </tr>
+                  `;
+
+                  data.forEach(d => {
+                     html += `
+                        <tr>
+                           <td>${d.id}</td>
+                           <td>${d.depto}</td>
+                        </tr>
+                     `;
+                  });
+
+                  html += `</table>`;
+
+                  document.getElementById("panel").innerHTML = html;
+               });
+
+            return;
+         }
+
          document.getElementById("panel").innerHTML = `
-    <div class="title">MÓDULO: ${page.toUpperCase()}</div>
-    <div class="small">Aquí irá el CRUD conectado a la base de datos</div>
-  `;
+            <div class="title">MÓDULO: ${page.toUpperCase()}</div>
+            <div class="small">Aquí irá el CRUD conectado a la base de datos</div>
+         `;
       }
+
    </script>
 
 </body>
