@@ -84,7 +84,6 @@
          text-decoration: none;
       }
 
-      /* FIX LAYOUT REAL (SIN ESPACIO MUERTO) */
       .departamentos-layout {
          display: grid;
          grid-template-columns: 2fr 1fr;
@@ -102,7 +101,6 @@
          padding-right: 8px;
       }
 
-      /* FIX CLAVE */
       .table-wrapper {
          flex: 1;
          overflow-y: auto;
@@ -175,7 +173,6 @@
          line-height: 1.6;
       }
 
-      /* PAGINACIÓN PEGADA A TABLA */
       .pagination {
          display: flex;
          justify-content: center;
@@ -298,14 +295,10 @@
 
       let selectedId = null;
       let currentPage = 1;
-      let rowsPerPage = 12;
+      let rowsPerPage = 16; // más filas para ocupar espacio
       let departamentosData = [];
-      let actividadHoy = [];
 
       function registrarActividad(texto) {
-         const hoy = new Date().toISOString().split("T")[0];
-         actividadHoy.push({ fecha: hoy, texto });
-
          document.getElementById("actividad").innerText = texto;
          document.getElementById("actividad-box").innerText = texto;
       }
@@ -324,13 +317,12 @@
          document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
          document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
 
-         if ((data.ingresados_hoy + data.modificados_hoy + data.eliminados_hoy) > 0) {
-            registrarActividad(
-               `Departamentos: +${data.ingresados_hoy} / ~${data.modificados_hoy} / -${data.eliminados_hoy}`
-            );
-         } else {
-            registrarActividad("Sin cambios en departamentos");
-         }
+         const msg =
+            `Departamentos: +${data.ingresados_hoy ?? 0} creados, ` +
+            `${data.modificados_hoy ?? 0} modificados, ` +
+            `${data.eliminados_hoy ?? 0} eliminados`;
+
+         registrarActividad(msg);
       }
 
       async function cargarDepartamentos() {
@@ -346,7 +338,6 @@
          const end = start + rowsPerPage;
 
          const pageData = departamentosData.slice(start, end);
-
          const totalPages = Math.ceil(departamentosData.length / rowsPerPage);
 
          let html = `
@@ -426,7 +417,7 @@
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
-            registrarActividad("CRUD departamentos ejecutado");
+            registrarActividad("Departamentos: CRUD ejecutado");
          }
       }
 
