@@ -178,7 +178,7 @@
          justify-content: center;
          align-items: center;
          gap: 10px;
-         padding: 6px 10px;
+         padding: 4px 10px;
          border-top: 1px solid #1e293b;
          flex-shrink: 0;
       }
@@ -295,7 +295,7 @@
 
       let selectedId = null;
       let currentPage = 1;
-      let rowsPerPage = 16; // más filas para ocupar espacio
+      let rowsPerPage = 16;
       let departamentosData = [];
 
       function registrarActividad(texto) {
@@ -317,12 +317,21 @@
          document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
          document.getElementById("deleted").innerText = data.eliminados_hoy ?? 0;
 
-         const msg =
-            `Departamentos: +${data.ingresados_hoy ?? 0} creados, ` +
-            `${data.modificados_hoy ?? 0} modificados, ` +
-            `${data.eliminados_hoy ?? 0} eliminados`;
+         const ins = data.ingresados_hoy ?? 0;
+         const upd = data.modificados_hoy ?? 0;
+         const del = data.eliminados_hoy ?? 0;
 
-         registrarActividad(msg);
+         let partes = [];
+
+         if (ins > 0) partes.push(`Departamentos: ${ins} creados`);
+         if (upd > 0) partes.push(`Departamentos: ${upd} modificados`);
+         if (del > 0) partes.push(`Departamentos: ${del} eliminados`);
+
+         if (partes.length === 0) {
+            registrarActividad("Sin cambios en departamentos");
+         } else {
+            registrarActividad(partes.join(" | "));
+         }
       }
 
       async function cargarDepartamentos() {
@@ -417,7 +426,7 @@
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
-            registrarActividad("Departamentos: CRUD ejecutado");
+            registrarActividad("Departamentos: actividad ejecutada");
          }
       }
 
