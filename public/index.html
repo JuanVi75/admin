@@ -39,18 +39,21 @@
          cursor: pointer;
       }
 
+      /* 🔥 CARDS MÁS PEQUEÑOS */
       .grid {
          display: grid;
          grid-template-columns: repeat(4, 1fr);
          gap: 12px;
-         padding: 15px;
+         padding: 16px;
+         width: 100%;
       }
 
       .card {
          background: #111827;
          border: 1px solid #1e293b;
          border-radius: 12px;
-         padding: 15px;
+         padding: 16px;
+         min-height: 120px;
       }
 
       .panel {
@@ -86,6 +89,15 @@
          display: grid;
          grid-template-columns: 2fr 1fr;
          gap: 15px;
+         width: 100%;
+         height: calc(100vh - 200px);
+      }
+
+      /* 🔥 TABLA CON SCROLL INDEPENDIENTE */
+      .table-container {
+         height: calc(100vh - 240px);
+         overflow-y: auto;
+         padding-right: 8px;
       }
 
       table {
@@ -99,46 +111,21 @@
          padding: 6px;
          border-bottom: 1px solid #334155;
          color: #93c5fd;
+         font-size: 12px;
+         position: sticky;
+         top: 0;
+         background: #0f172a;
       }
 
       td {
          padding: 6px;
          border-bottom: 1px solid #1e293b;
+         font-size: 12px;
       }
 
       tr:hover {
          background: #111827;
       }
-
-      input {
-         width: 100%;
-         padding: 10px;
-         margin-top: 10px;
-         border-radius: 8px;
-         border: 1px solid #1e293b;
-         background: #0b1220;
-         color: white;
-      }
-
-      button {
-         width: 100%;
-         padding: 10px;
-         margin-top: 10px;
-         border-radius: 8px;
-         border: none;
-         cursor: pointer;
-      }
-
-      .btn-save {
-         background: #2563eb;
-         color: white;
-      }
-
-      .btn-clear {
-         background: #374151;
-         color: white;
-      }
-
    </style>
 </head>
 
@@ -254,6 +241,7 @@
       function load(page) {
 
          if (page === 'inicio') {
+            location.reload();
             return;
          }
 
@@ -268,7 +256,7 @@
                   let html = `
                      <div class="departamentos-layout">
 
-                        <div>
+                        <div class="table-container">
                            <div class="title">DEPARTAMENTOS</div>
                            <br>
                            <table>
@@ -284,7 +272,7 @@
                   data.forEach(d => {
                      html += `
                         <tr>
-                           <td>${d.id}</td>
+                           <td style="width:60px;">${d.id}</td>
                            <td>${d.depto}</td>
                         </tr>
                      `;
@@ -296,12 +284,8 @@
                         </div>
 
                         <div class="card">
-                           <div class="title">CREAR DEPARTAMENTO</div>
-
-                           <input id="depto" placeholder="Nombre departamento">
-
-                           <button class="btn-save" onclick="saveDepto()">Guardar</button>
-                           <button class="btn-clear" onclick="clearForm()">Limpiar</button>
+                           <div class="title">FORMULARIO</div>
+                           <div class="small">Aquí irá crear / editar / eliminar</div>
                         </div>
 
                      </div>
@@ -323,24 +307,6 @@
 
             </div>
          `;
-      }
-
-      async function saveDepto() {
-
-         const depto = document.getElementById("depto").value;
-         if (!depto) return;
-
-         await fetch("/departamentos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ depto })
-         });
-
-         load('departamentos');
-      }
-
-      function clearForm() {
-         document.getElementById("depto").value = "";
       }
 
    </script>
