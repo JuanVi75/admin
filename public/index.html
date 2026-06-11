@@ -129,6 +129,7 @@
          display: flex;
          gap: 8px;
          margin-top: 10px;
+         flex-wrap: wrap;
       }
 
       .btn {
@@ -151,6 +152,11 @@
       .warn {
          background: #f59e0b;
       }
+
+      /* LIMPIAR (cambio solicitado) */
+      .clean {
+         background: #6b7280;
+      }
    </style>
 </head>
 
@@ -171,7 +177,6 @@
 
    <div class="panel" id="panel">
 
-      <!-- DASHBOARD COMPLETO RESTAURADO -->
       <div class="grid">
          <div class="card">
             <div class="title">Ciudades</div>
@@ -230,6 +235,8 @@
 
    <script>
 
+      let selectedDept = null;
+
       async function cargarDepartamentos() {
          try {
             const res = await fetch("/departamentos");
@@ -241,6 +248,18 @@
       }
 
       cargarDepartamentos();
+
+      function limpiarForm() {
+         document.getElementById("dep-id").value = "";
+         document.getElementById("dep-name").value = "";
+         selectedDept = null;
+      }
+
+      function selectRow(id, depto) {
+         document.getElementById("dep-id").value = id;
+         document.getElementById("dep-name").value = depto;
+         selectedDept = id;
+      }
 
       function load(page) {
 
@@ -270,7 +289,12 @@
                   `;
 
                   data.forEach(d => {
-                     html += `<tr><td>${d.id}</td><td>${d.depto}</td></tr>`;
+                     html += `
+                        <tr onclick="selectRow(${d.id}, '${d.depto}')">
+                           <td>${d.id}</td>
+                           <td>${d.depto}</td>
+                        </tr>
+                     `;
                   });
 
                   html += `
@@ -280,14 +304,15 @@
 
                      <div class="card">
                         <div class="title">FORMULARIO</div>
-                        <input class="btn" placeholder="ID" disabled>
-                        <input class="btn" placeholder="Departamento">
+
+                        <input class="btn" id="dep-id" placeholder="ID">
+                        <input class="btn" id="dep-name" placeholder="Departamento">
 
                         <div class="form-actions">
                            <button class="btn primary">Crear</button>
                            <button class="btn warn">Modificar</button>
                            <button class="btn danger">Borrar</button>
-                           <button class="btn">Limpiar</button>
+                           <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
                         </div>
                      </div>
 
@@ -299,7 +324,8 @@
             return;
          }
 
-         document.getElementById("panel").innerHTML = `<div class="grid"><div class="card"><div class="title">${page}</div></div></div>`;
+         document.getElementById("panel").innerHTML =
+            `<div class="grid"><div class="card"><div class="title">${page}</div></div></div>`;
       }
 
    </script>
