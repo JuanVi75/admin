@@ -211,29 +211,9 @@
       <div class="tab" onclick="load('sucursales')">🏬 Sucursales</div>
       <div class="tab" onclick="load('usuarios')">👤 Usuarios</div>
       <div class="tab" onclick="load('mensajes')">✉ Mensajes</div>
+      <div class="tab" onclick="location.href='https://admin.ecopanche.com/'">🏠</div>
    </div>
 
-   <script>
-      /*-------------------------------------------
-         VARIABLES GLOBALES
-      ---------------------------------------------*/
-      let selectedId = null;
-      let currentPage = 1;
-      let rowsPerPage = 16;
-      let departamentosData = [];
-   </script>
-
-   <script>
-      /*-------------------------------------------
-         FUNCIONES GOLBALES
-      ---------------------------------------------*/
-      window.onload = async () => {
-         await load('inicio');
-      };
-
-
-      function renderHome() {
-         document.getElementById("panel").innerHTML = `
    <div class="panel" id="panel">
 
       <div class="grid">
@@ -316,22 +296,37 @@
 
       </div>
 
-   </div>`;
-      }
+   </div>
+
+   <script>
+      /*-------------------------------------------
+         VARIABLES GLOBALES
+      ---------------------------------------------*/
+      let selectedId = null;
+      let currentPage = 1;
+      let rowsPerPage = 16;
+      let departamentosData = [];
+   </script>
+
+   <script>
+      /*-------------------------------------------
+         FUNCIONES GOLBALES
+      ---------------------------------------------*/
+      window.onload = async () => {
+         load('inicio');
+
+      };
 
       async function load(page) {
          if (page === 'inicio') {
-            renderHome();
             cargarMetaDepartamentos();
             cargarMetaCiudades();
-            return;
          }
 
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
             registrarActividad("Departamentos: actividad ejecutada");
-            return;
          }
 
          if (page === 'ciudades') {
@@ -339,7 +334,6 @@
             renderTablaCiudades();
             await cargarMetaCiudades();
             registrarActividad("Ciudades: actividad ejecutada");
-            return;
          }
       }
 
