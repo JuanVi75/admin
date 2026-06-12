@@ -1,6 +1,6 @@
 // model/ciudades.js
 
-const db = require("../db"); // conexión MySQL (ajusta si tu archivo se llama diferente)
+const db = require("../config/db");
 
 const Ciudades = {};
 
