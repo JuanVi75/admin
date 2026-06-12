@@ -228,9 +228,9 @@
          FUNCIONES GOLBALES
       ---------------------------------------------*/
       window.onload = async () => {
-         renderHome();
-
+         await load('inicio');
       };
+
 
       function renderHome() {
          document.getElementById("panel").innerHTML = `
@@ -319,18 +319,19 @@
    </div>`;
       }
 
-
       async function load(page) {
          if (page === 'inicio') {
             renderHome();
             cargarMetaDepartamentos();
             cargarMetaCiudades();
+            return;
          }
 
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
             registrarActividad("Departamentos: actividad ejecutada");
+            return;
          }
 
          if (page === 'ciudades') {
@@ -338,6 +339,7 @@
             renderTablaCiudades();
             await cargarMetaCiudades();
             registrarActividad("Ciudades: actividad ejecutada");
+            return;
          }
       }
 
