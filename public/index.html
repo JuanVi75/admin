@@ -759,21 +759,29 @@
             return;
          }
 
-         // filtrar SOLO del departamento seleccionado
-         const filtradas = ciudadesData.filter(c => String(c.id_depto) === String(id_depto));
+         const deptoStr = String(id_depto).padStart(2, "0");
 
-         let max = 0;
+         // SOLO IDs que pertenecen a ese departamento
+         const filtradas = ciudadesData.filter(c =>
+            String(c.id).startsWith(deptoStr)
+         );
+
+         let maxSuffix = 0;
 
          filtradas.forEach(c => {
-            const num = parseInt(c.id, 10);
-            if (!isNaN(num) && num > max) {
-               max = num;
+            const idStr = String(c.id);
+            const suffix = parseInt(idStr.slice(deptoStr.length), 10);
+
+            if (!isNaN(suffix) && suffix > maxSuffix) {
+               maxSuffix = suffix;
             }
          });
 
-         let next = max + 1;
+         let next = maxSuffix + 1;
 
-         if (inputId) inputId.value = String(next);
+         let finalId = deptoStr + String(next).padStart(2, "0");
+
+         if (inputId) inputId.value = finalId;
       }
 
       /* =========================
