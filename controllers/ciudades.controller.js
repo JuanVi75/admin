@@ -19,7 +19,6 @@ function listar(req, res) {
    CREAR
 ========================= */
 function crear(req, res) {
-
    const { id, municipio, id_depto } = req.body;
 
    Ciudades.crearCiudad(id, municipio, id_depto, (err, result) => {
@@ -36,7 +35,6 @@ function crear(req, res) {
    MODIFICAR
 ========================= */
 function modificar(req, res) {
-
    const id = req.params.id;
    const { municipio, id_depto } = req.body;
 
@@ -54,7 +52,6 @@ function modificar(req, res) {
    BORRAR
 ========================= */
 function borrar(req, res) {
-
    const id = req.params.id;
 
    Ciudades.borrarCiudad(id, (err, result) => {
@@ -68,10 +65,25 @@ function borrar(req, res) {
 }
 
 /* =========================
-   ULTIMO ID POR DEPTO
+   OBTENER UNA (FIX NECESARIO)
+========================= */
+function obtenerUna(req, res) {
+   const id = req.params.id;
+
+   Ciudades.obtenerCiudadPorId(id, (err, result) => {
+      if (err) {
+         console.log("Error obtener ciudad:", err);
+         return res.status(500).json({ error: "Error obteniendo ciudad" });
+      }
+
+      res.json(result?.[0] || null);
+   });
+}
+
+/* =========================
+   ULTIMO ID POR DEPTO (FIX CRÍTICO)
 ========================= */
 function ultimoId(req, res) {
-
    const id_depto = req.params.id_depto;
 
    Ciudades.obtenerUltimoIdPorDepto(id_depto, (err, results) => {
@@ -80,9 +92,9 @@ function ultimoId(req, res) {
          return res.status(500).json({ error: "Error obteniendo ultimo id" });
       }
 
-      const lastId = results?.[0]?.ultimo_id || null;
+      const lastId = results?.[0]?.ultimo_id || 0;
 
-      res.json({ lastId });
+      res.json({ lastId: String(lastId) });
    });
 }
 
@@ -90,31 +102,17 @@ function ultimoId(req, res) {
    ESTADÍSTICAS CIUDADES
 ========================= */
 function stats(req, res) {
-
    const sql = `
       SELECT 
          COUNT(*) AS total,
-
          SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
-
-         SUM(CASE 
-            WHEN updated_at IS NOT NULL 
-            AND DATE(updated_at) = CURDATE() 
-            THEN 1 ELSE 0 
-         END) AS modificados_hoy,
-
-         SUM(CASE 
-            WHEN is_deleted = 1 
-            AND DATE(deleted_at) = CURDATE() 
-            THEN 1 ELSE 0 
-         END) AS eliminados_hoy,
-
+         SUM(CASE WHEN DATE(updated_at) = CURDATE() THEN 1 ELSE 0 END) AS modificados_hoy,
+         SUM(CASE WHEN DATE(deleted_at) = CURDATE() THEN 1 ELSE 0 END) AS eliminados_hoy,
          GREATEST(
             COALESCE(MAX(created_at), '1970-01-01'),
             COALESCE(MAX(updated_at), '1970-01-01'),
             COALESCE(MAX(deleted_at), '1970-01-01')
          ) AS ultima_actualizacion
-
       FROM ciudades;
    `;
 
@@ -133,6 +131,7 @@ module.exports = {
    crear,
    modificar,
    borrar,
+   obtenerUna,
    ultimoId,
    stats
 };
