@@ -554,11 +554,16 @@
          const select = document.getElementById("ciu-depto");
          if (!select) return;
 
+         const currentValue = select.value;
+
          select.innerHTML = `<option value="">Seleccione Departamento</option>`;
 
          data.forEach(d => {
             select.innerHTML += `<option value="${d.id}">${d.depto}</option>`;
          });
+
+         // mantener selección si existe
+         if (currentValue) select.value = currentValue;
       }
 
       /* =========================
@@ -577,13 +582,9 @@
 
          filtroDeptoActivo = id_depto || null;
 
-         if (!id_depto) {
-            ciudadesFiltradas = ciudadesData;
-         } else {
-            ciudadesFiltradas = ciudadesData.filter(c =>
-               String(c.id_depto) === String(id_depto)
-            );
-         }
+         ciudadesFiltradas = id_depto
+            ? ciudadesData.filter(c => String(c.id_depto) === String(id_depto))
+            : ciudadesData;
 
          currentPageCiudades = 1;
          renderTablaCiudades();
@@ -603,22 +604,22 @@
          const totalPages = Math.ceil(data.length / rowsPerPage) || 1;
 
          let html = `
-   <div class="departamentos-layout">
+<div class="departamentos-layout">
 
-      <div class="table-container">
+   <div class="table-container">
 
-         <div class="title">CIUDADES</div>
+      <div class="title">CIUDADES</div>
 
-         <div class="table-wrapper">
-         <table>
-            <thead>
-               <tr>
-                  <th>ID</th>
-                  <th>Municipio</th>
-                  <th>Departamento</th>
-               </tr>
-            </thead>
-            <tbody>`;
+      <div class="table-wrapper">
+      <table>
+         <thead>
+            <tr>
+               <th>ID</th>
+               <th>Municipio</th>
+               <th>Departamento</th>
+            </tr>
+         </thead>
+         <tbody>`;
 
          pageData.forEach(c => {
 
@@ -626,46 +627,49 @@
             const depto = (c.departamento || '');
 
             html += `
-      <tr onclick="selectCiudad('${c.id}', '${municipio}', '${c.id_depto}')">
-         <td>${c.id}</td>
-         <td>${c.municipio}</td>
-         <td>${depto}</td>
-      </tr>`;
+   <tr onclick="selectCiudad('${c.id}', '${municipio}', '${c.id_depto}')">
+      <td>${c.id}</td>
+      <td>${c.municipio}</td>
+      <td>${depto}</td>
+   </tr>`;
          });
 
          html += `
-            </tbody>
-         </table>
-         </div>
-
-         <div class="pagination">
-            <button onclick="prevPageCiudades()" ${currentPageCiudades === 1 ? 'disabled' : ''}>⬅</button>
-            <span>${currentPageCiudades} / ${totalPages}</span>
-            <button onclick="nextPageCiudades()" ${currentPageCiudades >= totalPages ? 'disabled' : ''}>➡</button>
-         </div>
-
+         </tbody>
+      </table>
       </div>
 
-      <div class="card">
-         <div class="title">FORMULARIO CIUDADES</div>
-
-         <select id="ciu-depto" class="btn" onchange="filtrarPorDepto(this.value)">
-            <option value="">Todos los departamentos</option>
-         </select>
-
-         <input class="btn" id="ciu-id" placeholder="ID" readonly>
-         <input class="btn" id="ciu-municipio" placeholder="Municipio">
-
-         <div class="form-actions">
-            <button onclick="crearCiudad()" class="btn primary">Crear</button>
-            <button onclick="modificarCiudad()" class="btn warn">Modificar</button>
-            <button onclick="borrarCiudad()" class="btn danger">Borrar</button>
-            <button onclick="limpiarCiudad()" class="btn clean">Limpiar</button>
-         </div>
-
+      <div class="pagination">
+         <button onclick="prevPageCiudades()" ${currentPageCiudades === 1 ? 'disabled' : ''}>⬅</button>
+         <span>${currentPageCiudades} / ${totalPages}</span>
+         <button onclick="nextPageCiudades()" ${currentPageCiudades >= totalPages ? 'disabled' : ''}>➡</button>
       </div>
 
-   </div>`;
+   </div>
+
+   <div class="card">
+      <div class="title">FORMULARIO CIUDADES</div>
+
+      <select id="ciu-depto" class="btn"
+              onchange="filtrarPorDepto(this.value); limpiarSoloCampos(); cargarIdDepto()">
+         <option value="">Todos los departamentos</option>
+      </select>
+
+      <!-- ID visible pero NO editable -->
+      <input class="btn" id="ciu-id" placeholder="ID" readonly>
+
+      <input class="btn" id="ciu-municipio" placeholder="Municipio">
+
+      <div class="form-actions">
+         <button onclick="crearCiudad()" class="btn primary">Crear</button>
+         <button onclick="modificarCiudad()" class="btn warn">Modificar</button>
+         <button onclick="borrarCiudad()" class="btn danger">Borrar</button>
+         <button onclick="limpiarCiudad()" class="btn clean">Limpiar</button>
+      </div>
+
+   </div>
+
+</div>`;
 
          document.getElementById("panel").innerHTML = html;
 
@@ -683,6 +687,14 @@
          document.getElementById("ciu-depto").value = id_depto;
 
          filtroDeptoActivo = id_depto;
+      }
+
+      /* =========================
+         GENERAR ID DEPTO EN INPUT
+      ========================= */
+      function cargarIdDepto() {
+         const id_depto = document.getElementById("ciu-depto").value;
+         // queda visible el código del depto si quieres extenderlo luego
       }
 
       /* =========================
@@ -748,6 +760,13 @@
       /* =========================
          LIMPIAR
       ========================= */
+      function limpiarSoloCampos() {
+         document.getElementById("ciu-id").value = "";
+         document.getElementById("ciu-municipio").value = "";
+         selectedId = null;
+      }
+
+      /* reset total */
       function limpiarCiudad() {
 
          document.getElementById("ciu-id").value = "";
