@@ -1,89 +1,110 @@
-// model/ciudades.js
-
 const db = require("../config/db");
 
-const Ciudades = {};
+/* =========================
+   LISTAR (solo activos)
+========================= */
+function listarCiudades(callback) {
+   const sql = `
+        SELECT
+            c.id,
+            c.municipio,
+            c.id_depto,
+            d.depto
+        FROM ciudades c
+        LEFT JOIN departamentos d
+            ON d.id = c.id_depto
+        WHERE c.is_deleted = 0
+        ORDER BY c.id ASC
+    `;
 
-/**
- * LISTAR TODAS LAS CIUDADES
- */
-Ciudades.getAll = async function () {
-   const [rows] = await db.query(`
-      SELECT 
-         c.id,
-         c.municipio,
-         c.id_depto,
-         d.depto AS departamento
-      FROM ciudades c
-      LEFT JOIN departamentos d ON d.id = c.id_depto
-      ORDER BY c.id DESC
-   `);
+   db.query(sql, (err, results) => {
+      callback(err, results);
+   });
+}
 
-   return rows;
+/* =========================
+   CREAR
+========================= */
+function crearCiudad(id, municipio, id_depto, callback) {
+   const sql = `
+        INSERT INTO ciudades
+        (
+            id,
+            municipio,
+            id_depto,
+            created_at,
+            is_deleted
+        )
+        VALUES
+        (
+            ?,
+            ?,
+            ?,
+            NOW(),
+            0
+        )
+    `;
+
+   db.query(sql, [id, municipio, id_depto], (err, result) => {
+      callback(err, result);
+   });
+}
+
+/* =========================
+   MODIFICAR
+========================= */
+function modificarCiudad(id, municipio, id_depto, callback) {
+   const sql = `
+        UPDATE ciudades
+        SET
+            municipio = ?,
+            id_depto = ?,
+            updated_at = NOW()
+        WHERE id = ?
+    `;
+
+   db.query(sql, [municipio, id_depto, id], (err, result) => {
+      callback(err, result);
+   });
+}
+
+/* =========================
+   BORRAR (LÓGICO)
+========================= */
+function borrarCiudad(id, callback) {
+   const sql = `
+        UPDATE ciudades
+        SET
+            is_deleted = 1,
+            deleted_at = NOW()
+        WHERE id = ?
+    `;
+
+   db.query(sql, [id], (err, result) => {
+      callback(err, result);
+   });
+}
+
+/* =========================
+   ÚLTIMO ID POR DEPTO
+========================= */
+function obtenerUltimoIdPorDepto(id_depto, callback) {
+   const sql = `
+        SELECT MAX(id) AS ultimo_id
+        FROM ciudades
+        WHERE id_depto = ?
+          AND is_deleted = 0
+    `;
+
+   db.query(sql, [id_depto], (err, results) => {
+      callback(err, results);
+   });
+}
+
+module.exports = {
+   listarCiudades,
+   crearCiudad,
+   modificarCiudad,
+   borrarCiudad,
+   obtenerUltimoIdPorDepto
 };
-
-/**
- * OBTENER UNA CIUDAD POR ID
- */
-Ciudades.getById = async function (id) {
-   const [rows] = await db.query(`
-      SELECT * FROM ciudades WHERE id = ?
-   `, [id]);
-
-   return rows[0];
-};
-
-/**
- * CREAR CIUDAD
- */
-Ciudades.create = async function (data) {
-   const { id, municipio, id_depto } = data;
-
-   await db.query(`
-      INSERT INTO ciudades (id, municipio, id_depto)
-      VALUES (?, ?, ?)
-   `, [id, municipio, id_depto]);
-
-   return true;
-};
-
-/**
- * ACTUALIZAR CIUDAD
- */
-Ciudades.update = async function (id, data) {
-   const { municipio, id_depto } = data;
-
-   await db.query(`
-      UPDATE ciudades
-      SET municipio = ?, id_depto = ?
-      WHERE id = ?
-   `, [municipio, id_depto, id]);
-
-   return true;
-};
-
-/**
- * ELIMINAR CIUDAD
- */
-Ciudades.delete = async function (id) {
-   await db.query(`
-      DELETE FROM ciudades WHERE id = ?
-   `, [id]);
-
-   return true;
-};
-
-/**
- * TRAER ULTIMO ID POR DEPARTAMENTO (para lógica de incremento)
- */
-Ciudades.getLastIdByDepto = async function (id_depto) {
-   const [rows] = await db.query(`
-      SELECT MAX(id) AS lastId
-      FROM ciudades
-      WHERE id_depto = ?
-   `, [id_depto]);
-
-   return rows[0]?.lastId || null;
-};
-
-module.exports = Ciudades;
