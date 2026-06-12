@@ -87,7 +87,7 @@ function ultimoId(req, res) {
 }
 
 /* =========================
-   ESTADÍSTICAS CIUDADES (NUEVO)
+   ESTADÍSTICAS CIUDADES
 ========================= */
 function stats(req, res) {
 
