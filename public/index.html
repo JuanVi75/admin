@@ -306,6 +306,8 @@
       let departamentosData = [];
       let ciudadesData = [];
 
+      let currentPageCiudades = 1;
+
       function registrarActividad(texto) {
          document.getElementById("actividad").innerText = texto;
          document.getElementById("actividad-box").innerText = texto;
@@ -436,6 +438,13 @@
             await cargarMetaDepartamentos();
             registrarActividad("Departamentos: actividad ejecutada");
          }
+
+         if (page === 'ciudades') {
+            await cargarCiudades();
+            renderTablaCiudades();
+            await cargarMetaCiudades();
+            registrarActividad("Ciudades: actividad ejecutada");
+         }
       }
 
       async function crear() {
@@ -498,7 +507,7 @@
 
       function renderTablaCiudades() {
 
-         const start = (currentPage - 1) * rowsPerPage;
+         const start = (currentPageCiudades - 1) * rowsPerPage;
          const end = start + rowsPerPage;
 
          const pageData = ciudadesData.slice(start, end);
@@ -524,11 +533,11 @@
 
          pageData.forEach(c => {
             html += `
-         <tr onclick="selectCiudad(${c.id}, '${c.municipio}', ${c.id_depto})">
-            <td>${c.id}</td>
-            <td>${c.municipio}</td>
-            <td>${c.departamento || ''}</td>
-         </tr>`;
+      <tr onclick="selectCiudad(${c.id}, '${c.municipio}', ${c.id_depto})">
+         <td>${c.id}</td>
+         <td>${c.municipio}</td>
+         <td>${c.departamento || ''}</td>
+      </tr>`;
          });
 
          html += `
@@ -537,9 +546,9 @@
          </div>
 
          <div class="pagination">
-            <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
-            <span>Página ${currentPage} / ${totalPages}</span>
-            <button class="page-btn" onclick="nextPage()" ${currentPage >= totalPages ? 'disabled' : ''}>➡</button>
+            <button class="page-btn" onclick="prevPageCiudades()" ${currentPageCiudades === 1 ? 'disabled' : ''}>⬅</button>
+            <span>Página ${currentPageCiudades} / ${totalPages}</span>
+            <button class="page-btn" onclick="nextPageCiudades()" ${currentPageCiudades >= totalPages ? 'disabled' : ''}>➡</button>
          </div>
 
       </div>
@@ -614,11 +623,15 @@
          await cargarMetaCiudades();
       }
 
-      if (page === 'ciudades') {
-         await cargarCiudades();
+      function nextPageCiudades() {
+         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage);
+         if (currentPageCiudades < totalPages) currentPageCiudades++;
          renderTablaCiudades();
-         await cargarMetaCiudades();
-         registrarActividad("Ciudades: actividad ejecutada");
+      }
+
+      function prevPageCiudades() {
+         if (currentPageCiudades > 1) currentPageCiudades--;
+         renderTablaCiudades();
       }
 
       window.onload = async () => {
