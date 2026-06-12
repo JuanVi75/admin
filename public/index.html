@@ -305,8 +305,6 @@
       let currentPage = 1;
       let rowsPerPage = 16;
       let departamentosData = [];
-      let ciudadesData = [];
-      let currentPageCiudades = 1;
    </script>
 
    <script>
@@ -512,11 +510,14 @@
       /*-------------------------------------------
          FUNCIONES CIUDADES
       ---------------------------------------------*/
+
       /* =========================
          VARIABLES
       ========================= */
+      let ciudadesData = [];
       let ciudadesFiltradas = [];
       let filtroDeptoActivo = null;
+      let currentPageCiudades = 1;
 
       /* =========================
          METAS / CARD
@@ -544,32 +545,52 @@
       }
 
       /* =========================
+         CARGAR DEPARTAMENTOS (SELECT)
+      ========================= */
+      async function cargarDepartamentosSelect() {
+         const res = await fetch("/departamentos");
+         const data = await res.json();
+
+         const select = document.getElementById("ciu-depto");
+         if (!select) return;
+
+         select.innerHTML = `<option value="">Seleccione Departamento</option>`;
+
+         data.forEach(d => {
+            select.innerHTML += `<option value="${d.id}">${d.depto}</option>`;
+         });
+      }
+
+      /* =========================
          CARGAR DATA
       ========================= */
       async function cargarCiudades() {
          const res = await fetch("/ciudades");
          ciudadesData = await res.json();
-
          ciudadesFiltradas = ciudadesData;
       }
 
       /* =========================
-         FILTRAR POR DEPARTAMENTO (NUEVO)
+         FILTRO
       ========================= */
       function filtrarPorDepto(id_depto) {
 
-         filtroDeptoActivo = id_depto;
+         filtroDeptoActivo = id_depto || null;
 
-         ciudadesFiltradas = ciudadesData.filter(c =>
-            String(c.id_depto) === String(id_depto)
-         );
+         if (!id_depto) {
+            ciudadesFiltradas = ciudadesData;
+         } else {
+            ciudadesFiltradas = ciudadesData.filter(c =>
+               String(c.id_depto) === String(id_depto)
+            );
+         }
 
          currentPageCiudades = 1;
          renderTablaCiudades();
       }
 
       /* =========================
-         RENDER TABLA (CORREGIDO ORDEN + FILTRO)
+         RENDER TABLA
       ========================= */
       function renderTablaCiudades() {
 
@@ -579,7 +600,6 @@
          const end = start + rowsPerPage;
 
          const pageData = data.slice(start, end);
-
          const totalPages = Math.ceil(data.length / rowsPerPage) || 1;
 
          let html = `
@@ -603,12 +623,13 @@
          pageData.forEach(c => {
 
             const municipio = (c.municipio || '').replace(/'/g, "\\'");
+            const depto = (c.departamento || '');
 
             html += `
       <tr onclick="selectCiudad('${c.id}', '${municipio}', '${c.id_depto}')">
          <td>${c.id}</td>
          <td>${c.municipio}</td>
-         <td>${c.departamento || ''}</td>
+         <td>${depto}</td>
       </tr>`;
          });
 
@@ -628,12 +649,11 @@
       <div class="card">
          <div class="title">FORMULARIO CIUDADES</div>
 
-         <!-- ✔ SELECT DEPARTAMENTO (FALTABA) -->
          <select id="ciu-depto" class="btn" onchange="filtrarPorDepto(this.value)">
-            <option value="">Seleccione Departamento</option>
+            <option value="">Todos los departamentos</option>
          </select>
 
-         <input class="btn" id="ciu-id" placeholder="ID">
+         <input class="btn" id="ciu-id" placeholder="ID" readonly>
          <input class="btn" id="ciu-municipio" placeholder="Municipio">
 
          <div class="form-actions">
@@ -648,6 +668,8 @@
    </div>`;
 
          document.getElementById("panel").innerHTML = html;
+
+         cargarDepartamentosSelect();
       }
 
       /* =========================
@@ -659,10 +681,12 @@
          document.getElementById("ciu-id").value = id;
          document.getElementById("ciu-municipio").value = municipio;
          document.getElementById("ciu-depto").value = id_depto;
+
+         filtroDeptoActivo = id_depto;
       }
 
       /* =========================
-         CREAR (OK)
+         CREAR
       ========================= */
       async function crearCiudad() {
 
@@ -689,21 +713,54 @@
       }
 
       /* =========================
-         LIMPIAR (RESET TOTAL)
+         MODIFICAR
+      ========================= */
+      async function modificarCiudad() {
+
+         const municipio = document.getElementById("ciu-municipio").value;
+         const id_depto = document.getElementById("ciu-depto").value;
+
+         await fetch(`/ciudades/${selectedId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ municipio, id_depto })
+         });
+
+         await cargarCiudades();
+         renderTablaCiudades();
+         await cargarMetaCiudades();
+      }
+
+      /* =========================
+         BORRAR
+      ========================= */
+      async function borrarCiudad() {
+
+         await fetch(`/ciudades/${selectedId}`, {
+            method: "DELETE"
+         });
+
+         await cargarCiudades();
+         renderTablaCiudades();
+         await cargarMetaCiudades();
+      }
+
+      /* =========================
+         LIMPIAR
       ========================= */
       function limpiarCiudad() {
 
          document.getElementById("ciu-id").value = "";
          document.getElementById("ciu-municipio").value = "";
+         document.getElementById("ciu-depto").value = "";
 
          filtroDeptoActivo = null;
          ciudadesFiltradas = ciudadesData;
 
          currentPageCiudades = 1;
+         selectedId = null;
 
          renderTablaCiudades();
-
-         selectedId = null;
       }
 
       /* =========================
