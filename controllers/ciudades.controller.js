@@ -1,5 +1,5 @@
 const Ciudades = require("../model/ciudades.model");
-
+const db = require("../config/db");
 /**
  * LISTAR CIUDADES
  */
