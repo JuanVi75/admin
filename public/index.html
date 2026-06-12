@@ -213,6 +213,27 @@
       <div class="tab" onclick="load('mensajes')">✉ Mensajes</div>
    </div>
 
+   <script>
+      /*-------------------------------------------
+         VARIABLES GLOBALES
+      ---------------------------------------------*/
+      let selectedId = null;
+      let currentPage = 1;
+      let rowsPerPage = 16;
+      let departamentosData = [];
+   </script>
+
+   <script>
+      /*-------------------------------------------
+         FUNCIONES GOLBALES
+      ---------------------------------------------*/
+      window.onload = async () => {
+         load('inicio');
+
+      };
+
+      function renderHome() {
+         document.getElementById("panel").innerHTML = `
    <div class="panel" id="panel">
 
       <div class="grid">
@@ -295,34 +316,13 @@
 
       </div>
 
-   </div>
-
-   <script>
-      /*-------------------------------------------
-         VARIABLES GLOBALES
-      ---------------------------------------------*/
-      let selectedId = null;
-      let currentPage = 1;
-      let rowsPerPage = 16;
-      let departamentosData = [];
-   </script>
-
-   <script>
-      /*-------------------------------------------
-         FUNCIONES GOLBALES
-      ---------------------------------------------*/
-      window.onload = async () => {
-         load('inicio');
-
-      };
-
-      function goHome() {
-         load('inicio');
+   </div>`;
       }
+
 
       async function load(page) {
          if (page === 'inicio') {
-
+            renderHome();
             cargarMetaDepartamentos();
             cargarMetaCiudades();
          }
