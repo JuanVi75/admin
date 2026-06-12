@@ -662,6 +662,13 @@
 
          cargarDepartamentosSelect();
 
+         cargarDepartamentosSelect().then(() => {
+            if (formState.id_depto) {
+               const select = document.getElementById("ciu-depto");
+               if (select) select.value = formState.id_depto;
+            }
+         });
+
          setTimeout(() => {
 
             const idInput = document.getElementById("ciu-id");
@@ -750,31 +757,27 @@
       ========================= */
       async function generarIdCiudad(id_depto_param) {
 
-         const select = document.getElementById("ciu-depto");
+         const id_depto = id_depto_param || document.getElementById("ciu-depto").value;
          const inputId = document.getElementById("ciu-id");
-         const inputDepto = document.getElementById("ciu-id-depto");
-
-         const id_depto = id_depto_param || select?.value;
 
          if (!id_depto) {
             if (inputId) inputId.value = "";
-            if (inputDepto) inputDepto.value = "";
             return;
          }
 
-         // asegurar visibilidad del depto en formulario
-         if (select) select.value = id_depto;
-         if (inputDepto) inputDepto.value = id_depto;
+         // FILTRAR LOCALMENTE (NO BACKEND)
+         const filtradas = ciudadesData.filter(c => String(c.id_depto) === String(id_depto));
 
-         const res = await fetch(`/ciudades/last/${id_depto}`);
-         const data = await res.json();
+         let max = 0;
 
-         let last = Number(data.lastId || 0);
-         let depto = Number(id_depto);
+         filtradas.forEach(c => {
+            const num = parseInt(c.id, 10);
+            if (!isNaN(num) && num > max) {
+               max = num;
+            }
+         });
 
-         let base = depto * 1000;
-
-         let next = last >= base ? last + 1 : base + 1;
+         let next = max + 1;
 
          if (inputId) inputId.value = String(next);
       }
@@ -830,11 +833,29 @@
          const totalPages = Math.ceil(ciudadesFiltradas.length / rowsPerPage) || 1;
          if (currentPageCiudades < totalPages) currentPageCiudades++;
          renderTablaCiudades();
+         restaurarFormularioCiudades();
       }
 
       function prevPageCiudades() {
          if (currentPageCiudades > 1) currentPageCiudades--;
          renderTablaCiudades();
+         restaurarFormularioCiudades();
+      }
+
+      function restaurarFormularioCiudades() {
+
+         const idInput = document.getElementById("ciu-id");
+         const munInput = document.getElementById("ciu-municipio");
+         const deptoSelect = document.getElementById("ciu-depto");
+         const deptoInput = document.getElementById("ciu-id-depto");
+
+         if (formState.id && idInput) idInput.value = formState.id;
+         if (formState.municipio && munInput) munInput.value = formState.municipio;
+
+         if (formState.id_depto) {
+            if (deptoSelect) deptoSelect.value = formState.id_depto;
+            if (deptoInput) deptoInput.value = formState.id_depto;
+         }
       }
 
       /* =========================
