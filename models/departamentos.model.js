@@ -5,10 +5,16 @@ const db = require("../config/db");
 ========================= */
 function listarDepartamentos(callback) {
     const sql = `
-        SELECT * 
-        FROM departamentos 
-        WHERE is_deleted = 0 
-        ORDER BY id ASC
+        SELECT 
+            id,
+            depto,
+            created_at,
+            updated_at,
+            deleted_at,
+            is_deleted
+        FROM departamentos
+        WHERE is_deleted = 0
+        ORDER BY CAST(id AS UNSIGNED) ASC
     `;
 
     db.query(sql, (err, results) => {
@@ -38,6 +44,7 @@ function modificarDepartamento(id, depto, callback) {
         UPDATE departamentos 
         SET depto = ?, updated_at = NOW()
         WHERE id = ?
+          AND is_deleted = 0
     `;
 
     db.query(sql, [depto, id], (err, result) => {
