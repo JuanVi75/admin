@@ -298,21 +298,53 @@
    </div>
 
    <script>
-
+      /*-------------------------------------------
+         VARIABLES GLOBALES Y FUNCIONES AUXILIARES
+      ---------------------------------------------*/
       let selectedId = null;
       let currentPage = 1;
       let rowsPerPage = 16;
-
       let departamentosData = [];
       let ciudadesData = [];
-
       let currentPageCiudades = 1;
+   </script>
+
+   <script>
+      /*-------------------------------------------
+         FUNCIONES GOLBALES
+      ---------------------------------------------*/
+      window.onload = async () => {
+         await cargarMetaDepartamentos();
+         await cargarMetaCiudades();
+      };
 
       function registrarActividad(texto) {
          document.getElementById("actividad").innerText = texto;
          document.getElementById("actividad-box").innerText = texto;
       }
 
+      async function load(page) {
+         if (page === 'inicio') location.reload();
+
+         if (page === 'departamentos') {
+            await cargarDepartamentos();
+            await cargarMetaDepartamentos();
+            registrarActividad("Departamentos: actividad ejecutada");
+         }
+
+         if (page === 'ciudades') {
+            await cargarCiudades();
+            renderTablaCiudades();
+            await cargarMetaCiudades();
+            registrarActividad("Ciudades: actividad ejecutada");
+         }
+      }
+   </script>
+
+   <script>
+      /*-------------------------------------------
+         FUNCIONES DEPARTAMENTOS
+      ---------------------------------------------*/
       async function cargarMetaDepartamentos() {
          const res = await fetch("/departamentos/stats");
          const data = await res.json();
@@ -431,23 +463,6 @@
          document.getElementById("dep-name").value = depto;
       }
 
-      async function load(page) {
-         if (page === 'inicio') location.reload();
-
-         if (page === 'departamentos') {
-            await cargarDepartamentos();
-            await cargarMetaDepartamentos();
-            registrarActividad("Departamentos: actividad ejecutada");
-         }
-
-         if (page === 'ciudades') {
-            await cargarCiudades();
-            renderTablaCiudades();
-            await cargarMetaCiudades();
-            registrarActividad("Ciudades: actividad ejecutada");
-         }
-      }
-
       async function crear() {
          const id = document.getElementById("dep-id").value;
          const depto = document.getElementById("dep-name").value;
@@ -486,35 +501,61 @@
          await cargarMetaDepartamentos();
       }
 
+      function limpiarForm() {
+         document.getElementById("dep-id").value = "";
+         document.getElementById("dep-name").value = "";
+         selectedId = null;
+      }
+   </script>
+
+   <script>
+      /*-------------------------------------------
+         FUNCIONES CIUDADES
+      ---------------------------------------------*/
+
+      /* =========================
+         METAS / CARD
+      ========================= */
       async function cargarMetaCiudades() {
-         const res = await fetch("/ciudades/stats");
-         const data = await res.json();
+         try {
+            const res = await fetch("/ciudades/stats");
+            const data = await res.json();
 
-         document.getElementById("count-ciudades").innerText =
-            "Registros: " + (data.total ?? 0);
+            document.getElementById("count-ciudades").innerText =
+               "Registros: " + (data.total ?? 0);
 
-         document.getElementById("last-update-ciudades").innerText =
-            data.ultima_actualizacion
-               ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
-               : "-";
+            document.getElementById("last-update-ciudades").innerText =
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+                  : "-";
 
-         document.getElementById("inserted-ciudades").innerText = data.ingresados_hoy ?? 0;
-         document.getElementById("updated-ciudades").innerText = data.modificados_hoy ?? 0;
-         document.getElementById("deleted-ciudades").innerText = data.eliminados_hoy ?? 0;
+            document.getElementById("inserted-ciudades").innerText = data.ingresados_hoy ?? 0;
+            document.getElementById("updated-ciudades").innerText = data.modificados_hoy ?? 0;
+            document.getElementById("deleted-ciudades").innerText = data.eliminados_hoy ?? 0;
+
+         } catch (e) {
+            console.log("Error cargando stats ciudades", e);
+         }
       }
 
+      /* =========================
+         CARGAR DATA
+      ========================= */
       async function cargarCiudades() {
          const res = await fetch("/ciudades");
          ciudadesData = await res.json();
       }
 
+      /* =========================
+         RENDER TABLA
+      ========================= */
       function renderTablaCiudades() {
 
          const start = (currentPageCiudades - 1) * rowsPerPage;
          const end = start + rowsPerPage;
 
          const pageData = ciudadesData.slice(start, end);
-         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage);
+         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage) || 1;
 
          let html = `
    <div class="departamentos-layout">
@@ -535,11 +576,15 @@
             <tbody>`;
 
          pageData.forEach(c => {
+
+            const municipio = (c.municipio || '').replace(/'/g, "\\'");
+            const depto = (c.departamento || '');
+
             html += `
-      <tr onclick="selectCiudad(${c.id}, '${c.municipio}', ${c.id_depto})">
+      <tr onclick="selectCiudad('${c.id}', '${municipio}', '${c.id_depto}')">
          <td>${c.id}</td>
          <td>${c.municipio}</td>
-         <td>${c.departamento || ''}</td>
+         <td>${depto}</td>
       </tr>`;
          });
 
@@ -577,6 +622,9 @@
          document.getElementById("panel").innerHTML = html;
       }
 
+      /* =========================
+         SELECT
+      ========================= */
       function selectCiudad(id, municipio, id_depto) {
          selectedId = id;
 
@@ -585,10 +633,23 @@
          document.getElementById("ciu-depto").value = id_depto;
       }
 
+      /* =========================
+         CREAR
+      ========================= */
       async function crearCiudad() {
-         const id = document.getElementById("ciu-id").value;
+
          const municipio = document.getElementById("ciu-municipio").value;
          const id_depto = document.getElementById("ciu-depto").value;
+
+         // 1. obtener último ID del depto
+         const res = await fetch(`/ciudades/last/${id_depto}`);
+         const data = await res.json();
+
+         let last = data.lastId ?? 0;
+         let next = String(parseInt(last) + 1);
+
+         // 2. formato (depto + consecutivo)
+         let id = String(id_depto).padStart(2, "0") + next;
 
          await fetch("/ciudades", {
             method: "POST",
@@ -601,7 +662,11 @@
          await cargarMetaCiudades();
       }
 
+      /* =========================
+         MODIFICAR
+      ========================= */
       async function modificarCiudad() {
+
          const municipio = document.getElementById("ciu-municipio").value;
          const id_depto = document.getElementById("ciu-depto").value;
 
@@ -616,7 +681,11 @@
          await cargarMetaCiudades();
       }
 
+      /* =========================
+         BORRAR
+      ========================= */
       async function borrarCiudad() {
+
          await fetch(`/ciudades/${selectedId}`, {
             method: "DELETE"
          });
@@ -626,8 +695,11 @@
          await cargarMetaCiudades();
       }
 
+      /* =========================
+         PAGINACIÓN
+      ========================= */
       function nextPageCiudades() {
-         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage);
+         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage) || 1;
          if (currentPageCiudades < totalPages) currentPageCiudades++;
          renderTablaCiudades();
       }
@@ -637,24 +709,15 @@
          renderTablaCiudades();
       }
 
-      function limpiarForm() {
-         document.getElementById("dep-id").value = "";
-         document.getElementById("dep-name").value = "";
-         selectedId = null;
-      }
-
+      /* =========================
+         LIMPIAR
+      ========================= */
       function limpiarCiudad() {
          document.getElementById("ciu-id").value = "";
          document.getElementById("ciu-municipio").value = "";
          document.getElementById("ciu-depto").value = "";
          selectedId = null;
       }
-
-      window.onload = async () => {
-         await cargarMetaDepartamentos();
-         await cargarMetaCiudades();
-      };
-
    </script>
 
 </body>
