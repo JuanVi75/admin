@@ -86,10 +86,53 @@ function ultimoId(req, res) {
    });
 }
 
+/* =========================
+   ESTADÍSTICAS CIUDADES (NUEVO)
+========================= */
+function stats(req, res) {
+
+   const sql = `
+      SELECT 
+         COUNT(*) AS total,
+
+         SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
+
+         SUM(CASE 
+            WHEN updated_at IS NOT NULL 
+            AND DATE(updated_at) = CURDATE() 
+            THEN 1 ELSE 0 
+         END) AS modificados_hoy,
+
+         SUM(CASE 
+            WHEN is_deleted = 1 
+            AND DATE(deleted_at) = CURDATE() 
+            THEN 1 ELSE 0 
+         END) AS eliminados_hoy,
+
+         GREATEST(
+            COALESCE(MAX(created_at), '1970-01-01'),
+            COALESCE(MAX(updated_at), '1970-01-01'),
+            COALESCE(MAX(deleted_at), '1970-01-01')
+         ) AS ultima_actualizacion
+
+      FROM ciudades;
+   `;
+
+   db.query(sql, (err, result) => {
+      if (err) {
+         console.log("Error stats ciudades:", err);
+         return res.status(500).json({ error: "Error stats ciudades" });
+      }
+
+      res.json(result[0]);
+   });
+}
+
 module.exports = {
    listar,
    crear,
    modificar,
    borrar,
-   ultimoId
+   ultimoId,
+   stats
 };
