@@ -1,24 +1,36 @@
 const express = require("express");
 const router = express.Router();
 
-const ciudadesController = require("../controller/ciudades.controller");
+const ciudadesController = require("../controllers/ciudades.controller");
 
-// LISTAR
-router.get("/", ciudadesController.getAll);
+/* =========================
+   ULTIMO ID POR DEPTO
+========================= */
+router.get("/last/:id_depto", ciudadesController.ultimoId);
 
-// OBTENER UNA
-router.get("/:id", ciudadesController.getById);
+/* =========================
+   LISTAR
+========================= */
+router.get("/", ciudadesController.listar);
 
-// CREAR
-router.post("/", ciudadesController.create);
+/* =========================
+   OBTENER UNA
+========================= */
+router.get("/:id", ciudadesController.listar);
 
-// ACTUALIZAR
-router.put("/:id", ciudadesController.update);
+/* =========================
+   CREAR
+========================= */
+router.post("/", ciudadesController.crear);
 
-// ELIMINAR
-router.delete("/:id", ciudadesController.delete);
+/* =========================
+   ACTUALIZAR
+========================= */
+router.put("/:id", ciudadesController.modificar);
 
-// ULTIMO ID POR DEPTO
-router.get("/last/:id_depto", ciudadesController.getLastIdByDepto);
+/* =========================
+   ELIMINAR
+========================= */
+router.delete("/:id", ciudadesController.borrar);
 
 module.exports = router;
