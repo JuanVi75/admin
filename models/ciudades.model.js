@@ -6,15 +6,15 @@ const db = require("../config/db");
 function listarCiudades(callback) {
    const sql = `
         SELECT
-            c.id,
+            CAST(c.id AS CHAR) AS id,
             c.municipio,
             c.id_depto,
-            d.depto
+            d.depto AS departamento
         FROM ciudades c
         LEFT JOIN departamentos d
             ON d.id = c.id_depto
         WHERE c.is_deleted = 0
-        ORDER BY c.id ASC
+        ORDER BY CAST(c.id AS CHAR) ASC
     `;
 
    db.query(sql, (err, results) => {
@@ -28,21 +28,8 @@ function listarCiudades(callback) {
 function crearCiudad(id, municipio, id_depto, callback) {
    const sql = `
         INSERT INTO ciudades
-        (
-            id,
-            municipio,
-            id_depto,
-            created_at,
-            is_deleted
-        )
-        VALUES
-        (
-            ?,
-            ?,
-            ?,
-            NOW(),
-            0
-        )
+        (id, municipio, id_depto, created_at, is_deleted)
+        VALUES (?, ?, ?, NOW(), 0)
     `;
 
    db.query(sql, [id, municipio, id_depto], (err, result) => {
@@ -56,10 +43,7 @@ function crearCiudad(id, municipio, id_depto, callback) {
 function modificarCiudad(id, municipio, id_depto, callback) {
    const sql = `
         UPDATE ciudades
-        SET
-            municipio = ?,
-            id_depto = ?,
-            updated_at = NOW()
+        SET municipio = ?, id_depto = ?, updated_at = NOW()
         WHERE id = ?
     `;
 
@@ -74,9 +58,7 @@ function modificarCiudad(id, municipio, id_depto, callback) {
 function borrarCiudad(id, callback) {
    const sql = `
         UPDATE ciudades
-        SET
-            is_deleted = 1,
-            deleted_at = NOW()
+        SET is_deleted = 1, deleted_at = NOW()
         WHERE id = ?
     `;
 
@@ -90,7 +72,7 @@ function borrarCiudad(id, callback) {
 ========================= */
 function obtenerUltimoIdPorDepto(id_depto, callback) {
    const sql = `
-        SELECT MAX(id) AS ultimo_id
+        SELECT MAX(CAST(id AS UNSIGNED)) AS ultimo_id
         FROM ciudades
         WHERE id_depto = ?
           AND is_deleted = 0
