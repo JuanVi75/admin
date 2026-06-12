@@ -321,7 +321,9 @@
             "Registros: " + (data.total ?? 0);
 
          document.getElementById("last-update").innerText =
-            (data.ultima_actualizacion || "-").toString().split("T")[0];
+            (data.ultima_actualizacion || "-").toString().split("T")[0]; data.ultima_actualizacion
+               ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+               : "-";
 
          document.getElementById("inserted").innerText = data.ingresados_hoy ?? 0;
          document.getElementById("updated").innerText = data.modificados_hoy ?? 0;
@@ -493,7 +495,9 @@
             "Registros: " + (data.total ?? 0);
 
          document.getElementById("last-update-ciudades").innerText =
-            (data.ultima_actualizacion || "-").toString().split("T")[0];
+            data.ultima_actualizacion
+               ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+               : "-";
 
          document.getElementById("inserted-ciudades").innerText = data.ingresados_hoy ?? 0;
          document.getElementById("updated-ciudades").innerText = data.modificados_hoy ?? 0;
