@@ -271,30 +271,6 @@
 
       </div>
 
-      <div class="grid">
-
-         <div class="card">
-            <div class="title">Resumen Sistema</div>
-            <div class="small">Panel de control administrativo</div>
-         </div>
-
-         <div class="card">
-            <div class="title">Actividad</div>
-            <div class="small" id="actividad">Sin actividad hoy</div>
-         </div>
-
-         <div class="card">
-            <div class="title">Estado API</div>
-            <div class="small">Conectado</div>
-         </div>
-
-         <div class="card">
-            <div class="title">Base de Datos</div>
-            <div class="small">MySQL activo</div>
-         </div>
-
-      </div>
-
    </div>
 
    <script>
@@ -334,11 +310,6 @@
             await cargarMetaCiudades();
             registrarActividad("Ciudades: actividad ejecutada");
          }
-      }
-
-      function registrarActividad(texto) {
-         document.getElementById("actividad").innerText = texto;
-         document.getElementById("actividad-box").innerText = texto;
       }
 
    </script>
