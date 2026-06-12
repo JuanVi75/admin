@@ -1,79 +1,95 @@
-const Ciudades = require("../model/ciudades.model");
+const Ciudades = require("../models/ciudades.model");
 const db = require("../config/db");
-/**
- * LISTAR CIUDADES
- */
-exports.getAll = async (req, res) => {
-   try {
-      const data = await Ciudades.getAll();
-      res.json(data);
-   } catch (err) {
-      res.status(500).json({ error: "Error listando ciudades" });
-   }
-};
 
-/**
- * OBTENER UNA CIUDAD
- */
-exports.getById = async (req, res) => {
-   try {
-      const data = await Ciudades.getById(req.params.id);
-      res.json(data);
-   } catch (err) {
-      res.status(500).json({ error: "Error obteniendo ciudad" });
-   }
-};
+/* =========================
+   LISTAR
+========================= */
+function listar(req, res) {
+   Ciudades.listarCiudades((err, results) => {
+      if (err) {
+         console.log("Error en controller ciudades:", err);
+         return res.status(500).json({ error: "Error en base de datos" });
+      }
 
-/**
- * CREAR CIUDAD
- */
-exports.create = async (req, res) => {
-   try {
-      const { id, municipio, id_depto } = req.body;
+      res.json(results);
+   });
+}
 
-      await Ciudades.create({ id, municipio, id_depto });
+/* =========================
+   CREAR
+========================= */
+function crear(req, res) {
+
+   const { id, municipio, id_depto } = req.body;
+
+   Ciudades.crearCiudad(id, municipio, id_depto, (err, result) => {
+      if (err) {
+         console.log("Error en controller crear ciudad:", err);
+         return res.status(500).json({ error: "Error al crear ciudad" });
+      }
 
       res.json({ ok: true });
-   } catch (err) {
-      res.status(500).json({ error: "Error creando ciudad" });
-   }
-};
+   });
+}
 
-/**
- * ACTUALIZAR CIUDAD
- */
-exports.update = async (req, res) => {
-   try {
-      await Ciudades.update(req.params.id, req.body);
+/* =========================
+   MODIFICAR
+========================= */
+function modificar(req, res) {
 
-      res.json({ ok: true });
-   } catch (err) {
-      res.status(500).json({ error: "Error actualizando ciudad" });
-   }
-};
+   const id = req.params.id;
+   const { municipio, id_depto } = req.body;
 
-/**
- * ELIMINAR CIUDAD
- */
-exports.delete = async (req, res) => {
-   try {
-      await Ciudades.delete(req.params.id);
+   Ciudades.modificarCiudad(id, municipio, id_depto, (err, result) => {
+      if (err) {
+         console.log("Error en controller modificar ciudad:", err);
+         return res.status(500).json({ error: "Error al modificar ciudad" });
+      }
 
       res.json({ ok: true });
-   } catch (err) {
-      res.status(500).json({ error: "Error eliminando ciudad" });
-   }
-};
+   });
+}
 
-/**
- * OBTENER ULTIMO ID POR DEPTO (para generación automática)
- */
-exports.getLastIdByDepto = async (req, res) => {
-   try {
-      const data = await Ciudades.getLastIdByDepto(req.params.id_depto);
+/* =========================
+   BORRAR
+========================= */
+function borrar(req, res) {
 
-      res.json({ lastId: data });
-   } catch (err) {
-      res.status(500).json({ error: "Error obteniendo último ID" });
-   }
+   const id = req.params.id;
+
+   Ciudades.borrarCiudad(id, (err, result) => {
+      if (err) {
+         console.log("Error en controller borrar ciudad:", err);
+         return res.status(500).json({ error: "Error al borrar ciudad" });
+      }
+
+      res.json({ ok: true });
+   });
+}
+
+/* =========================
+   ULTIMO ID POR DEPTO
+========================= */
+function ultimoId(req, res) {
+
+   const id_depto = req.params.id_depto;
+
+   Ciudades.obtenerUltimoIdPorDepto(id_depto, (err, results) => {
+      if (err) {
+         console.log("Error en controller ultimo id ciudad:", err);
+         return res.status(500).json({ error: "Error obteniendo ultimo id" });
+      }
+
+      const lastId = results?.[0]?.ultimo_id || null;
+
+      res.json({ lastId });
+   });
+}
+
+module.exports = {
+   listar,
+   crear,
+   modificar,
+   borrar,
+   ultimoId
 };
