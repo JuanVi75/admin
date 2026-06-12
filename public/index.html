@@ -299,7 +299,7 @@
 
    <script>
       /*-------------------------------------------
-         VARIABLES GLOBALES Y FUNCIONES AUXILIARES
+         VARIABLES GLOBALES
       ---------------------------------------------*/
       let selectedId = null;
       let currentPage = 1;
@@ -512,6 +512,11 @@
       /*-------------------------------------------
          FUNCIONES CIUDADES
       ---------------------------------------------*/
+      /* =========================
+         VARIABLES
+      ========================= */
+      let ciudadesFiltradas = [];
+      let filtroDeptoActivo = null;
 
       /* =========================
          METAS / CARD
@@ -534,7 +539,7 @@
             document.getElementById("deleted-ciudades").innerText = data.eliminados_hoy ?? 0;
 
          } catch (e) {
-            console.log("Error cargando stats ciudades", e);
+            console.log(e);
          }
       }
 
@@ -544,18 +549,38 @@
       async function cargarCiudades() {
          const res = await fetch("/ciudades");
          ciudadesData = await res.json();
+
+         ciudadesFiltradas = ciudadesData;
       }
 
       /* =========================
-         RENDER TABLA
+         FILTRAR POR DEPARTAMENTO (NUEVO)
+      ========================= */
+      function filtrarPorDepto(id_depto) {
+
+         filtroDeptoActivo = id_depto;
+
+         ciudadesFiltradas = ciudadesData.filter(c =>
+            String(c.id_depto) === String(id_depto)
+         );
+
+         currentPageCiudades = 1;
+         renderTablaCiudades();
+      }
+
+      /* =========================
+         RENDER TABLA (CORREGIDO ORDEN + FILTRO)
       ========================= */
       function renderTablaCiudades() {
+
+         const data = ciudadesFiltradas;
 
          const start = (currentPageCiudades - 1) * rowsPerPage;
          const end = start + rowsPerPage;
 
-         const pageData = ciudadesData.slice(start, end);
-         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage) || 1;
+         const pageData = data.slice(start, end);
+
+         const totalPages = Math.ceil(data.length / rowsPerPage) || 1;
 
          let html = `
    <div class="departamentos-layout">
@@ -578,13 +603,12 @@
          pageData.forEach(c => {
 
             const municipio = (c.municipio || '').replace(/'/g, "\\'");
-            const depto = (c.departamento || '');
 
             html += `
       <tr onclick="selectCiudad('${c.id}', '${municipio}', '${c.id_depto}')">
          <td>${c.id}</td>
          <td>${c.municipio}</td>
-         <td>${depto}</td>
+         <td>${c.departamento || ''}</td>
       </tr>`;
          });
 
@@ -594,9 +618,9 @@
          </div>
 
          <div class="pagination">
-            <button class="page-btn" onclick="prevPageCiudades()" ${currentPageCiudades === 1 ? 'disabled' : ''}>⬅</button>
-            <span>Página ${currentPageCiudades} / ${totalPages}</span>
-            <button class="page-btn" onclick="nextPageCiudades()" ${currentPageCiudades >= totalPages ? 'disabled' : ''}>➡</button>
+            <button onclick="prevPageCiudades()" ${currentPageCiudades === 1 ? 'disabled' : ''}>⬅</button>
+            <span>${currentPageCiudades} / ${totalPages}</span>
+            <button onclick="nextPageCiudades()" ${currentPageCiudades >= totalPages ? 'disabled' : ''}>➡</button>
          </div>
 
       </div>
@@ -604,15 +628,19 @@
       <div class="card">
          <div class="title">FORMULARIO CIUDADES</div>
 
+         <!-- ✔ SELECT DEPARTAMENTO (FALTABA) -->
+         <select id="ciu-depto" class="btn" onchange="filtrarPorDepto(this.value)">
+            <option value="">Seleccione Departamento</option>
+         </select>
+
          <input class="btn" id="ciu-id" placeholder="ID">
          <input class="btn" id="ciu-municipio" placeholder="Municipio">
-         <input class="btn" id="ciu-depto" placeholder="ID Departamento">
 
          <div class="form-actions">
-            <button class="btn primary" onclick="crearCiudad()">Crear</button>
-            <button class="btn warn" onclick="modificarCiudad()">Modificar</button>
-            <button class="btn danger" onclick="borrarCiudad()">Borrar</button>
-            <button class="btn clean" onclick="limpiarCiudad()">Limpiar</button>
+            <button onclick="crearCiudad()" class="btn primary">Crear</button>
+            <button onclick="modificarCiudad()" class="btn warn">Modificar</button>
+            <button onclick="borrarCiudad()" class="btn danger">Borrar</button>
+            <button onclick="limpiarCiudad()" class="btn clean">Limpiar</button>
          </div>
 
       </div>
@@ -634,21 +662,19 @@
       }
 
       /* =========================
-         CREAR
+         CREAR (OK)
       ========================= */
       async function crearCiudad() {
 
          const municipio = document.getElementById("ciu-municipio").value;
          const id_depto = document.getElementById("ciu-depto").value;
 
-         // 1. obtener último ID del depto
          const res = await fetch(`/ciudades/last/${id_depto}`);
          const data = await res.json();
 
          let last = data.lastId ?? 0;
          let next = String(parseInt(last) + 1);
 
-         // 2. formato (depto + consecutivo)
          let id = String(id_depto).padStart(2, "0") + next;
 
          await fetch("/ciudades", {
@@ -663,43 +689,28 @@
       }
 
       /* =========================
-         MODIFICAR
+         LIMPIAR (RESET TOTAL)
       ========================= */
-      async function modificarCiudad() {
+      function limpiarCiudad() {
 
-         const municipio = document.getElementById("ciu-municipio").value;
-         const id_depto = document.getElementById("ciu-depto").value;
+         document.getElementById("ciu-id").value = "";
+         document.getElementById("ciu-municipio").value = "";
 
-         await fetch(`/ciudades/${selectedId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ municipio, id_depto })
-         });
+         filtroDeptoActivo = null;
+         ciudadesFiltradas = ciudadesData;
 
-         await cargarCiudades();
+         currentPageCiudades = 1;
+
          renderTablaCiudades();
-         await cargarMetaCiudades();
-      }
 
-      /* =========================
-         BORRAR
-      ========================= */
-      async function borrarCiudad() {
-
-         await fetch(`/ciudades/${selectedId}`, {
-            method: "DELETE"
-         });
-
-         await cargarCiudades();
-         renderTablaCiudades();
-         await cargarMetaCiudades();
+         selectedId = null;
       }
 
       /* =========================
          PAGINACIÓN
       ========================= */
       function nextPageCiudades() {
-         const totalPages = Math.ceil(ciudadesData.length / rowsPerPage) || 1;
+         const totalPages = Math.ceil(ciudadesFiltradas.length / rowsPerPage) || 1;
          if (currentPageCiudades < totalPages) currentPageCiudades++;
          renderTablaCiudades();
       }
@@ -707,16 +718,6 @@
       function prevPageCiudades() {
          if (currentPageCiudades > 1) currentPageCiudades--;
          renderTablaCiudades();
-      }
-
-      /* =========================
-         LIMPIAR
-      ========================= */
-      function limpiarCiudad() {
-         document.getElementById("ciu-id").value = "";
-         document.getElementById("ciu-municipio").value = "";
-         document.getElementById("ciu-depto").value = "";
-         selectedId = null;
       }
    </script>
 
