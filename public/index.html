@@ -313,18 +313,16 @@
       ---------------------------------------------*/
       window.onload = async () => {
          load('inicio');
-         await cargarMetaDepartamentos();
-         await cargarMetaCiudades();
+
       };
 
-      function registrarActividad(texto) {
-         document.getElementById("actividad").innerText = texto;
-         document.getElementById("actividad-box").innerText = texto;
+      function goHome() {
+         window.location.href = "https://admin.ecopanche.com/";
       }
 
       async function load(page) {
          if (page === 'inicio') {
-            location.reload();
+            goHome();
             cargarMetaDepartamentos();
             cargarMetaCiudades();
          }
@@ -342,6 +340,12 @@
             registrarActividad("Ciudades: actividad ejecutada");
          }
       }
+
+      function registrarActividad(texto) {
+         document.getElementById("actividad").innerText = texto;
+         document.getElementById("actividad-box").innerText = texto;
+      }
+
    </script>
 
    <script>
