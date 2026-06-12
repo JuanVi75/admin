@@ -1,138 +1,92 @@
-const Ciudades = require("../models/ciudades.model");
 const db = require("../config/db");
 
 /* =========================
-   LISTAR
+   LISTAR (solo activos)
 ========================= */
-function listar(req, res) {
-   Ciudades.listarCiudades((err, results) => {
-      if (err) {
-         console.log("Error en controller ciudades:", err);
-         return res.status(500).json({ error: "Error en base de datos" });
-      }
+function listarCiudades(callback) {
+   const sql = `
+        SELECT
+            CAST(c.id AS CHAR) AS id,
+            c.municipio,
+            c.id_depto,
+            d.depto AS departamento
+        FROM ciudades c
+        LEFT JOIN departamentos d
+            ON d.id = c.id_depto
+        WHERE c.is_deleted = 0
+        ORDER BY CAST(c.id AS UNSIGNED) ASC
+    `;
 
-      res.json(results);
+   db.query(sql, (err, results) => {
+      callback(err, results);
    });
 }
 
 /* =========================
    CREAR
 ========================= */
-function crear(req, res) {
+function crearCiudad(id, municipio, id_depto, callback) {
+   const sql = `
+        INSERT INTO ciudades
+        (id, municipio, id_depto, created_at, is_deleted)
+        VALUES (?, ?, ?, NOW(), 0)
+    `;
 
-   const { id, municipio, id_depto } = req.body;
-
-   Ciudades.crearCiudad(id, municipio, id_depto, (err, result) => {
-      if (err) {
-         console.log("Error en controller crear ciudad:", err);
-         return res.status(500).json({ error: "Error al crear ciudad" });
-      }
-
-      res.json({ ok: true });
+   db.query(sql, [id, municipio, id_depto], (err, result) => {
+      callback(err, result);
    });
 }
 
 /* =========================
    MODIFICAR
 ========================= */
-function modificar(req, res) {
-
-   const id = req.params.id;
-   const { municipio, id_depto } = req.body;
-
-   Ciudades.modificarCiudad(id, municipio, id_depto, (err, result) => {
-      if (err) {
-         console.log("Error en controller modificar ciudad:", err);
-         return res.status(500).json({ error: "Error al modificar ciudad" });
-      }
-
-      res.json({ ok: true });
-   });
-}
-
-/* =========================
-   BORRAR
-========================= */
-function borrar(req, res) {
-
-   const id = req.params.id;
-
-   Ciudades.borrarCiudad(id, (err, result) => {
-      if (err) {
-         console.log("Error en controller borrar ciudad:", err);
-         return res.status(500).json({ error: "Error al borrar ciudad" });
-      }
-
-      res.json({ ok: true });
-   });
-}
-
-/* =========================
-   ULTIMO ID POR DEPTO
-========================= */
-function ultimoId(req, res) {
-
-   const id_depto = req.params.id_depto;
-
-   Ciudades.obtenerUltimoIdPorDepto(id_depto, (err, results) => {
-      if (err) {
-         console.log("Error en controller ultimo id ciudad:", err);
-         return res.status(500).json({ error: "Error obteniendo ultimo id" });
-      }
-
-      const lastId = results?.[0]?.ultimo_id || null;
-
-      res.json({ lastId });
-   });
-}
-
-/* =========================
-   ESTADÍSTICAS CIUDADES
-========================= */
-function stats(req, res) {
-
+function modificarCiudad(id, municipio, id_depto, callback) {
    const sql = `
-      SELECT 
-         COUNT(*) AS total,
+        UPDATE ciudades
+        SET municipio = ?, id_depto = ?, updated_at = NOW()
+        WHERE id = ?
+    `;
 
-         SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
+   db.query(sql, [municipio, id_depto, id], (err, result) => {
+      callback(err, result);
+   });
+}
 
-         SUM(CASE 
-            WHEN updated_at IS NOT NULL 
-            AND DATE(updated_at) = CURDATE() 
-            THEN 1 ELSE 0 
-         END) AS modificados_hoy,
+/* =========================
+   BORRAR (LÓGICO)
+========================= */
+function borrarCiudad(id, callback) {
+   const sql = `
+        UPDATE ciudades
+        SET is_deleted = 1, deleted_at = NOW()
+        WHERE id = ?
+    `;
 
-         SUM(CASE 
-            WHEN is_deleted = 1 
-            AND DATE(deleted_at) = CURDATE() 
-            THEN 1 ELSE 0 
-         END) AS eliminados_hoy,
+   db.query(sql, [id], (err, result) => {
+      callback(err, result);
+   });
+}
 
-         GREATEST(
-            COALESCE(MAX(created_at), '1970-01-01'),
-            COALESCE(MAX(updated_at), '1970-01-01'),
-            COALESCE(MAX(deleted_at), '1970-01-01')
-         ) AS ultima_actualizacion
+/* =========================
+   ÚLTIMO ID POR DEPTO
+========================= */
+function obtenerUltimoIdPorDepto(id_depto, callback) {
+   const sql = `
+        SELECT MAX(CAST(id AS UNSIGNED)) AS ultimo_id
+        FROM ciudades
+        WHERE id_depto = ?
+          AND is_deleted = 0
+    `;
 
-      FROM ciudades;
-   `;
-
-   db.query(sql, (err, result) => {
-      if (err) {
-         console.log("Error stats ciudades:", err);
-         return res.status(500).json({ error: "Error stats ciudades" });
-      }
-
-      res.json(result[0]);
+   db.query(sql, [id_depto], (err, results) => {
+      callback(err, results);
    });
 }
 
 module.exports = {
-   listar,
-   crear,
-   modificar,
-   borrar,
-   ultimoId,
-   stats
+   listarCiudades,
+   crearCiudad,
+   modificarCiudad,
+   borrarCiudad,
+   obtenerUltimoIdPorDepto
 };
