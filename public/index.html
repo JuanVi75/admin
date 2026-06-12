@@ -576,7 +576,7 @@
          renderTablaCiudades();
 
          // FIX: asegurar que la card cargue datos reales también
-         cargarMetaCiudades();
+         await cargarMetaCiudades();
       }
 
       /* =========================
@@ -881,6 +881,23 @@
 
          if (actual) select.value = actual;
       }
+
+      function restaurarCardCiudades() {
+
+         const idInput = document.getElementById("ciu-id");
+         const munInput = document.getElementById("ciu-municipio");
+         const deptoSelect = document.getElementById("ciu-depto");
+         const deptoInput = document.getElementById("ciu-id-depto");
+
+         if (formState.id && idInput) idInput.value = formState.id;
+         if (formState.municipio && munInput) munInput.value = formState.municipio;
+
+         if (formState.id_depto) {
+            if (deptoSelect) deptoSelect.value = formState.id_depto;
+            if (deptoInput) deptoInput.value = formState.id_depto;
+         }
+      }
+
    </script>
 
 </body>
