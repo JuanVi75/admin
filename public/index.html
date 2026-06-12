@@ -317,12 +317,12 @@
       };
 
       function goHome() {
-         window.location.href = "https://admin.ecopanche.com/";
+         load('inicio');
       }
 
       async function load(page) {
          if (page === 'inicio') {
-            goHome();
+
             cargarMetaDepartamentos();
             cargarMetaCiudades();
          }
