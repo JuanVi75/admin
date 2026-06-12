@@ -634,6 +634,19 @@
          renderTablaCiudades();
       }
 
+      function limpiarForm() {
+         document.getElementById("dep-id").value = "";
+         document.getElementById("dep-name").value = "";
+         selectedId = null;
+      }
+
+      function limpiarCiudad() {
+         document.getElementById("ciu-id").value = "";
+         document.getElementById("ciu-municipio").value = "";
+         document.getElementById("ciu-depto").value = "";
+         selectedId = null;
+      }
+
       window.onload = async () => {
          await cargarMetaDepartamentos();
          await cargarMetaCiudades();
