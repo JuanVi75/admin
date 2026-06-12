@@ -536,17 +536,25 @@
             const res = await fetch("/ciudades/stats");
             const data = await res.json();
 
-            document.getElementById("count-ciudades").innerText =
-               "Registros: " + (data.total ?? 0);
+            const count = document.getElementById("count-ciudades");
+            const last = document.getElementById("last-update-ciudades");
+            const ins = document.getElementById("inserted-ciudades");
+            const upd = document.getElementById("updated-ciudades");
+            const del = document.getElementById("deleted-ciudades");
 
-            document.getElementById("last-update-ciudades").innerText =
-               data.ultima_actualizacion
-                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+            if (count) count.innerText = "Registros: " + (data.total ?? 0);
+
+            if (last) {
+               const fecha = data.ultima_actualizacion;
+
+               last.innerText = fecha
+                  ? new Date(fecha).toISOString().split("T")[0]
                   : "-";
+            }
 
-            document.getElementById("inserted-ciudades").innerText = data.ingresados_hoy ?? 0;
-            document.getElementById("updated-ciudades").innerText = data.modificados_hoy ?? 0;
-            document.getElementById("deleted-ciudades").innerText = data.eliminados_hoy ?? 0;
+            if (ins) ins.innerText = data.ingresados_hoy ?? 0;
+            if (upd) upd.innerText = data.modificados_hoy ?? 0;
+            if (del) del.innerText = data.eliminados_hoy ?? 0;
 
          } catch (e) {
             console.log(e);
@@ -560,9 +568,15 @@
          const res = await fetch("/ciudades");
          ciudadesData = await res.json();
 
-         ciudadesFiltradas = [...ciudadesData]; // FIX referencia estable
+         ciudadesFiltradas = [...ciudadesData];
 
-         renderTablaCiudades(); // FIX: asegurar carga visual inicial
+         currentPageCiudades = 1;
+         filtroDeptoActivo = null;
+
+         renderTablaCiudades();
+
+         // FIX: asegurar que la card cargue datos reales también
+         cargarMetaCiudades();
       }
 
       /* =========================
@@ -662,12 +676,12 @@
                if (deptoSelect) deptoSelect.value = formState.id_depto;
                if (deptoInput) deptoInput.value = formState.id_depto;
 
-               // 🔥 CRÍTICO: regenerar ID después del render
                generarIdCiudad(formState.id_depto);
             }
 
          }, 0);
       }
+
       /* =========================
          SELECT CIUDAD (FIX SELECCIÓN + PERSISTENCIA)
       ========================= */
@@ -685,10 +699,19 @@
          if (idInput) idInput.value = id;
          if (munInput) munInput.value = municipio;
 
-         if (deptoSelect) deptoSelect.value = id_depto;
-         if (deptoInput) deptoInput.value = id_depto;
+         if (deptoSelect) {
+            deptoSelect.value = id_depto;
+         }
+
+         if (deptoInput) {
+            deptoInput.value = id_depto;
+         }
 
          filtroDeptoActivo = id_depto;
+
+         if (id_depto) {
+            generarIdCiudad(id_depto);
+         }
       }
 
       /* =========================
@@ -700,15 +723,24 @@
 
          ciudadesFiltradas = id_depto
             ? ciudadesData.filter(c => String(c.id_depto) === String(id_depto))
-            : ciudadesData;
+            : [...ciudadesData];
 
          currentPageCiudades = 1;
 
-         // solo estado, no DOM directo
          formState.id_depto = id_depto || "";
 
-         // generar ID basado en parámetro real
-         generarIdCiudad(id_depto);
+         const select = document.getElementById("ciu-depto");
+         if (select) select.value = id_depto || "";
+
+         const depInput = document.getElementById("ciu-id-depto");
+         if (depInput) depInput.value = id_depto || "";
+
+         if (id_depto) {
+            generarIdCiudad(id_depto);
+         } else {
+            const inputId = document.getElementById("ciu-id");
+            if (inputId) inputId.value = "";
+         }
 
          renderTablaCiudades();
       }
@@ -718,13 +750,21 @@
       ========================= */
       async function generarIdCiudad(id_depto_param) {
 
-         const id_depto = id_depto_param || document.getElementById("ciu-depto").value;
+         const select = document.getElementById("ciu-depto");
          const inputId = document.getElementById("ciu-id");
+         const inputDepto = document.getElementById("ciu-id-depto");
+
+         const id_depto = id_depto_param || select?.value;
 
          if (!id_depto) {
             if (inputId) inputId.value = "";
+            if (inputDepto) inputDepto.value = "";
             return;
          }
+
+         // asegurar visibilidad del depto en formulario
+         if (select) select.value = id_depto;
+         if (inputDepto) inputDepto.value = id_depto;
 
          const res = await fetch(`/ciudades/last/${id_depto}`);
          const data = await res.json();
