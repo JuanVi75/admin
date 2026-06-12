@@ -313,8 +313,8 @@
       ---------------------------------------------*/
       window.onload = async () => {
          load('inicio');
-         // await cargarMetaDepartamentos();
-         //await cargarMetaCiudades();
+         await cargarMetaDepartamentos();
+         await cargarMetaCiudades();
       };
 
       function registrarActividad(texto) {
@@ -324,10 +324,11 @@
 
       async function load(page) {
          if (page === 'inicio') {
+            location.reload();
             cargarMetaDepartamentos();
             cargarMetaCiudades();
-            return;
          }
+
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
