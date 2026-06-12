@@ -706,19 +706,13 @@
          if (idInput) idInput.value = id;
          if (munInput) munInput.value = municipio;
 
-         if (deptoSelect) {
-            deptoSelect.value = id_depto;
-         }
-
-         if (deptoInput) {
-            deptoInput.value = id_depto;
-         }
+         if (deptoSelect) deptoSelect.value = id_depto;
+         if (deptoInput) deptoInput.value = id_depto;
 
          filtroDeptoActivo = id_depto;
 
-         if (id_depto) {
-            generarIdCiudad(id_depto);
-         }
+         // 🔥 IMPORTANTE: NO regenerar ID aquí porque estás EDITANDO
+         // el ID ya existente debe mantenerse intacto
       }
 
       /* =========================
@@ -765,7 +759,7 @@
             return;
          }
 
-         // FILTRAR LOCALMENTE (NO BACKEND)
+         // filtrar SOLO del departamento seleccionado
          const filtradas = ciudadesData.filter(c => String(c.id_depto) === String(id_depto));
 
          let max = 0;
