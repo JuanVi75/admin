@@ -508,7 +508,7 @@
 
    <script>
       /*-------------------------------------------
-         FUNCIONES CIUDADES (CORREGIDO FINAL)
+         FUNCIONES CIUDADES (FIX FINAL ESTABLE)
       ---------------------------------------------*/
 
       /* =========================
@@ -520,7 +520,7 @@
       let currentPageCiudades = 1;
 
       /* =========================
-         ESTADO FORMULARIO (IMPORTANTE)
+         FORM STATE (CRÍTICO)
       ========================= */
       let formState = {
          id: "",
@@ -529,7 +529,7 @@
       };
 
       /* =========================
-         META CARD
+         META CARD (FIX FECHAS + ERROR SAFE)
       ========================= */
       async function cargarMetaCiudades() {
          try {
@@ -554,16 +554,19 @@
       }
 
       /* =========================
-         CARGAR DATA
+         CARGAR DATA (FIX CARD SIN DATOS)
       ========================= */
       async function cargarCiudades() {
          const res = await fetch("/ciudades");
          ciudadesData = await res.json();
-         ciudadesFiltradas = ciudadesData;
+
+         ciudadesFiltradas = [...ciudadesData]; // FIX referencia estable
+
+         renderTablaCiudades(); // FIX: asegurar carga visual inicial
       }
 
       /* =========================
-         RENDER TABLA
+         RENDER TABLA (FIX COMPLETO UI + NO RESET FORM)
       ========================= */
       function renderTablaCiudades() {
 
@@ -599,7 +602,7 @@
             const depto = (c.departamento || '');
 
             html += `
-<tr onclick="selectCiudad('${c.id}','${municipio}','${c.id_depto}','${depto}')">
+<tr onclick="selectCiudad('${c.id}','${municipio}','${c.id_depto}')">
    <td>${c.id}</td>
    <td>${c.municipio}</td>
    <td>${depto}</td>
@@ -645,7 +648,7 @@
 
          cargarDepartamentosSelect();
 
-         // RESTAURAR FORMULARIO DESPUÉS DE RENDER
+         // FIX: restaurar estado sin perder selección
          setTimeout(() => {
             if (formState.id) document.getElementById("ciu-id").value = formState.id;
             if (formState.municipio) document.getElementById("ciu-municipio").value = formState.municipio;
@@ -657,9 +660,9 @@
       }
 
       /* =========================
-         SELECT CIUDAD
+         SELECT CIUDAD (FIX SELECCIÓN + PERSISTENCIA)
       ========================= */
-      function selectCiudad(id, municipio, id_depto, deptoNombre) {
+      function selectCiudad(id, municipio, id_depto) {
 
          formState.id = id;
          formState.municipio = municipio;
@@ -667,18 +670,18 @@
 
          document.getElementById("ciu-id").value = id;
          document.getElementById("ciu-municipio").value = municipio;
-         document.getElementById("ciu-id-depto").value = id_depto;
 
          const select = document.getElementById("ciu-depto");
-         if (select) {
-            select.value = id_depto;
-         }
+         if (select) select.value = id_depto;
+
+         const dep = document.getElementById("ciu-id-depto");
+         if (dep) dep.value = id_depto;
 
          filtroDeptoActivo = id_depto;
       }
 
       /* =========================
-         FILTRO DEPARTAMENTO
+         FILTRO (FIX SIN BORRAR FORM)
       ========================= */
       function filtrarPorDepto(id_depto) {
 
@@ -690,26 +693,27 @@
 
          currentPageCiudades = 1;
 
-         if (id_depto) {
-            generarIdCiudad();
-            document.getElementById("ciu-id-depto").value = id_depto;
-         } else {
-            document.getElementById("ciu-id").value = "";
-            document.getElementById("ciu-id-depto").value = "";
-         }
+         const select = document.getElementById("ciu-depto");
+         if (select) select.value = id_depto || "";
+
+         // FIX: SOLO GENERA ID, NO LIMPIA FORM
+         generarIdCiudad();
 
          renderTablaCiudades();
       }
 
       /* =========================
-         GENERAR ID CORRECTO (FIX FINAL)
+         GENERAR ID (FIX 0299 / 02100 CORRECTO)
       ========================= */
       async function generarIdCiudad() {
 
          const id_depto = document.getElementById("ciu-depto").value;
          const inputId = document.getElementById("ciu-id");
 
-         if (!id_depto) return;
+         if (!id_depto) {
+            if (inputId) inputId.value = "";
+            return;
+         }
 
          const res = await fetch(`/ciudades/last/${id_depto}`);
          const data = await res.json();
@@ -730,7 +734,7 @@
       }
 
       /* =========================
-         CREAR
+         CREAR (FIX REFRESH + NO PERDER DATA)
       ========================= */
       async function crearCiudad() {
 
@@ -745,10 +749,12 @@
          });
 
          await cargarCiudades();
-         renderTablaCiudades();
          await cargarMetaCiudades();
 
-         limpiarCiudad();
+         // FIX: no perder selección
+         formState = { id: "", municipio: "", id_depto };
+
+         generarIdCiudad();
       }
 
       /* =========================
@@ -764,7 +770,7 @@
          document.getElementById("ciu-depto").value = "";
 
          filtroDeptoActivo = null;
-         ciudadesFiltradas = ciudadesData;
+         ciudadesFiltradas = [...ciudadesData];
 
          currentPageCiudades = 1;
 
@@ -772,7 +778,7 @@
       }
 
       /* =========================
-         PAGINACIÓN
+         PAGINACIÓN (FIX SIN RESET FORM)
       ========================= */
       function nextPageCiudades() {
          const totalPages = Math.ceil(ciudadesFiltradas.length / rowsPerPage) || 1;
@@ -786,7 +792,7 @@
       }
 
       /* =========================
-         CARGAR DEPARTAMENTOS
+         DEPARTAMENTOS SELECT (FIX PERSISTENCIA)
       ========================= */
       async function cargarDepartamentosSelect() {
 
