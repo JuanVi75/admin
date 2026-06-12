@@ -508,7 +508,7 @@
 
    <script>
       /*-------------------------------------------
-         FUNCIONES CIUDADES
+         FUNCIONES CIUDADES (CORREGIDO)
       ---------------------------------------------*/
 
       /* =========================
@@ -518,7 +518,6 @@
       let ciudadesFiltradas = [];
       let filtroDeptoActivo = null;
       let currentPageCiudades = 1;
-
 
       /* =========================
          META CARD
@@ -555,28 +554,7 @@
       }
 
       /* =========================
-         DEPARTAMENTOS SELECT
-      ========================= */
-      async function cargarDepartamentosSelect() {
-         const res = await fetch("/departamentos");
-         const data = await res.json();
-
-         const select = document.getElementById("ciu-depto");
-         if (!select) return;
-
-         const actual = select.value;
-
-         select.innerHTML = `<option value="">Seleccione Departamento</option>`;
-
-         data.forEach(d => {
-            select.innerHTML += `<option value="${d.id}">${d.depto}</option>`;
-         });
-
-         if (actual) select.value = actual;
-      }
-
-      /* =========================
-         FILTRO
+         FILTRO DEPARTAMENTO
       ========================= */
       function filtrarPorDepto(id_depto) {
 
@@ -592,17 +570,15 @@
          currentPageCiudades = 1;
 
          generarIdCiudad();
-
          renderTablaCiudades();
       }
 
       /* =========================
-         GENERAR ID CORRECTO
+         GENERAR ID CORRECTO (FIX REAL)
       ========================= */
       async function generarIdCiudad() {
 
          const id_depto = document.getElementById("ciu-depto").value;
-
          const inputId = document.getElementById("ciu-id");
 
          if (!id_depto) {
@@ -613,7 +589,7 @@
          const res = await fetch(`/ciudades/last/${id_depto}`);
          const data = await res.json();
 
-         let last = data.lastId ?? 0;
+         let last = data.lastId ?? "0";
 
          let base = String(id_depto).padStart(2, "0");
 
@@ -625,9 +601,7 @@
 
          let next = String(Number(lastNum) + 1).padStart(3, "0");
 
-         let id = base + next;
-
-         inputId.value = id;
+         inputId.value = base + next;
       }
 
       /* =========================
@@ -696,7 +670,7 @@
 
       <input class="btn" id="ciu-id" placeholder="ID" readonly>
 
-      <!-- 🔥 AHORA SÍ EXISTE VISUALMENTE -->
+      <!-- FIX: ID DEPTO visible -->
       <input class="btn" id="ciu-id-depto" placeholder="ID Departamento" readonly>
 
       <input class="btn" id="ciu-municipio" placeholder="Municipio">
@@ -718,7 +692,7 @@
       }
 
       /* =========================
-         SELECT CIUDAD
+         SELECT CIUDAD (FIX COMPLETO)
       ========================= */
       function selectCiudad(id, municipio, id_depto) {
 
@@ -737,7 +711,7 @@
       }
 
       /* =========================
-         CREAR
+         CREAR (FIX ID SECUENCIA)
       ========================= */
       async function crearCiudad() {
 
@@ -759,7 +733,7 @@
       }
 
       /* =========================
-         LIMPIAR
+         LIMPIAR (FIX COMPLETO)
       ========================= */
       function limpiarCiudad() {
 
@@ -793,6 +767,27 @@
       function prevPageCiudades() {
          if (currentPageCiudades > 1) currentPageCiudades--;
          renderTablaCiudades();
+      }
+
+      /* =========================
+         CARGAR SELECT DEPARTAMENTOS
+      ========================= */
+      async function cargarDepartamentosSelect() {
+         const res = await fetch("/departamentos");
+         const data = await res.json();
+
+         const select = document.getElementById("ciu-depto");
+         if (!select) return;
+
+         const actual = select.value;
+
+         select.innerHTML = `<option value="">Seleccione Departamento</option>`;
+
+         data.forEach(d => {
+            select.innerHTML += `<option value="${d.id}">${d.depto}</option>`;
+         });
+
+         if (actual) select.value = actual;
       }
    </script>
 
