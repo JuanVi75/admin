@@ -90,7 +90,11 @@ function stats(req, res) {
                 THEN 1 ELSE 0 
             END) AS eliminados_hoy,
 
-            MAX(created_at) AS ultima_actualizacion
+            GREATEST(
+                COALESCE(MAX(created_at), '1970-01-01'),
+                COALESCE(MAX(updated_at), '1970-01-01'),
+                COALESCE(MAX(deleted_at), '1970-01-01')
+            ) AS ultima_actualizacion
 
         FROM departamentos;
     `;
