@@ -14,7 +14,7 @@ function listarCiudades(callback) {
         LEFT JOIN departamentos d
             ON d.id = c.id_depto
         WHERE c.is_deleted = 0
-        ORDER BY CAST(c.id AS CHAR) ASC
+        ORDER BY CAST(c.id AS UNSIGNED) ASC
     `;
 
    db.query(sql, (err, results) => {
