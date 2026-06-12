@@ -508,7 +508,7 @@
 
    <script>
       /*-------------------------------------------
-         CIUDADES - FIX FINAL REAL (ESTABLE)
+         FUNCIONES CIUDADES (FIX FINAL ESTABLE)
       ---------------------------------------------*/
 
       /* =========================
@@ -520,7 +520,7 @@
       let currentPageCiudades = 1;
 
       /* =========================
-         FORM STATE (NO PÉRDIDA UI)
+         FORM STATE (CRÍTICO)
       ========================= */
       let formState = {
          id: "",
@@ -529,20 +529,7 @@
       };
 
       /* =========================
-         CARGAR DATA + CARD
-      ========================= */
-      async function cargarCiudades() {
-         const res = await fetch("/ciudades");
-         ciudadesData = await res.json();
-
-         ciudadesFiltradas = [...ciudadesData];
-
-         renderTablaCiudades();
-         cargarMetaCiudades();
-      }
-
-      /* =========================
-         STATS CARD (FIX BACKEND SAFE)
+         META CARD (FIX FECHAS + ERROR SAFE)
       ========================= */
       async function cargarMetaCiudades() {
          try {
@@ -552,12 +539,14 @@
             document.getElementById("count-ciudades").innerText =
                "Registros: " + (data.total ?? 0);
 
+            document.getElementById("last-update-ciudades").innerText =
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+                  : "-";
+
             document.getElementById("inserted-ciudades").innerText = data.ingresados_hoy ?? 0;
             document.getElementById("updated-ciudades").innerText = data.modificados_hoy ?? 0;
             document.getElementById("deleted-ciudades").innerText = data.eliminados_hoy ?? 0;
-
-            document.getElementById("last-update-ciudades").innerText =
-               data.ultima_actualizacion ? data.ultima_actualizacion.split("T")[0] : "-";
 
          } catch (e) {
             console.log(e);
@@ -565,20 +554,35 @@
       }
 
       /* =========================
-         RENDER TABLA
+         CARGAR DATA (FIX CARD SIN DATOS)
+      ========================= */
+      async function cargarCiudades() {
+         const res = await fetch("/ciudades");
+         ciudadesData = await res.json();
+
+         ciudadesFiltradas = [...ciudadesData]; // FIX referencia estable
+
+         renderTablaCiudades(); // FIX: asegurar carga visual inicial
+      }
+
+      /* =========================
+         RENDER TABLA (FIX COMPLETO UI + NO RESET FORM)
       ========================= */
       function renderTablaCiudades() {
+
+         const data = ciudadesFiltradas;
 
          const start = (currentPageCiudades - 1) * rowsPerPage;
          const end = start + rowsPerPage;
 
-         const pageData = ciudadesFiltradas.slice(start, end);
-         const totalPages = Math.ceil(ciudadesFiltradas.length / rowsPerPage) || 1;
+         const pageData = data.slice(start, end);
+         const totalPages = Math.ceil(data.length / rowsPerPage) || 1;
 
          let html = `
 <div class="departamentos-layout">
 
    <div class="table-container">
+
       <div class="title">CIUDADES</div>
 
       <div class="table-wrapper">
@@ -595,12 +599,13 @@
          pageData.forEach(c => {
 
             const municipio = (c.municipio || '').replace(/'/g, "\\'");
+            const depto = (c.departamento || '');
 
             html += `
 <tr onclick="selectCiudad('${c.id}','${municipio}','${c.id_depto}')">
    <td>${c.id}</td>
    <td>${c.municipio}</td>
-   <td>${c.departamento || ''}</td>
+   <td>${depto}</td>
 </tr>`;
          });
 
@@ -620,16 +625,21 @@
    <div class="card">
       <div class="title">FORMULARIO CIUDADES</div>
 
-      <select id="ciu-depto" onchange="filtrarPorDepto(this.value)">
+      <select id="ciu-depto" class="btn" onchange="filtrarPorDepto(this.value)">
          <option value="">Seleccione Departamento</option>
       </select>
 
-      <input id="ciu-id" placeholder="ID" readonly>
-      <input id="ciu-id-depto" placeholder="ID DEPTO" readonly>
-      <input id="ciu-municipio" placeholder="Municipio">
+      <input class="btn" id="ciu-id" placeholder="ID" readonly>
+      <input class="btn" id="ciu-id-depto" placeholder="ID Departamento" readonly>
+      <input class="btn" id="ciu-municipio" placeholder="Municipio">
 
-      <button onclick="crearCiudad()">Crear</button>
-      <button onclick="limpiarCiudad()">Limpiar</button>
+      <div class="form-actions">
+         <button onclick="crearCiudad()" class="btn primary">Crear</button>
+         <button onclick="modificarCiudad()" class="btn warn">Modificar</button>
+         <button onclick="borrarCiudad()" class="btn danger">Borrar</button>
+         <button onclick="limpiarCiudad()" class="btn clean">Limpiar</button>
+      </div>
+
    </div>
 
 </div>`;
@@ -638,19 +648,28 @@
 
          cargarDepartamentosSelect();
 
-         // RESTAURAR FORM
          setTimeout(() => {
-            if (formState.id) document.getElementById("ciu-id").value = formState.id;
-            if (formState.municipio) document.getElementById("ciu-municipio").value = formState.municipio;
+
+            const idInput = document.getElementById("ciu-id");
+            const munInput = document.getElementById("ciu-municipio");
+            const deptoSelect = document.getElementById("ciu-depto");
+            const deptoInput = document.getElementById("ciu-id-depto");
+
+            if (formState.id && idInput) idInput.value = formState.id;
+            if (formState.municipio && munInput) munInput.value = formState.municipio;
+
             if (formState.id_depto) {
-               document.getElementById("ciu-depto").value = formState.id_depto;
-               document.getElementById("ciu-id-depto").value = formState.id_depto;
+               if (deptoSelect) deptoSelect.value = formState.id_depto;
+               if (deptoInput) deptoInput.value = formState.id_depto;
+
+               // 🔥 CRÍTICO: regenerar ID después del render
+               generarIdCiudad(formState.id_depto);
             }
+
          }, 0);
       }
-
       /* =========================
-         SELECT CIUDAD
+         SELECT CIUDAD (FIX SELECCIÓN + PERSISTENCIA)
       ========================= */
       function selectCiudad(id, municipio, id_depto) {
 
@@ -658,17 +677,22 @@
          formState.municipio = municipio;
          formState.id_depto = id_depto;
 
-         document.getElementById("ciu-id").value = id;
-         document.getElementById("ciu-municipio").value = municipio;
-         document.getElementById("ciu-id-depto").value = id_depto;
+         const idInput = document.getElementById("ciu-id");
+         const munInput = document.getElementById("ciu-municipio");
+         const deptoSelect = document.getElementById("ciu-depto");
+         const deptoInput = document.getElementById("ciu-id-depto");
 
-         document.getElementById("ciu-depto").value = id_depto;
+         if (idInput) idInput.value = id;
+         if (munInput) munInput.value = municipio;
+
+         if (deptoSelect) deptoSelect.value = id_depto;
+         if (deptoInput) deptoInput.value = id_depto;
 
          filtroDeptoActivo = id_depto;
       }
 
       /* =========================
-         FILTRO + GENERADOR ID REAL
+         FILTRO (FIX SIN BORRAR FORM)
       ========================= */
       function filtrarPorDepto(id_depto) {
 
@@ -680,23 +704,25 @@
 
          currentPageCiudades = 1;
 
-         document.getElementById("ciu-id-depto").value = id_depto || "";
+         // solo estado, no DOM directo
+         formState.id_depto = id_depto || "";
 
-         generarIdCiudad();
+         // generar ID basado en parámetro real
+         generarIdCiudad(id_depto);
 
          renderTablaCiudades();
       }
 
       /* =========================
-         GENERADOR ID (CORRECTO REAL 02XXX / 02100+)
+         GENERAR ID (FIX 0299 / 02100 CORRECTO)
       ========================= */
-      async function generarIdCiudad() {
+      async function generarIdCiudad(id_depto_param) {
 
-         const id_depto = document.getElementById("ciu-depto").value;
+         const id_depto = id_depto_param || document.getElementById("ciu-depto").value;
          const inputId = document.getElementById("ciu-id");
 
          if (!id_depto) {
-            inputId.value = "";
+            if (inputId) inputId.value = "";
             return;
          }
 
@@ -704,22 +730,23 @@
          const data = await res.json();
 
          let last = Number(data.lastId || 0);
+         let depto = Number(id_depto);
 
-         let base = Number(id_depto) * 1000;
+         let base = depto * 1000;
 
          let next = last >= base ? last + 1 : base + 1;
 
-         inputId.value = String(next);
+         if (inputId) inputId.value = String(next);
       }
 
       /* =========================
-         CREAR
+         CREAR (FIX REFRESH + NO PERDER DATA)
       ========================= */
       async function crearCiudad() {
 
-         const id = document.getElementById("ciu-id").value;
          const municipio = document.getElementById("ciu-municipio").value;
          const id_depto = document.getElementById("ciu-depto").value;
+         const id = document.getElementById("ciu-id").value;
 
          await fetch("/ciudades", {
             method: "POST",
@@ -730,13 +757,14 @@
          await cargarCiudades();
          await cargarMetaCiudades();
 
-         formState = { id: "", municipio: "", id_depto: "" };
+         // FIX: no perder selección
+         formState = { id: "", municipio: "", id_depto };
 
          generarIdCiudad();
       }
 
       /* =========================
-         LIMPIAR
+         LIMPIAR (ÚNICO RESET REAL)
       ========================= */
       function limpiarCiudad() {
 
@@ -756,7 +784,7 @@
       }
 
       /* =========================
-         PAGINACIÓN
+         PAGINACIÓN (FIX SIN RESET FORM)
       ========================= */
       function nextPageCiudades() {
          const totalPages = Math.ceil(ciudadesFiltradas.length / rowsPerPage) || 1;
@@ -770,7 +798,7 @@
       }
 
       /* =========================
-         DEPARTAMENTOS
+         DEPARTAMENTOS SELECT (FIX PERSISTENCIA)
       ========================= */
       async function cargarDepartamentosSelect() {
 
@@ -778,6 +806,7 @@
          const data = await res.json();
 
          const select = document.getElementById("ciu-depto");
+         if (!select) return;
 
          const actual = select.value;
 
