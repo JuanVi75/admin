@@ -519,8 +519,9 @@
       let filtroDeptoActivo = null;
       let currentPageCiudades = 1;
 
+
       /* =========================
-         METAS / CARD
+         META CARD
       ========================= */
       async function cargarMetaCiudades() {
          try {
@@ -545,7 +546,7 @@
       }
 
       /* =========================
-         CARGAR DEPARTAMENTOS (SELECT)
+         DEPARTAMENTOS SELECT
       ========================= */
       async function cargarDepartamentosSelect() {
          const res = await fetch("/departamentos");
@@ -554,7 +555,7 @@
          const select = document.getElementById("ciu-depto");
          if (!select) return;
 
-         const currentValue = select.value;
+         const actual = select.value;
 
          select.innerHTML = `<option value="">Seleccione Departamento</option>`;
 
@@ -562,12 +563,12 @@
             select.innerHTML += `<option value="${d.id}">${d.depto}</option>`;
          });
 
-         // mantener selección si existe
-         if (currentValue) select.value = currentValue;
+         // 🔥 RESTAURA SELECCIÓN VISUAL
+         if (actual) select.value = actual;
       }
 
       /* =========================
-         CARGAR DATA
+         CARGAR CIUDADES
       ========================= */
       async function cargarCiudades() {
          const res = await fetch("/ciudades");
@@ -576,18 +577,49 @@
       }
 
       /* =========================
-         FILTRO
+         FILTRO + SELECCIÓN DE DEPTO
       ========================= */
       function filtrarPorDepto(id_depto) {
 
          filtroDeptoActivo = id_depto || null;
+
+         // 🔥 IMPORTANTE: mantener selección en UI
+         const select = document.getElementById("ciu-depto");
+         if (select) select.value = id_depto || "";
 
          ciudadesFiltradas = id_depto
             ? ciudadesData.filter(c => String(c.id_depto) === String(id_depto))
             : ciudadesData;
 
          currentPageCiudades = 1;
+
+         // 🔥 GENERA ID AUTOMÁTICAMENTE AL CAMBIAR DEPTO
+         generarIdCiudad();
+
          renderTablaCiudades();
+      }
+
+      /* =========================
+         GENERAR ID CIUDAD (CORRECTO)
+      ========================= */
+      async function generarIdCiudad() {
+
+         const id_depto = document.getElementById("ciu-depto").value;
+         if (!id_depto) {
+            document.getElementById("ciu-id").value = "";
+            return;
+         }
+
+         const res = await fetch(`/ciudades/last/${id_depto}`);
+         const data = await res.json();
+
+         let last = data.lastId ?? 0;
+         let next = String(Number(last) + 1);
+
+         let id = String(id_depto).padStart(2, "0") + next;
+
+         // 🔥 ESTO ES LO QUE TE FALTABA
+         document.getElementById("ciu-id").value = id;
       }
 
       /* =========================
@@ -627,11 +659,11 @@
             const depto = (c.departamento || '');
 
             html += `
-   <tr onclick="selectCiudad('${c.id}', '${municipio}', '${c.id_depto}')">
-      <td>${c.id}</td>
-      <td>${c.municipio}</td>
-      <td>${depto}</td>
-   </tr>`;
+<tr onclick="selectCiudad('${c.id}','${municipio}','${c.id_depto}')">
+   <td>${c.id}</td>
+   <td>${c.municipio}</td>
+   <td>${depto}</td>
+</tr>`;
          });
 
          html += `
@@ -651,13 +683,11 @@
       <div class="title">FORMULARIO CIUDADES</div>
 
       <select id="ciu-depto" class="btn"
-              onchange="filtrarPorDepto(this.value); limpiarSoloCampos(); cargarIdDepto()">
-         <option value="">Todos los departamentos</option>
+              onchange="filtrarPorDepto(this.value)">
+         <option value="">Seleccione Departamento</option>
       </select>
 
-      <!-- ID visible pero NO editable -->
       <input class="btn" id="ciu-id" placeholder="ID" readonly>
-
       <input class="btn" id="ciu-municipio" placeholder="Municipio">
 
       <div class="form-actions">
@@ -677,24 +707,18 @@
       }
 
       /* =========================
-         SELECT
+         SELECT CIUDAD
       ========================= */
       function selectCiudad(id, municipio, id_depto) {
          selectedId = id;
 
          document.getElementById("ciu-id").value = id;
          document.getElementById("ciu-municipio").value = municipio;
+
+         // 🔥 ESTO ES LO QUE TE FALTABA
          document.getElementById("ciu-depto").value = id_depto;
 
          filtroDeptoActivo = id_depto;
-      }
-
-      /* =========================
-         GENERAR ID DEPTO EN INPUT
-      ========================= */
-      function cargarIdDepto() {
-         const id_depto = document.getElementById("ciu-depto").value;
-         // queda visible el código del depto si quieres extenderlo luego
       }
 
       /* =========================
@@ -704,14 +728,7 @@
 
          const municipio = document.getElementById("ciu-municipio").value;
          const id_depto = document.getElementById("ciu-depto").value;
-
-         const res = await fetch(`/ciudades/last/${id_depto}`);
-         const data = await res.json();
-
-         let last = data.lastId ?? 0;
-         let next = String(parseInt(last) + 1);
-
-         let id = String(id_depto).padStart(2, "0") + next;
+         const id = document.getElementById("ciu-id").value;
 
          await fetch("/ciudades", {
             method: "POST",
@@ -722,51 +739,14 @@
          await cargarCiudades();
          renderTablaCiudades();
          await cargarMetaCiudades();
-      }
 
-      /* =========================
-         MODIFICAR
-      ========================= */
-      async function modificarCiudad() {
-
-         const municipio = document.getElementById("ciu-municipio").value;
-         const id_depto = document.getElementById("ciu-depto").value;
-
-         await fetch(`/ciudades/${selectedId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ municipio, id_depto })
-         });
-
-         await cargarCiudades();
-         renderTablaCiudades();
-         await cargarMetaCiudades();
-      }
-
-      /* =========================
-         BORRAR
-      ========================= */
-      async function borrarCiudad() {
-
-         await fetch(`/ciudades/${selectedId}`, {
-            method: "DELETE"
-         });
-
-         await cargarCiudades();
-         renderTablaCiudades();
-         await cargarMetaCiudades();
+         // 🔥 REFRESCA ID DESPUÉS DE CREAR
+         generarIdCiudad();
       }
 
       /* =========================
          LIMPIAR
       ========================= */
-      function limpiarSoloCampos() {
-         document.getElementById("ciu-id").value = "";
-         document.getElementById("ciu-municipio").value = "";
-         selectedId = null;
-      }
-
-      /* reset total */
       function limpiarCiudad() {
 
          document.getElementById("ciu-id").value = "";
