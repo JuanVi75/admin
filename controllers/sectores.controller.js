@@ -1,105 +1,90 @@
-const SectoresModel = require('../models/sectores.model');
+const Sectores = require("../models/sectores.model");
 
-const SectoresController = {
-
-   async getAll(req, res) {
-      try {
-
-         const data = await SectoresModel.getAll();
-
-         res.json(data);
-
-      } catch (error) {
-
-         console.error(error);
-         res.status(500).json({
-            error: 'Error obteniendo sectores'
-         });
-
+/* =========================
+   LISTAR
+========================= */
+function listar(req, res) {
+   Sectores.listarSectores((err, results) => {
+      if (err) {
+         console.log("Error sectores listar:", err);
+         return res.status(500).json({ error: "Error en base de datos" });
       }
-   },
 
-   async create(req, res) {
-      try {
+      res.json(results);
+   });
+}
 
-         const result = await SectoresModel.create(req.body);
+/* =========================
+   CREAR
+========================= */
+function crear(req, res) {
 
-         res.json({
-            success: true,
-            result
-         });
+   const { sector, subcategoria } = req.body;
 
-      } catch (error) {
-
-         console.error(error);
-         res.status(500).json({
-            error: 'Error creando sector'
-         });
-
+   Sectores.crearSector(sector, subcategoria, (err, result) => {
+      if (err) {
+         console.log("Error crear sector:", err);
+         return res.status(500).json({ error: "Error al crear sector" });
       }
-   },
 
-   async update(req, res) {
-      try {
+      res.json({ ok: true });
+   });
+}
 
-         const { id } = req.params;
+/* =========================
+   MODIFICAR
+========================= */
+function modificar(req, res) {
 
-         const result = await SectoresModel.update(id, req.body);
+   const id = req.params.id;
+   const { sector, subcategoria } = req.body;
 
-         res.json({
-            success: true,
-            result
-         });
-
-      } catch (error) {
-
-         console.error(error);
-         res.status(500).json({
-            error: 'Error modificando sector'
-         });
-
+   Sectores.modificarSector(id, sector, subcategoria, (err, result) => {
+      if (err) {
+         console.log("Error modificar sector:", err);
+         return res.status(500).json({ error: "Error al modificar sector" });
       }
-   },
 
-   async delete(req, res) {
-      try {
+      res.json({ ok: true });
+   });
+}
 
-         const { id } = req.params;
+/* =========================
+   BORRAR
+========================= */
+function borrar(req, res) {
 
-         const result = await SectoresModel.delete(id);
+   const id = req.params.id;
 
-         res.json({
-            success: true,
-            result
-         });
-
-      } catch (error) {
-
-         console.error(error);
-         res.status(500).json({
-            error: 'Error eliminando sector'
-         });
-
+   Sectores.borrarSector(id, (err, result) => {
+      if (err) {
+         console.log("Error borrar sector:", err);
+         return res.status(500).json({ error: "Error al borrar sector" });
       }
-   },
 
-   async stats(req, res) {
-      try {
+      res.json({ ok: true });
+   });
+}
 
-         const data = await SectoresModel.stats();
+/* =========================
+   STATS
+========================= */
+function stats(req, res) {
 
-         res.json(data);
-
-      } catch (error) {
-
-         console.error(error);
-         res.status(500).json({
-            error: 'Error obteniendo estadísticas'
-         });
-
+   Sectores.stats((err, result) => {
+      if (err) {
+         console.log("Error stats sectores:", err);
+         return res.status(500).json({ error: "Error stats sectores" });
       }
-   }
 
+      res.json(result);
+   });
+}
+
+module.exports = {
+   listar,
+   crear,
+   modificar,
+   borrar,
+   stats
 };
-
-module.exports = SectoresController;
