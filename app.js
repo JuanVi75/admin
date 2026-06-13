@@ -13,9 +13,11 @@ app.use(express.static(path.join(__dirname, "public")));
 /* ROUTES */
 const departamentosRoutes = require("./routes/departamentos.routes");
 const ciudadesRoutes = require("./routes/ciudades.routes");
+const sectoresRoutes = require("./routes/sectores.routes");
 
 app.use("/departamentos", departamentosRoutes);
 app.use("/ciudades", ciudadesRoutes);
+app.use("/sectores", sectoresRoutes);
 
 /* HOME */
 app.get("/", (req, res) => {
