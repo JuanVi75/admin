@@ -14,7 +14,7 @@ function listar(req, res) {
             is_deleted
         FROM sectores
         WHERE is_deleted = 0
-        ORDER BY subcategoria ASC, sector ASC
+        ORDER BY sector ASC, subcategoria ASC
     `;
 
    db.query(sql, (err, results) => {
