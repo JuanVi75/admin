@@ -117,42 +117,28 @@ function stats(req, res) {
 
    const sql = `
         SELECT 
-            COUNT(*) AS total,
-
-            SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
-
-            SUM(CASE 
-                WHEN updated_at IS NOT NULL 
-                AND DATE(updated_at) = CURDATE() 
-                THEN 1 ELSE 0 
-            END) AS modificados_hoy,
-
-            SUM(CASE 
-                WHEN is_deleted = 1 
-                AND DATE(deleted_at) = CURDATE() 
-                THEN 1 ELSE 0 
-            END) AS eliminados_hoy,
-
-            GREATEST(
-                COALESCE(MAX(created_at), '1970-01-01'),
-                COALESCE(MAX(updated_at), '1970-01-01'),
-                COALESCE(MAX(deleted_at), '1970-01-01')
-            ) AS ultima_actualizacion
-
+            COUNT(*) AS total
         FROM sectores
-        WHERE is_deleted = 0;
+        WHERE is_deleted = 0
     `;
 
    db.query(sql, (err, result) => {
 
       if (err) {
-         console.log("Error stats sectores:", err);
-         return res.status(500).json({ error: "Error stats sectores" });
+         console.log("ERROR REAL STATS SECTORES:", err);
+         return res.status(500).json({ error: err.message });
       }
 
-      res.json(result[0]);
+      res.json({
+         total: result[0].total || 0,
+         ingresados_hoy: 0,
+         modificados_hoy: 0,
+         eliminados_hoy: 0,
+         ultima_actualizacion: null
+      });
    });
 }
+
 
 module.exports = {
    listar,
