@@ -1,10 +1,11 @@
-const db = require('../config/db');
+const db = require("../config/db");
 
-const SectoresModel = {
-
-   async getAll() {
-      const [rows] = await db.query(`
-         SELECT
+/* =========================
+   LISTAR
+========================= */
+function listarSectores(callback) {
+    const sql = `
+        SELECT 
             id,
             sector,
             subcategoria,
@@ -12,105 +13,101 @@ const SectoresModel = {
             updated_at,
             deleted_at,
             is_deleted
-         FROM sectores
-         WHERE is_deleted = 0
-         ORDER BY subcategoria ASC, sector ASC
-      `);
+        FROM sectores
+        WHERE is_deleted = 0
+        ORDER BY subcategoria ASC, sector ASC
+    `;
 
-      return rows;
-   },
+    db.query(sql, (err, results) => {
+        callback(err, results);
+    });
+}
 
-   async create(data) {
+/* =========================
+   CREAR
+========================= */
+function crearSector(sector, subcategoria, callback) {
+    const sql = `
+        INSERT INTO sectores (sector, subcategoria, created_at, is_deleted)
+        VALUES (?, ?, NOW(), 0)
+    `;
 
-      const { sector, subcategoria } = data;
+    db.query(sql, [sector, subcategoria], (err, result) => {
+        callback(err, result);
+    });
+}
 
-      const [result] = await db.query(`
-         INSERT INTO sectores (
-            sector,
-            subcategoria,
-            created_at,
-            updated_at,
-            is_deleted
-         )
-         VALUES (?, ?, NOW(), NOW(), 0)
-      `, [sector, subcategoria]);
+/* =========================
+   MODIFICAR
+========================= */
+function modificarSector(id, sector, subcategoria, callback) {
+    const sql = `
+        UPDATE sectores 
+        SET sector = ?, subcategoria = ?, updated_at = NOW()
+        WHERE id = ?
+          AND is_deleted = 0
+    `;
 
-      return result;
-   },
+    db.query(sql, [sector, subcategoria, id], (err, result) => {
+        callback(err, result);
+    });
+}
 
-   async update(id, data) {
+/* =========================
+   BORRAR (LÓGICO)
+========================= */
+function borrarSector(id, callback) {
+    const sql = `
+        UPDATE sectores 
+        SET is_deleted = 1, deleted_at = NOW()
+        WHERE id = ?
+    `;
 
-      const { sector, subcategoria } = data;
+    db.query(sql, [id], (err, result) => {
+        callback(err, result);
+    });
+}
 
-      const [result] = await db.query(`
-         UPDATE sectores
-         SET sector = ?, subcategoria = ?, updated_at = NOW()
-         WHERE id = ?
-           AND is_deleted = 0
-      `, [sector, subcategoria, id]);
+/* =========================
+   ESTADÍSTICAS
+========================= */
+function stats(callback) {
+    const sql = `
+        SELECT 
+            COUNT(*) AS total,
 
-      return result;
-   },
+            SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
 
-   async delete(id) {
+            SUM(CASE 
+                WHEN updated_at IS NOT NULL 
+                AND DATE(updated_at) = CURDATE() 
+                THEN 1 ELSE 0 
+            END) AS modificados_hoy,
 
-      const [result] = await db.query(`
-         UPDATE sectores
-         SET is_deleted = 1,
-             deleted_at = NOW()
-         WHERE id = ?
-      `, [id]);
+            SUM(CASE 
+                WHEN is_deleted = 1 
+                AND DATE(deleted_at) = CURDATE() 
+                THEN 1 ELSE 0 
+            END) AS eliminados_hoy,
 
-      return result;
-   },
+            GREATEST(
+                COALESCE(MAX(created_at), '1970-01-01'),
+                COALESCE(MAX(updated_at), '1970-01-01'),
+                COALESCE(MAX(deleted_at), '1970-01-01')
+            ) AS ultima_actualizacion
 
-   async stats() {
+        FROM sectores;
+    `;
 
-      const [[total]] = await db.query(`
-      SELECT COUNT(*) total
-      FROM sectores
-      WHERE is_deleted = 0
-   `);
+    db.query(sql, (err, result) => {
+        callback(err, result[0]);
+    });
+}
 
-      const [[ingresados]] = await db.query(`
-      SELECT COUNT(*) ingresados_hoy
-      FROM sectores
-      WHERE is_deleted = 0
-        AND created_at IS NOT NULL
-        AND DATE(created_at) = CURDATE()
-   `);
-
-      const [[modificados]] = await db.query(`
-      SELECT COUNT(*) modificados_hoy
-      FROM sectores
-      WHERE is_deleted = 0
-        AND updated_at IS NOT NULL
-        AND DATE(updated_at) = CURDATE()
-   `);
-
-      const [[eliminados]] = await db.query(`
-      SELECT COUNT(*) eliminados_hoy
-      FROM sectores
-      WHERE is_deleted = 1
-        AND deleted_at IS NOT NULL
-        AND DATE(deleted_at) = CURDATE()
-   `);
-
-      const [[ultima]] = await db.query(`
-      SELECT MAX(updated_at) ultima_actualizacion
-      FROM sectores
-      WHERE is_deleted = 0
-   `);
-
-      return {
-         total: total.total || 0,
-         ingresados_hoy: ingresados.ingresados_hoy || 0,
-         modificados_hoy: modificados.modificados_hoy || 0,
-         eliminados_hoy: eliminados.eliminados_hoy || 0,
-         ultima_actualizacion: ultima.ultima_actualizacion || null
-      };
-   }
-
+module.exports = {
+    listarSectores,
+    crearSector,
+    modificarSector,
+    borrarSector,
+    stats
 };
-
-module.exports = SectoresModel;
