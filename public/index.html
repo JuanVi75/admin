@@ -897,7 +897,7 @@
       /* =========================
          VARIABLES
       ========================= */
-      let sectoresData = [];
+      let sectoresData = sectoresData || [];
       let currentPageSectores = 1;
       let selectedSectorId = null;
       let filtroSector = "";
@@ -970,15 +970,18 @@
          RENDER TABLA SECTORES
       ========================= */
 
+      function filtrarSectores(valor) {
+         filtroSector = valor || "";
+         currentPageSectores = 1;
+         renderTablaSectores();
+      }
 
       function renderTablaSectores() {
 
          let dataFiltrada = sectoresData;
 
-         /* =========================
-            FILTRO POR SECTOR
-         ========================= */
-         if (filtroSector && filtroSector !== "") {
+         /* FILTRO */
+         if (filtroSector.trim() !== "") {
             dataFiltrada = sectoresData.filter(s =>
                (s.sector || "")
                   .toLowerCase()
@@ -1001,10 +1004,10 @@
 
       <div class="title">SECTORES</div>
 
-      <!-- FILTRO -->
+      <!-- FILTRO REAL -->
       <input
          class="btn"
-         placeholder="Filtrar por sector..."
+         placeholder="Filtrar por sector"
          value="${filtroSector}"
          oninput="filtrarSectores(this.value)"
       >
@@ -1023,11 +1026,8 @@
 
          pageData.forEach(s => {
 
-            const sector =
-               (s.sector || '').replace(/'/g, "\\'");
-
-            const subcategoria =
-               (s.subcategoria || '').replace(/'/g, "\\'");
+            const sector = (s.sector || '').replace(/'/g, "\\'");
+            const subcategoria = (s.subcategoria || '').replace(/'/g, "\\'");
 
             html += `
 <tr onclick="selectSector('${s.id}','${sector}','${subcategoria}')">
@@ -1044,19 +1044,13 @@
 
       <div class="pagination">
 
-         <button
-            onclick="prevPageSectores()"
-            ${currentPageSectores === 1 ? 'disabled' : ''}>
+         <button onclick="prevPageSectores()" ${currentPageSectores === 1 ? 'disabled' : ''}>
             ⬅
          </button>
 
-         <span>
-            ${currentPageSectores} / ${totalPages}
-         </span>
+         <span>${currentPageSectores} / ${totalPages}</span>
 
-         <button
-            onclick="nextPageSectores()"
-            ${currentPageSectores >= totalPages ? 'disabled' : ''}>
+         <button onclick="nextPageSectores()" ${currentPageSectores >= totalPages ? 'disabled' : ''}>
             ➡
          </button>
 
@@ -1066,39 +1060,17 @@
 
    <div class="card">
 
-      <div class="title">
-         FORMULARIO SECTORES
-      </div>
+      <div class="title">FORMULARIO SECTORES</div>
 
-      <!-- YA NO HAY ID -->
-
-      <input
-         class="btn"
-         id="sector-nombre"
-         placeholder="Sector">
-
-      <input
-         class="btn"
-         id="sector-subcategoria"
-         placeholder="Subcategoría">
+      <input class="btn" id="sector-nombre" placeholder="Sector">
+      <input class="btn" id="sector-subcategoria" placeholder="Subcategoría">
 
       <div class="form-actions">
 
-         <button onclick="crearSector()" class="btn primary">
-            Crear
-         </button>
-
-         <button onclick="modificarSector()" class="btn warn">
-            Modificar
-         </button>
-
-         <button onclick="borrarSector()" class="btn danger">
-            Borrar
-         </button>
-
-         <button onclick="limpiarSector()" class="btn clean">
-            Limpiar
-         </button>
+         <button onclick="crearSector()" class="btn primary">Crear</button>
+         <button onclick="modificarSector()" class="btn warn">Modificar</button>
+         <button onclick="borrarSector()" class="btn danger">Borrar</button>
+         <button onclick="limpiarSector()" class="btn clean">Limpiar</button>
 
       </div>
 
