@@ -1,119 +1,139 @@
 const db = require("../config/db");
 
-/* =========================
-   LISTAR
-========================= */
-function listarSectores(callback) {
+/* LISTAR */
+function listar(req, res) {
    const sql = `
-      SELECT 
-         id,
-         sector,
-         subcategoria,
-         created_at,
-         updated_at,
-         deleted_at,
-         is_deleted
-      FROM sectores
-      WHERE is_deleted = 0
-      ORDER BY subcategoria ASC, sector ASC
-   `;
+        SELECT 
+            id,
+            sector,
+            subcategoria,
+            created_at,
+            updated_at,
+            deleted_at,
+            is_deleted
+        FROM sectores
+        WHERE is_deleted = 0
+        ORDER BY subcategoria ASC, sector ASC
+    `;
 
    db.query(sql, (err, results) => {
-      callback(err, results);
+      if (err) {
+         console.log("Error listar sectores:", err);
+         return res.status(500).json({ error: "Error en base de datos" });
+      }
+
+      res.json(results);
    });
 }
 
-/* =========================
-   CREAR
-========================= */
-function crearSector(sector, subcategoria, callback) {
+/* CREAR */
+function crear(req, res) {
+
+   const { sector, subcategoria } = req.body;
+
    const sql = `
-      INSERT INTO sectores (sector, subcategoria, created_at, is_deleted)
-      VALUES (?, ?, NOW(), 0)
-   `;
+        INSERT INTO sectores (sector, subcategoria, created_at, is_deleted)
+        VALUES (?, ?, NOW(), 0)
+    `;
 
    db.query(sql, [sector, subcategoria], (err, result) => {
-      callback(err, result);
+      if (err) {
+         console.log("Error crear sectores:", err);
+         return res.status(500).json({ error: "Error al crear sector" });
+      }
+
+      res.json({ ok: true });
    });
 }
 
-/* =========================
-   MODIFICAR
-========================= */
-function modificarSector(id, sector, subcategoria, callback) {
+/* MODIFICAR */
+function modificar(req, res) {
+
+   const id = req.params.id;
+   const { sector, subcategoria } = req.body;
+
    const sql = `
-      UPDATE sectores 
-      SET sector = ?, subcategoria = ?, updated_at = NOW()
-      WHERE id = ?
-      AND is_deleted = 0
-   `;
+        UPDATE sectores 
+        SET sector = ?, subcategoria = ?, updated_at = NOW()
+        WHERE id = ?
+        AND is_deleted = 0
+    `;
 
    db.query(sql, [sector, subcategoria, id], (err, result) => {
-      callback(err, result);
+      if (err) {
+         console.log("Error modificar sectores:", err);
+         return res.status(500).json({ error: "Error al modificar sector" });
+      }
+
+      res.json({ ok: true });
    });
 }
 
-/* =========================
-   BORRAR
-========================= */
-function borrarSector(id, callback) {
+/* ELIMINAR */
+function borrar(req, res) {
+
+   const id = req.params.id;
+
    const sql = `
-      UPDATE sectores 
-      SET is_deleted = 1, deleted_at = NOW()
-      WHERE id = ?
-   `;
+        UPDATE sectores 
+        SET is_deleted = 1, deleted_at = NOW()
+        WHERE id = ?
+    `;
 
    db.query(sql, [id], (err, result) => {
-      callback(err, result);
+      if (err) {
+         console.log("Error borrar sectores:", err);
+         return res.status(500).json({ error: "Error al borrar sector" });
+      }
+
+      res.json({ ok: true });
    });
 }
 
-/* =========================
-   ESTADÍSTICAS
-========================= */
-function stats(callback) {
+/* STATS */
+function stats(req, res) {
+
    const sql = `
-      SELECT 
-         COUNT(*) AS total,
+        SELECT 
+            COUNT(*) AS total,
 
-         SUM(CASE 
-            WHEN created_at IS NOT NULL 
-            AND DATE(created_at) = CURDATE() 
-            THEN 1 ELSE 0 
-         END) AS ingresados_hoy,
+            SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
 
-         SUM(CASE 
-            WHEN updated_at IS NOT NULL 
-            AND DATE(updated_at) = CURDATE() 
-            THEN 1 ELSE 0 
-         END) AS modificados_hoy,
+            SUM(CASE 
+                WHEN updated_at IS NOT NULL 
+                AND DATE(updated_at) = CURDATE() 
+                THEN 1 ELSE 0 
+            END) AS modificados_hoy,
 
-         SUM(CASE 
-            WHEN is_deleted = 1 
-            AND deleted_at IS NOT NULL 
-            AND DATE(deleted_at) = CURDATE() 
-            THEN 1 ELSE 0 
-         END) AS eliminados_hoy,
+            SUM(CASE 
+                WHEN is_deleted = 1 
+                AND DATE(deleted_at) = CURDATE() 
+                THEN 1 ELSE 0 
+            END) AS eliminados_hoy,
 
-         MAX(updated_at) AS ultima_actualizacion
+            GREATEST(
+                COALESCE(MAX(created_at), '1970-01-01'),
+                COALESCE(MAX(updated_at), '1970-01-01'),
+                COALESCE(MAX(deleted_at), '1970-01-01')
+            ) AS ultima_actualizacion
 
-      FROM sectores
-   `;
+        FROM sectores;
+    `;
 
    db.query(sql, (err, result) => {
       if (err) {
-         console.log("ERROR STATS SECTORES:", err);
-         return callback(err);
+         console.log("Error stats sectores:", err);
+         return res.status(500).json({ error: "Error stats" });
       }
 
-      callback(null, result[0]);
+      res.json(result[0]);
    });
 }
 
 module.exports = {
-   listarSectores,
-   crearSector,
-   modificarSector,
-   borrarSector,
+   listar,
+   crear,
+   modificar,
+   borrar,
    stats
 };
