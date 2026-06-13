@@ -4,7 +4,7 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>CRM WEB - CONFIG</title>
+   <title>⚙ CRM WEB - CONFIG</title>
 
    <style>
       body {
@@ -317,8 +317,10 @@
          }
 
          if (page === 'sectores') {
-            cargarMetaSectores();
-            cargarSectores();
+            await cargarSectores();
+            renderTablaSectores();
+            await cargarMetaSectores();
+
          }
 
       }
@@ -898,6 +900,7 @@
       let sectoresData = [];
       let currentPageSectores = 1;
       let selectedSectorId = null;
+      let filtroSector = "";
 
       /* =========================
          META CARD
@@ -964,17 +967,32 @@
       }
 
       /* =========================
-   RENDER TABLA SECTORES
-========================= */
+         RENDER TABLA SECTORES
+      ========================= */
+
+
       function renderTablaSectores() {
+
+         let dataFiltrada = sectoresData;
+
+         /* =========================
+            FILTRO POR SECTOR
+         ========================= */
+         if (filtroSector && filtroSector !== "") {
+            dataFiltrada = sectoresData.filter(s =>
+               (s.sector || "")
+                  .toLowerCase()
+                  .includes(filtroSector.toLowerCase())
+            );
+         }
 
          const start = (currentPageSectores - 1) * rowsPerPage;
          const end = start + rowsPerPage;
 
-         const pageData = sectoresData.slice(start, end);
+         const pageData = dataFiltrada.slice(start, end);
 
          const totalPages =
-            Math.ceil(sectoresData.length / rowsPerPage) || 1;
+            Math.ceil(dataFiltrada.length / rowsPerPage) || 1;
 
          let html = `
 <div class="departamentos-layout">
@@ -982,6 +1000,14 @@
    <div class="table-container">
 
       <div class="title">SECTORES</div>
+
+      <!-- FILTRO -->
+      <input
+         class="btn"
+         placeholder="Filtrar por sector..."
+         value="${filtroSector}"
+         oninput="filtrarSectores(this.value)"
+      >
 
       <div class="table-wrapper">
       <table>
@@ -1044,11 +1070,7 @@
          FORMULARIO SECTORES
       </div>
 
-      <input
-         class="btn"
-         id="sector-id"
-         placeholder="ID"
-         readonly>
+      <!-- YA NO HAY ID -->
 
       <input
          class="btn"
@@ -1062,27 +1084,19 @@
 
       <div class="form-actions">
 
-         <button
-            onclick="crearSector()"
-            class="btn primary">
+         <button onclick="crearSector()" class="btn primary">
             Crear
          </button>
 
-         <button
-            onclick="modificarSector()"
-            class="btn warn">
+         <button onclick="modificarSector()" class="btn warn">
             Modificar
          </button>
 
-         <button
-            onclick="borrarSector()"
-            class="btn danger">
+         <button onclick="borrarSector()" class="btn danger">
             Borrar
          </button>
 
-         <button
-            onclick="limpiarSector()"
-            class="btn clean">
+         <button onclick="limpiarSector()" class="btn clean">
             Limpiar
          </button>
 
@@ -1093,7 +1107,6 @@
 </div>`;
 
          document.getElementById("panel").innerHTML = html;
-
       }
 
       /* =========================
