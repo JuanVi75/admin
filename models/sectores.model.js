@@ -67,37 +67,40 @@ const SectoresModel = {
    async stats() {
 
       const [[total]] = await db.query(`
-         SELECT COUNT(*) total
-         FROM sectores
-         WHERE is_deleted = 0
-      `);
+      SELECT COUNT(*) total
+      FROM sectores
+      WHERE is_deleted = 0
+   `);
 
       const [[ingresados]] = await db.query(`
-         SELECT COUNT(*) ingresados_hoy
-         FROM sectores
-         WHERE DATE(created_at) = CURDATE()
-           AND is_deleted = 0
-      `);
+      SELECT COUNT(*) ingresados_hoy
+      FROM sectores
+      WHERE is_deleted = 0
+        AND created_at IS NOT NULL
+        AND DATE(created_at) = CURDATE()
+   `);
 
       const [[modificados]] = await db.query(`
-         SELECT COUNT(*) modificados_hoy
-         FROM sectores
-         WHERE DATE(updated_at) = CURDATE()
-           AND is_deleted = 0
-      `);
+      SELECT COUNT(*) modificados_hoy
+      FROM sectores
+      WHERE is_deleted = 0
+        AND updated_at IS NOT NULL
+        AND DATE(updated_at) = CURDATE()
+   `);
 
       const [[eliminados]] = await db.query(`
-         SELECT COUNT(*) eliminados_hoy
-         FROM sectores
-         WHERE DATE(deleted_at) = CURDATE()
-           AND is_deleted = 1
-      `);
+      SELECT COUNT(*) eliminados_hoy
+      FROM sectores
+      WHERE is_deleted = 1
+        AND deleted_at IS NOT NULL
+        AND DATE(deleted_at) = CURDATE()
+   `);
 
       const [[ultima]] = await db.query(`
-         SELECT MAX(updated_at) AS ultima_actualizacion
-         FROM sectores
-         WHERE is_deleted = 0
-      `);
+      SELECT MAX(updated_at) ultima_actualizacion
+      FROM sectores
+      WHERE is_deleted = 0
+   `);
 
       return {
          total: total.total || 0,
