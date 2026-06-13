@@ -1,12 +1,10 @@
 const Sectores = require("../models/sectores.model");
 
-/* =========================
-   LISTAR
-========================= */
+/* LISTAR */
 function listar(req, res) {
    Sectores.listarSectores((err, results) => {
       if (err) {
-         console.log("Error sectores listar:", err);
+         console.log("Error sectores:", err);
          return res.status(500).json({ error: "Error en base de datos" });
       }
 
@@ -14,9 +12,7 @@ function listar(req, res) {
    });
 }
 
-/* =========================
-   CREAR
-========================= */
+/* CREAR */
 function crear(req, res) {
 
    const { sector, subcategoria } = req.body;
@@ -31,9 +27,7 @@ function crear(req, res) {
    });
 }
 
-/* =========================
-   MODIFICAR
-========================= */
+/* MODIFICAR */
 function modificar(req, res) {
 
    const id = req.params.id;
@@ -49,9 +43,7 @@ function modificar(req, res) {
    });
 }
 
-/* =========================
-   BORRAR
-========================= */
+/* BORRAR */
 function borrar(req, res) {
 
    const id = req.params.id;
@@ -66,15 +58,13 @@ function borrar(req, res) {
    });
 }
 
-/* =========================
-   STATS
-========================= */
+/* STATS */
 function stats(req, res) {
 
    Sectores.stats((err, result) => {
       if (err) {
          console.log("Error stats sectores:", err);
-         return res.status(500).json({ error: "Error stats sectores" });
+         return res.status(500).json({ error: "Error stats" });
       }
 
       res.json(result);
