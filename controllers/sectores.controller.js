@@ -1,149 +1,105 @@
-const db = require("../config/db");
+const SectoresModel = require('../models/sectores.model');
 
-/* =========================
-   LISTAR SECTORES
-========================= */
-function listar(req, res) {
+const SectoresController = {
 
-   const sql = `
-        SELECT 
-            id,
-            sector,
-            subcategoria
-        FROM sectores
-        WHERE is_deleted = 0
-        ORDER BY subcategoria ASC, sector ASC
-    `;
+   async getAll(req, res) {
+      try {
 
-   db.query(sql, (err, results) => {
+         const data = await SectoresModel.getAll();
 
-      if (err) {
-         console.log("Error en controller sectores (listar):", err);
-         return res.status(500).json({ error: "Error en base de datos" });
+         res.json(data);
+
+      } catch (error) {
+
+         console.error(error);
+         res.status(500).json({
+            error: 'Error obteniendo sectores'
+         });
+
       }
+   },
 
-      res.json(results);
-   });
-}
+   async create(req, res) {
+      try {
 
-/* =========================
-   CREAR SECTOR
-========================= */
-function crear(req, res) {
+         const result = await SectoresModel.create(req.body);
 
-   const { sector, subcategoria } = req.body;
+         res.json({
+            success: true,
+            result
+         });
 
-   const sql = `
-        INSERT INTO sectores (
-            sector,
-            subcategoria,
-            created_at,
-            updated_at,
-            is_deleted
-        )
-        VALUES (?, ?, NOW(), NOW(), 0)
-    `;
+      } catch (error) {
 
-   db.query(sql, [sector, subcategoria], (err, result) => {
+         console.error(error);
+         res.status(500).json({
+            error: 'Error creando sector'
+         });
 
-      if (err) {
-         console.log("Error en controller sectores (crear):", err);
-         return res.status(500).json({ error: "Error al crear sector" });
       }
+   },
 
-      res.json({ ok: true });
-   });
-}
+   async update(req, res) {
+      try {
 
-/* =========================
-   MODIFICAR SECTOR
-========================= */
-function modificar(req, res) {
+         const { id } = req.params;
 
-   const id = req.params.id;
-   const { sector, subcategoria } = req.body;
+         const result = await SectoresModel.update(id, req.body);
 
-   const sql = `
-        UPDATE sectores
-        SET 
-            sector = ?,
-            subcategoria = ?,
-            updated_at = NOW()
-        WHERE id = ?
-          AND is_deleted = 0
-    `;
+         res.json({
+            success: true,
+            result
+         });
 
-   db.query(sql, [sector, subcategoria, id], (err, result) => {
+      } catch (error) {
 
-      if (err) {
-         console.log("Error en controller sectores (modificar):", err);
-         return res.status(500).json({ error: "Error al modificar sector" });
+         console.error(error);
+         res.status(500).json({
+            error: 'Error modificando sector'
+         });
+
       }
+   },
 
-      res.json({ ok: true });
-   });
-}
+   async delete(req, res) {
+      try {
 
-/* =========================
-   BORRAR (SOFT DELETE)
-========================= */
-function borrar(req, res) {
+         const { id } = req.params;
 
-   const id = req.params.id;
+         const result = await SectoresModel.delete(id);
 
-   const sql = `
-        UPDATE sectores
-        SET 
-            is_deleted = 1,
-            deleted_at = NOW()
-        WHERE id = ?
-    `;
+         res.json({
+            success: true,
+            result
+         });
 
-   db.query(sql, [id], (err, result) => {
+      } catch (error) {
 
-      if (err) {
-         console.log("Error en controller sectores (borrar):", err);
-         return res.status(500).json({ error: "Error al borrar sector" });
+         console.error(error);
+         res.status(500).json({
+            error: 'Error eliminando sector'
+         });
+
       }
+   },
 
-      res.json({ ok: true });
-   });
-}
+   async stats(req, res) {
+      try {
 
-/* =========================
-   ESTADÍSTICAS (IGUAL A DEPARTAMENTOS)
-========================= */
-function stats(req, res) {
+         const data = await SectoresModel.stats();
 
-   const sql = `
-        SELECT 
-            COUNT(*) AS total
-        FROM sectores
-        WHERE is_deleted = 0
-    `;
+         res.json(data);
 
-   db.query(sql, (err, result) => {
+      } catch (error) {
 
-      if (err) {
-         console.log("ERROR REAL STATS SECTORES:", err);
-         return res.status(500).json({ error: err.message });
+         console.error(error);
+         res.status(500).json({
+            error: 'Error obteniendo estadísticas'
+         });
+
       }
+   }
 
-      res.json({
-         total: result[0].total || 0,
-         ingresados_hoy: 0,
-         modificados_hoy: 0,
-         eliminados_hoy: 0,
-         ultima_actualizacion: null
-      });
-   });
-}
-
-
-module.exports = {
-   listar,
-   crear,
-   modificar,
-   borrar,
-   stats
 };
+
+module.exports = SectoresController;
