@@ -4,7 +4,7 @@ const db = require("../config/db");
    LISTAR
 ========================= */
 function listarSectores(callback) {
-    const sql = `
+   const sql = `
         SELECT 
             id,
             sector,
@@ -18,61 +18,61 @@ function listarSectores(callback) {
         ORDER BY subcategoria ASC, sector ASC
     `;
 
-    db.query(sql, (err, results) => {
-        callback(err, results);
-    });
+   db.query(sql, (err, results) => {
+      callback(err, results);
+   });
 }
 
 /* =========================
    CREAR
 ========================= */
 function crearSector(sector, subcategoria, callback) {
-    const sql = `
+   const sql = `
         INSERT INTO sectores (sector, subcategoria, created_at, is_deleted)
         VALUES (?, ?, NOW(), 0)
     `;
 
-    db.query(sql, [sector, subcategoria], (err, result) => {
-        callback(err, result);
-    });
+   db.query(sql, [sector, subcategoria], (err, result) => {
+      callback(err, result);
+   });
 }
 
 /* =========================
    MODIFICAR
 ========================= */
 function modificarSector(id, sector, subcategoria, callback) {
-    const sql = `
+   const sql = `
         UPDATE sectores 
         SET sector = ?, subcategoria = ?, updated_at = NOW()
         WHERE id = ?
           AND is_deleted = 0
     `;
 
-    db.query(sql, [sector, subcategoria, id], (err, result) => {
-        callback(err, result);
-    });
+   db.query(sql, [sector, subcategoria, id], (err, result) => {
+      callback(err, result);
+   });
 }
 
 /* =========================
    BORRAR (LÓGICO)
 ========================= */
 function borrarSector(id, callback) {
-    const sql = `
+   const sql = `
         UPDATE sectores 
         SET is_deleted = 1, deleted_at = NOW()
         WHERE id = ?
     `;
 
-    db.query(sql, [id], (err, result) => {
-        callback(err, result);
-    });
+   db.query(sql, [id], (err, result) => {
+      callback(err, result);
+   });
 }
 
 /* =========================
    ESTADÍSTICAS
 ========================= */
 function stats(callback) {
-    const sql = `
+   const sql = `
         SELECT 
             COUNT(*) AS total,
 
@@ -99,15 +99,15 @@ function stats(callback) {
         FROM sectores;
     `;
 
-    db.query(sql, (err, result) => {
-        callback(err, result[0]);
-    });
+   db.query(sql, (err, result) => {
+      callback(err, result[0]);
+   });
 }
 
 module.exports = {
-    listarSectores,
-    crearSector,
-    modificarSector,
-    borrarSector,
-    stats
+   listarSectores,
+   crearSector,
+   modificarSector,
+   borrarSector,
+   stats
 };
