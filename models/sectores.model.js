@@ -5,18 +5,18 @@ const db = require("../config/db");
 ========================= */
 function listarSectores(callback) {
    const sql = `
-        SELECT 
-            id,
-            sector,
-            subcategoria,
-            created_at,
-            updated_at,
-            deleted_at,
-            is_deleted
-        FROM sectores
-        WHERE is_deleted = 0
-        ORDER BY subcategoria ASC, sector ASC
-    `;
+      SELECT 
+         id,
+         sector,
+         subcategoria,
+         created_at,
+         updated_at,
+         deleted_at,
+         is_deleted
+      FROM sectores
+      WHERE is_deleted = 0
+      ORDER BY subcategoria ASC, sector ASC
+   `;
 
    db.query(sql, (err, results) => {
       callback(err, results);
@@ -28,9 +28,9 @@ function listarSectores(callback) {
 ========================= */
 function crearSector(sector, subcategoria, callback) {
    const sql = `
-        INSERT INTO sectores (sector, subcategoria, created_at, is_deleted)
-        VALUES (?, ?, NOW(), 0)
-    `;
+      INSERT INTO sectores (sector, subcategoria, created_at, is_deleted)
+      VALUES (?, ?, NOW(), 0)
+   `;
 
    db.query(sql, [sector, subcategoria], (err, result) => {
       callback(err, result);
@@ -42,11 +42,11 @@ function crearSector(sector, subcategoria, callback) {
 ========================= */
 function modificarSector(id, sector, subcategoria, callback) {
    const sql = `
-        UPDATE sectores 
-        SET sector = ?, subcategoria = ?, updated_at = NOW()
-        WHERE id = ?
-          AND is_deleted = 0
-    `;
+      UPDATE sectores 
+      SET sector = ?, subcategoria = ?, updated_at = NOW()
+      WHERE id = ?
+      AND is_deleted = 0
+   `;
 
    db.query(sql, [sector, subcategoria, id], (err, result) => {
       callback(err, result);
@@ -54,14 +54,14 @@ function modificarSector(id, sector, subcategoria, callback) {
 }
 
 /* =========================
-   BORRAR (LÓGICO)
+   BORRAR
 ========================= */
 function borrarSector(id, callback) {
    const sql = `
-        UPDATE sectores 
-        SET is_deleted = 1, deleted_at = NOW()
-        WHERE id = ?
-    `;
+      UPDATE sectores 
+      SET is_deleted = 1, deleted_at = NOW()
+      WHERE id = ?
+   `;
 
    db.query(sql, [id], (err, result) => {
       callback(err, result);
@@ -73,34 +73,40 @@ function borrarSector(id, callback) {
 ========================= */
 function stats(callback) {
    const sql = `
-        SELECT 
-            COUNT(*) AS total,
+      SELECT 
+         COUNT(*) AS total,
 
-            SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
+         SUM(CASE 
+            WHEN created_at IS NOT NULL 
+            AND DATE(created_at) = CURDATE() 
+            THEN 1 ELSE 0 
+         END) AS ingresados_hoy,
 
-            SUM(CASE 
-                WHEN updated_at IS NOT NULL 
-                AND DATE(updated_at) = CURDATE() 
-                THEN 1 ELSE 0 
-            END) AS modificados_hoy,
+         SUM(CASE 
+            WHEN updated_at IS NOT NULL 
+            AND DATE(updated_at) = CURDATE() 
+            THEN 1 ELSE 0 
+         END) AS modificados_hoy,
 
-            SUM(CASE 
-                WHEN is_deleted = 1 
-                AND DATE(deleted_at) = CURDATE() 
-                THEN 1 ELSE 0 
-            END) AS eliminados_hoy,
+         SUM(CASE 
+            WHEN is_deleted = 1 
+            AND deleted_at IS NOT NULL 
+            AND DATE(deleted_at) = CURDATE() 
+            THEN 1 ELSE 0 
+         END) AS eliminados_hoy,
 
-            GREATEST(
-                COALESCE(MAX(created_at), '1970-01-01'),
-                COALESCE(MAX(updated_at), '1970-01-01'),
-                COALESCE(MAX(deleted_at), '1970-01-01')
-            ) AS ultima_actualizacion
+         MAX(updated_at) AS ultima_actualizacion
 
-        FROM sectores;
-    `;
+      FROM sectores
+   `;
 
    db.query(sql, (err, result) => {
-      callback(err, result[0]);
+      if (err) {
+         console.log("ERROR STATS SECTORES:", err);
+         return callback(err);
+      }
+
+      callback(null, result[0]);
    });
 }
 
