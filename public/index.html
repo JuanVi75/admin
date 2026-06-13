@@ -241,7 +241,13 @@
 
          <div class="card">
             <div class="title">Sectores</div>
-            <div class="small">Registros: 0</div>
+            <div class="small" id="count-sectores">Registros: ...</div>
+            <div class="meta">
+               Última actualización: <b id="last-update-sectores">-</b><br>
+               Ingresados Hoy: <b id="inserted-sectores">0</b><br>
+               Modificados Hoy: <b id="updated-sectores">0</b><br>
+               Eliminados Hoy: <b id="deleted-sectores">0</b>
+            </div>
          </div>
 
          <div class="card">
@@ -296,20 +302,25 @@
          if (page === 'inicio') {
             cargarMetaDepartamentos();
             cargarMetaCiudades();
+            cargarMetaSectores();
          }
 
          if (page === 'departamentos') {
             await cargarDepartamentos();
             await cargarMetaDepartamentos();
-            registrarActividad("Departamentos: actividad ejecutada");
          }
 
          if (page === 'ciudades') {
             await cargarCiudades();
             renderTablaCiudades();
             await cargarMetaCiudades();
-            registrarActividad("Ciudades: actividad ejecutada");
          }
+
+         if (page === 'sectores') {
+            cargarMetaSectores();
+            cargarSectores();
+         }
+
       }
 
    </script>
@@ -483,7 +494,7 @@
 
    <script>
       /*-------------------------------------------
-         FUNCIONES CIUDADES (FIX FINAL ESTABLE)
+         FUNCIONES CIUDADES
       ---------------------------------------------*/
 
       /* =========================
@@ -871,6 +882,354 @@
             if (deptoSelect) deptoSelect.value = formState.id_depto;
             if (deptoInput) deptoInput.value = formState.id_depto;
          }
+      }
+
+   </script>
+
+   <script>
+
+      /*-------------------------------------------
+         FUNCIONES SECTORES
+      ---------------------------------------------*/
+
+      /* =========================
+         VARIABLES
+      ========================= */
+      let sectoresData = [];
+      let currentPageSectores = 1;
+      let selectedSectorId = null;
+
+      /* =========================
+         META CARD
+      ========================= */
+      async function cargarMetaSectores() {
+
+         try {
+
+            const res = await fetch("/sectores/stats");
+            const data = await res.json();
+
+            document.getElementById("count-sectores").innerText =
+               "Registros: " + (data.total ?? 0);
+
+            document.getElementById("last-update-sectores").innerText =
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+                  : "-";
+
+            document.getElementById("inserted-sectores").innerText =
+               data.ingresados_hoy ?? 0;
+
+            document.getElementById("updated-sectores").innerText =
+               data.modificados_hoy ?? 0;
+
+            document.getElementById("deleted-sectores").innerText =
+               data.eliminados_hoy ?? 0;
+
+            const ins = data.ingresados_hoy ?? 0;
+            const upd = data.modificados_hoy ?? 0;
+            const del = data.eliminados_hoy ?? 0;
+
+            let partes = [];
+
+            if (ins > 0) partes.push(`Sectores: ${ins} creados`);
+            if (upd > 0) partes.push(`Sectores: ${upd} modificados`);
+            if (del > 0) partes.push(`Sectores: ${del} eliminados`);
+
+            if (partes.length > 0) {
+               registrarActividad(partes.join(" | "));
+            }
+
+         } catch (e) {
+
+            console.log(e);
+
+         }
+
+      }
+
+      /* =========================
+         CARGAR SECTORES
+      ========================= */
+      async function cargarSectores() {
+
+         const res = await fetch("/sectores");
+
+         sectoresData = await res.json();
+
+         currentPageSectores = 1;
+
+         renderTablaSectores();
+
+      }
+
+      /* =========================
+   RENDER TABLA SECTORES
+========================= */
+      function renderTablaSectores() {
+
+         const start = (currentPageSectores - 1) * rowsPerPage;
+         const end = start + rowsPerPage;
+
+         const pageData = sectoresData.slice(start, end);
+
+         const totalPages =
+            Math.ceil(sectoresData.length / rowsPerPage) || 1;
+
+         let html = `
+<div class="departamentos-layout">
+
+   <div class="table-container">
+
+      <div class="title">SECTORES</div>
+
+      <div class="table-wrapper">
+      <table>
+
+         <thead>
+            <tr>
+               <th>Sector</th>
+               <th>Subcategoría</th>
+            </tr>
+         </thead>
+
+         <tbody>`;
+
+         pageData.forEach(s => {
+
+            const sector =
+               (s.sector || '').replace(/'/g, "\\'");
+
+            const subcategoria =
+               (s.subcategoria || '').replace(/'/g, "\\'");
+
+            html += `
+<tr onclick="selectSector('${s.id}','${sector}','${subcategoria}')">
+   <td>${s.sector || ''}</td>
+   <td>${s.subcategoria || ''}</td>
+</tr>`;
+         });
+
+         html += `
+         </tbody>
+
+      </table>
+      </div>
+
+      <div class="pagination">
+
+         <button
+            onclick="prevPageSectores()"
+            ${currentPageSectores === 1 ? 'disabled' : ''}>
+            ⬅
+         </button>
+
+         <span>
+            ${currentPageSectores} / ${totalPages}
+         </span>
+
+         <button
+            onclick="nextPageSectores()"
+            ${currentPageSectores >= totalPages ? 'disabled' : ''}>
+            ➡
+         </button>
+
+      </div>
+
+   </div>
+
+   <div class="card">
+
+      <div class="title">
+         FORMULARIO SECTORES
+      </div>
+
+      <input
+         class="btn"
+         id="sector-id"
+         placeholder="ID"
+         readonly>
+
+      <input
+         class="btn"
+         id="sector-nombre"
+         placeholder="Sector">
+
+      <input
+         class="btn"
+         id="sector-subcategoria"
+         placeholder="Subcategoría">
+
+      <div class="form-actions">
+
+         <button
+            onclick="crearSector()"
+            class="btn primary">
+            Crear
+         </button>
+
+         <button
+            onclick="modificarSector()"
+            class="btn warn">
+            Modificar
+         </button>
+
+         <button
+            onclick="borrarSector()"
+            class="btn danger">
+            Borrar
+         </button>
+
+         <button
+            onclick="limpiarSector()"
+            class="btn clean">
+            Limpiar
+         </button>
+
+      </div>
+
+   </div>
+
+</div>`;
+
+         document.getElementById("panel").innerHTML = html;
+
+      }
+
+      /* =========================
+         SELECT SECTOR
+      ========================= */
+      function selectSector(id, sector, subcategoria) {
+
+         selectedSectorId = id;
+
+         const idInput = document.getElementById("sector-id");
+         const sectorInput = document.getElementById("sector-nombre");
+         const subInput = document.getElementById("sector-subcategoria");
+
+         if (idInput) idInput.value = id;
+         if (sectorInput) sectorInput.value = sector;
+         if (subInput) subInput.value = subcategoria;
+
+      }
+
+      /* =========================
+         CREAR
+      ========================= */
+      async function crearSector() {
+
+         const sector =
+            document.getElementById("sector-nombre").value.trim();
+
+         const subcategoria =
+            document.getElementById("sector-subcategoria").value.trim();
+
+         if (!sector) return;
+
+         await fetch("/sectores", {
+            method: "POST",
+            headers: {
+               "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+               sector,
+               subcategoria
+            })
+         });
+
+         await cargarSectores();
+         await cargarMetaSectores();
+
+         limpiarSector();
+
+      }
+
+      /* =========================
+         MODIFICAR
+      ========================= */
+      async function modificarSector() {
+
+         if (!selectedSectorId) return;
+
+         const sector =
+            document.getElementById("sector-nombre").value.trim();
+
+         const subcategoria =
+            document.getElementById("sector-subcategoria").value.trim();
+
+         await fetch(`/sectores/${selectedSectorId}`, {
+            method: "PUT",
+            headers: {
+               "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+               sector,
+               subcategoria
+            })
+         });
+
+         await cargarSectores();
+         await cargarMetaSectores();
+
+      }
+
+      /* =========================
+         BORRAR
+      ========================= */
+      async function borrarSector() {
+
+         if (!selectedSectorId) return;
+
+         await fetch(`/sectores/${selectedSectorId}`, {
+            method: "DELETE"
+         });
+
+         await cargarSectores();
+         await cargarMetaSectores();
+
+         limpiarSector();
+
+      }
+
+      /* =========================
+         LIMPIAR
+      ========================= */
+      function limpiarSector() {
+
+         selectedSectorId = null;
+
+         const idInput = document.getElementById("sector-id");
+         const sectorInput = document.getElementById("sector-nombre");
+         const subInput = document.getElementById("sector-subcategoria");
+
+         if (idInput) idInput.value = "";
+         if (sectorInput) sectorInput.value = "";
+         if (subInput) subInput.value = "";
+
+      }
+
+      /* =========================
+         PAGINACIÓN SECTORES
+      ========================= */
+      function nextPageSectores() {
+
+         const totalPages =
+            Math.ceil(sectoresData.length / rowsPerPage) || 1;
+
+         if (currentPageSectores < totalPages) {
+            currentPageSectores++;
+            renderTablaSectores();
+         }
+
+      }
+
+      function prevPageSectores() {
+
+         if (currentPageSectores > 1) {
+            currentPageSectores--;
+            renderTablaSectores();
+         }
+
       }
 
    </script>
