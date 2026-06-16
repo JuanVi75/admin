@@ -1338,9 +1338,6 @@
 
    <script>
 
-      /* =========================
-         VARIABLES CONTACTOS
-      ========================= */
       let contactosData = [];
       let clientesData = [];
       let currentPageContactos = 1;
@@ -1376,26 +1373,27 @@
       }
 
       /* =========================
-         FILTRO CLIENTE
+         FILTRO
       ========================= */
       function filtrarContactos(valor) {
-         filtroClienteActivo = (valor ?? "").toString().trim();
+         filtroClienteActivo = String(valor || "").trim();
          currentPageContactos = 1;
          renderTablaContactos();
       }
 
       /* =========================
-         RENDER CONTACTOS
+         RENDER
       ========================= */
       function renderTablaContactos() {
 
-         const clienteId = (filtroClienteActivo ?? "").toString().trim();
+         const clienteId = String(filtroClienteActivo || "").trim();
 
-         const normalize = v => (v ?? "").toString().trim();
+         const normalize = (v) =>
+            String(v ?? "").trim();
 
          const dataFiltrada = clienteId
             ? contactosData.filter(c =>
-               normalize(c.cliente_id) === clienteId
+               normalize(c.cliente_id) === normalize(clienteId)
             )
             : contactosData;
 
@@ -1405,8 +1403,9 @@
          const pageData = dataFiltrada.slice(start, end);
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
-         const clienteActivo =
-            clientesData.find(c => normalize(c.id) === clienteId);
+         const clienteActivo = clientesData.find(c =>
+            normalize(c.id) === normalize(clienteId)
+         );
 
          let html = `
 <div class="departamentos-layout">
@@ -1435,7 +1434,8 @@
             </tr>
          </thead>
 
-         <tbody>`;
+         <tbody>
+`;
 
          pageData.forEach(c => {
 
@@ -1457,12 +1457,13 @@
 )">
    <td>${clienteNombre}</td>
    <td>${c.nombre || ''}</td>
-   <td>${c.cargo || ''}</td>
-   <td>${c.telefono || ''}</td>
+   <td style="padding:10px 6px;">${c.cargo || ''}</td>
+   <td style="padding:10px 6px;">${c.telefono || ''}</td>
    <td>${c.email || ''}</td>
    <td>${c.tipo || ''}</td>
    <td>${c.estado || ''}</td>
-</tr>`;
+</tr>
+`;
          });
 
          html += `
@@ -1484,28 +1485,28 @@
 
       <select class="btn" id="contacto-cliente" onchange="filtrarContactos(this.value)">
          <option value="">-- TODOS LOS CLIENTES --</option>
-         ${clientesData.map(cli =>
-            `<option value="${cli.id}">${cli.cliente}</option>`
-         ).join("")}
+         ${clientesData.map(cli => `
+            <option value="${cli.id}">${cli.cliente}</option>
+         `).join("")}
       </select>
 
       <input class="btn" id="contacto-nombre" placeholder="Nombre">
-      <input class="btn" id="contacto-cargo" placeholder="Cargo">
-      <input class="btn" id="contacto-telefono" placeholder="Teléfono">
-      <input class="btn" id="contacto-email" placeholder="Email">
+      <input class="btn" id="contacto-cargo" placeholder="Cargo" style="margin-top:10px;">
+      <input class="btn" id="contacto-telefono" placeholder="Teléfono" style="margin-top:10px;">
+      <input class="btn" id="contacto-email" placeholder="Email" style="margin-top:10px;">
 
-      <select class="btn" id="contacto-tipo">
+      <select class="btn" id="contacto-tipo" style="margin-top:10px;">
          <option value="COMPRADOR">COMPRADOR</option>
          <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
          <option value="OTRO">OTRO</option>
       </select>
 
-      <select class="btn" id="contacto-estado">
+      <select class="btn" id="contacto-estado" style="margin-top:10px;">
          <option value="ACTIVO">ACTIVO</option>
          <option value="INACTIVO">INACTIVO</option>
       </select>
 
-      <div class="form-actions">
+      <div class="form-actions" style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
 
          <button onclick="crearContacto()" class="btn primary">Crear</button>
          <button onclick="modificarContacto()" class="btn warn">Modificar</button>
@@ -1518,14 +1519,12 @@
 
 </div>`;
 
-         document.getElementById("panel").innerHTML = html;
-
-         const select = document.getElementById("contacto-cliente");
-         if (select) select.value = filtroClienteActivo;
+         const panel = document.getElementById("panel");
+         if (panel) panel.innerHTML = html;
       }
 
       /* =========================
-         SELECT CONTACTO
+         SELECT
       ========================= */
       function selectContacto(id, cliente_id, nombre, cargo, telefono, email, tipo, estado) {
 
@@ -1546,10 +1545,9 @@
       }
 
       /* =========================
-         CREAR
+         CRUD
       ========================= */
       async function crearContacto() {
-
          const data = {
             cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
@@ -1570,11 +1568,7 @@
          await cargarMetaContactos();
       }
 
-      /* =========================
-         MODIFICAR
-      ========================= */
       async function modificarContacto() {
-
          if (!selectedContactoId) return;
 
          const data = {
@@ -1597,11 +1591,7 @@
          await cargarMetaContactos();
       }
 
-      /* =========================
-         BORRAR
-      ========================= */
       async function borrarContacto() {
-
          if (!selectedContactoId) return;
 
          await fetch(`/contactos/${selectedContactoId}`, {
@@ -1610,7 +1600,6 @@
 
          await cargarContactos();
          await cargarMetaContactos();
-
          limpiarContacto();
       }
 
@@ -1621,42 +1610,49 @@
 
          selectedContactoId = null;
 
-         document.getElementById("contacto-cliente").value = "";
-         document.getElementById("contacto-nombre").value = "";
-         document.getElementById("contacto-cargo").value = "";
-         document.getElementById("contacto-telefono").value = "";
-         document.getElementById("contacto-email").value = "";
+         const ids = [
+            "contacto-cliente",
+            "contacto-nombre",
+            "contacto-cargo",
+            "contacto-telefono",
+            "contacto-email"
+         ];
+
+         ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+         });
+
          document.getElementById("contacto-tipo").value = "COMPRADOR";
          document.getElementById("contacto-estado").value = "ACTIVO";
       }
 
       /* =========================
-         META CONTACTOS
+         META
       ========================= */
       async function cargarMetaContactos() {
          try {
             const res = await fetch("/contactos/stats");
             const data = await res.json();
 
-            document.getElementById("count-contactos").innerText =
-               "Registros: " + (data.total ?? 0);
+            const set = (id, val) => {
+               const el = document.getElementById(id);
+               if (el) el.innerText = val;
+            };
 
-            document.getElementById("last-update-contactos").innerText =
+            set("count-contactos", "Registros: " + (data.total ?? 0));
+            set("last-update-contactos",
                data.ultima_actualizacion
                   ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
-                  : "-";
+                  : "-"
+            );
 
-            document.getElementById("inserted-contactos").innerText =
-               data.ingresados_hoy ?? 0;
-
-            document.getElementById("updated-contactos").innerText =
-               data.modificados_hoy ?? 0;
-
-            document.getElementById("deleted-contactos").innerText =
-               data.eliminados_hoy ?? 0;
+            set("inserted-contactos", data.ingresados_hoy ?? 0);
+            set("updated-contactos", data.modificados_hoy ?? 0);
+            set("deleted-contactos", data.eliminados_hoy ?? 0);
 
          } catch (e) {
-            console.log("ERROR META CONTACTOS:", e);
+            console.log(e);
          }
       }
 
