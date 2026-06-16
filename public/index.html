@@ -1389,7 +1389,7 @@
 
          const dataFiltrada = clienteId
             ? contactosData.filter(c =>
-               String(c.cliente_id || "").trim() === clienteId
+               String(c.cliente_id || "").trim() === String(clienteId)
             )
             : contactosData;
 
@@ -1402,7 +1402,7 @@
             Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
          const clienteActivo =
-            clientesData.find(c => c.id === clienteId);
+            clientesData.find(c => String(c.id) === String(clienteId));
 
          let html = `
 <div class="departamentos-layout">
@@ -1435,11 +1435,8 @@
 
          pageData.forEach(c => {
 
-            const nombre = (c.nombre || "").replace(/'/g, "\\'");
-            const cargo = (c.cargo || "").replace(/'/g, "\\'");
-
             const clienteNombre =
-               clientesData.find(cl => cl.id === c.cliente_id)?.cliente
+               clientesData.find(cl => String(cl.id) === String(c.cliente_id))?.cliente
                || c.cliente_id
                || "";
 
@@ -1447,8 +1444,8 @@
 <tr onclick="selectContacto(
    '${c.id}',
    '${c.cliente_id || ''}',
-   '${nombre}',
-   '${cargo}',
+   '${(c.nombre || '').replace(/'/g, "\\'")}',
+   '${(c.cargo || '').replace(/'/g, "\\'")}',
    '${c.telefono || ''}',
    '${c.email || ''}',
    '${c.tipo || ''}',
@@ -1493,10 +1490,7 @@
 `;
 
          (clientesData || []).forEach(cli => {
-            html += `
-         <option value="${cli.id}">
-            ${cli.cliente}
-         </option>`;
+            html += `<option value="${cli.id}">${cli.cliente}</option>`;
          });
 
          html += `
