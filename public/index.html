@@ -1363,6 +1363,9 @@
          try {
             const res = await fetch("/clientes");
             clientesData = await res.json();
+
+            console.log("CLIENTES OK:", clientesData);
+
          } catch (e) {
             console.error("ERROR CLIENTES:", e);
             clientesData = [];
@@ -1377,6 +1380,8 @@
             const res = await fetch("/contactos");
             contactosData = await res.json();
 
+            console.log("CONTACTOS OK:", contactosData);
+
             currentPageContactos = 1;
             renderTablaContactos();
 
@@ -1387,28 +1392,29 @@
       }
 
       /* =========================
-         NORMALIZADOR (CLAVE)
+         FILTRO
+      ========================= */
+      function filtrarContactos(valor) {
+         filtroClienteActivo = String(valor || "").trim();
+         currentPageContactos = 1;
+         renderTablaContactos();
+      }
+
+      /* =========================
+         NORMALIZADOR CRÍTICO
       ========================= */
       function norm(v) {
          return String(v ?? "").trim();
       }
 
       /* =========================
-         FILTRO (ARREGLADO)
-      ========================= */
-      function filtrarContactos(valor) {
-         filtroClienteActivo = norm(valor);
-         currentPageContactos = 1;
-         renderTablaContactos();
-      }
-
-      /* =========================
-         RENDER TABLA CONTACTOS
+         RENDER TABLA
       ========================= */
       function renderTablaContactos() {
 
          const clienteId = norm(filtroClienteActivo);
 
+         // 🔴 FIX REAL: asegurar comparación estricta string-string
          const dataFiltrada = clienteId
             ? contactosData.filter(c => norm(c.cliente_id) === clienteId)
             : contactosData;
@@ -1419,7 +1425,8 @@
          const pageData = dataFiltrada.slice(start, end);
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
-         const clienteActivo = clientesData.find(c => norm(c.id) === clienteId);
+         const clienteActivo =
+            clientesData.find(c => norm(c.id) === clienteId);
 
          let html = `
 <div class="departamentos-layout">
@@ -1519,17 +1526,18 @@
          <option value="INACTIVO">INACTIVO</option>
       </select>
 
-      <div class="form-actions" style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div class="form-actions">
+
          <button onclick="crearContacto()" class="btn primary">Crear</button>
          <button onclick="modificarContacto()" class="btn warn">Modificar</button>
          <button onclick="borrarContacto()" class="btn danger">Borrar</button>
          <button onclick="limpiarContacto()" class="btn clean">Limpiar</button>
+
       </div>
 
    </div>
 
-</div>
-`;
+</div>`;
 
          document.getElementById("panel").innerHTML = html;
       }
