@@ -306,20 +306,20 @@
          }
 
          if (page === 'departamentos') {
-            await cargarDepartamentos();
-            await cargarMetaDepartamentos();
+            cargarDepartamentos();
+            cargarMetaDepartamentos();
          }
 
          if (page === 'ciudades') {
-            await cargarCiudades();
+            cargarCiudades();
             renderTablaCiudades();
-            await cargarMetaCiudades();
+            cargarMetaCiudades();
          }
 
          if (page === 'sectores') {
-            await cargarSectores();
+            cargarSectores();
             renderTablaSectores();
-            await cargarMetaSectores();
+            cargarMetaSectores();
 
          }
 
