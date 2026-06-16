@@ -1563,14 +1563,120 @@
       }
 
       /* =========================
-         CRUD (SIN CAMBIOS)
+         CREAR CONTACTO
       ========================= */
-      async function crearContacto() { /* igual que el tuyo */ }
-      async function modificarContacto() { /* igual que el tuyo */ }
-      async function borrarContacto() { /* igual que el tuyo */ }
-      function limpiarContacto() { /* igual que el tuyo */ }
-      async function cargarMetaContactos() { /* igual que el tuyo */ }
+      async function crearContacto() {
 
+         const data = {
+            cliente_id: document.getElementById("contacto-cliente").value.trim(),
+            nombre: document.getElementById("contacto-nombre").value.trim(),
+            cargo: document.getElementById("contacto-cargo").value.trim(),
+            telefono: document.getElementById("contacto-telefono").value.trim(),
+            email: document.getElementById("contacto-email").value.trim(),
+            tipo: document.getElementById("contacto-tipo").value,
+            estado: document.getElementById("contacto-estado").value
+         };
+
+         await fetch("/contactos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+         });
+
+         await cargarContactos();
+         await cargarMetaContactos();
+      }
+
+      /* =========================
+         MODIFICAR CONTACTO
+      ========================= */
+      async function modificarContacto() {
+
+         if (!selectedContactoId) return;
+
+         const data = {
+            cliente_id: document.getElementById("contacto-cliente").value.trim(),
+            nombre: document.getElementById("contacto-nombre").value.trim(),
+            cargo: document.getElementById("contacto-cargo").value.trim(),
+            telefono: document.getElementById("contacto-telefono").value.trim(),
+            email: document.getElementById("contacto-email").value.trim(),
+            tipo: document.getElementById("contacto-tipo").value,
+            estado: document.getElementById("contacto-estado").value
+         };
+
+         await fetch(`/contactos/${selectedContactoId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+         });
+
+         await cargarContactos();
+         await cargarMetaContactos();
+      }
+
+      /* =========================
+         BORRAR CONTACTO
+      ========================= */
+      async function borrarContacto() {
+
+         if (!selectedContactoId) return;
+
+         await fetch(`/contactos/${selectedContactoId}`, {
+            method: "DELETE"
+         });
+
+         await cargarContactos();
+         await cargarMetaContactos();
+
+         limpiarContacto();
+      }
+
+      /* =========================
+         LIMPIAR FORM
+      ========================= */
+      function limpiarContacto() {
+
+         selectedContactoId = null;
+
+         document.getElementById("contacto-cliente").value = "";
+         document.getElementById("contacto-nombre").value = "";
+         document.getElementById("contacto-cargo").value = "";
+         document.getElementById("contacto-telefono").value = "";
+         document.getElementById("contacto-email").value = "";
+
+         document.getElementById("contacto-tipo").value = "COMPRADOR";
+         document.getElementById("contacto-estado").value = "ACTIVO";
+      }
+
+      /* =========================
+         META CONTACTOS
+      ========================= */
+      async function cargarMetaContactos() {
+
+         try {
+            const res = await fetch("/contactos/stats");
+            const data = await res.json();
+
+            const set = (id, val) => {
+               const el = document.getElementById(id);
+               if (el) el.innerText = val;
+            };
+
+            set("count-contactos", "Registros: " + (data.total ?? 0));
+            set("last-update-contactos",
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+                  : "-"
+            );
+
+            set("inserted-contactos", data.ingresados_hoy ?? 0);
+            set("updated-contactos", data.modificados_hoy ?? 0);
+            set("deleted-contactos", data.eliminados_hoy ?? 0);
+
+         } catch (e) {
+            console.error(e);
+         }
+      }
       function nextPageContactos() {
          const totalPages = Math.ceil(contactosData.length / rowsPerPage) || 1;
          if (currentPageContactos < totalPages) {
