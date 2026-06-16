@@ -4,7 +4,17 @@ const router = express.Router();
 const ContactosController = require("../controllers/clienteContactos.controller");
 
 /* =========================
-   LISTAR
+   CLIENTES
+========================= */
+router.get("/clientes", ContactosController.listarClientes);
+
+/* =========================
+   STATS
+========================= */
+router.get("/stats", ContactosController.stats);
+
+/* =========================
+   LISTAR CONTACTOS
 ========================= */
 router.get("/", ContactosController.listar);
 
@@ -22,10 +32,5 @@ router.put("/:id", ContactosController.modificar);
    BORRAR
 ========================= */
 router.delete("/:id", ContactosController.borrar);
-
-/* =========================
-   STATS
-========================= */
-router.get("/stats", ContactosController.stats);
 
 module.exports = router;
