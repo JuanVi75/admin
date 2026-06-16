@@ -1348,7 +1348,7 @@
       let filtroClienteActivo = "";
 
       /* =========================
-         INIT
+         INIT CONTACTOS
       ========================= */
       async function initContactos() {
          await cargarClientes();
@@ -1357,7 +1357,7 @@
       }
 
       /* =========================
-         CARGAR CLIENTES
+         CLIENTES
       ========================= */
       async function cargarClientes() {
          const res = await fetch("/clientes");
@@ -1365,17 +1365,18 @@
       }
 
       /* =========================
-         CARGAR CONTACTOS
+         CONTACTOS
       ========================= */
       async function cargarContactos() {
          const res = await fetch("/contactos");
          contactosData = await res.json();
+
          currentPageContactos = 1;
          renderTablaContactos();
       }
 
       /* =========================
-         FILTRO POR CLIENTE
+         FILTRO CLIENTE
       ========================= */
       function filtrarContactos(valor) {
          filtroClienteActivo = valor ? String(valor) : "";
@@ -1384,7 +1385,7 @@
       }
 
       /* =========================
-         RENDER TABLA CONTACTOS
+         RENDER CONTACTOS (ÚNICO)
       ========================= */
       function renderTablaContactos() {
 
@@ -1398,7 +1399,6 @@
          const end = start + rowsPerPage;
 
          const pageData = dataFiltrada.slice(start, end);
-
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
          const clienteActivo = clientesData.find(c => String(c.id) === clienteId);
@@ -1513,7 +1513,8 @@
 
 </div>`;
 
-         document.getElementById("panel").innerHTML = html;
+         const panel = document.getElementById("panel");
+         if (panel) panel.innerHTML = html;
       }
 
       /* =========================
@@ -1523,19 +1524,25 @@
 
          selectedContactoId = id;
 
-         document.getElementById("contacto-cliente").value = cliente_id;
-         document.getElementById("contacto-nombre").value = nombre;
-         document.getElementById("contacto-cargo").value = cargo;
-         document.getElementById("contacto-telefono").value = telefono;
-         document.getElementById("contacto-email").value = email;
-         document.getElementById("contacto-tipo").value = tipo;
-         document.getElementById("contacto-estado").value = estado;
+         const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || "";
+         };
+
+         set("contacto-cliente", cliente_id);
+         set("contacto-nombre", nombre);
+         set("contacto-cargo", cargo);
+         set("contacto-telefono", telefono);
+         set("contacto-email", email);
+         set("contacto-tipo", tipo);
+         set("contacto-estado", estado);
       }
 
       /* =========================
-         CREAR
+         CRUD
       ========================= */
       async function crearContacto() {
+
          const data = {
             cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
@@ -1556,10 +1563,8 @@
          await cargarMetaContactos();
       }
 
-      /* =========================
-         MODIFICAR
-      ========================= */
       async function modificarContacto() {
+
          if (!selectedContactoId) return;
 
          const data = {
@@ -1582,10 +1587,8 @@
          await cargarMetaContactos();
       }
 
-      /* =========================
-         BORRAR
-      ========================= */
       async function borrarContacto() {
+
          if (!selectedContactoId) return;
 
          await fetch(`/contactos/${selectedContactoId}`, {
@@ -1602,44 +1605,52 @@
          LIMPIAR
       ========================= */
       function limpiarContacto() {
+
          selectedContactoId = null;
 
-         document.getElementById("contacto-cliente").value = "";
-         document.getElementById("contacto-nombre").value = "";
-         document.getElementById("contacto-cargo").value = "";
-         document.getElementById("contacto-telefono").value = "";
-         document.getElementById("contacto-email").value = "";
+         const ids = [
+            "contacto-cliente",
+            "contacto-nombre",
+            "contacto-cargo",
+            "contacto-telefono",
+            "contacto-email"
+         ];
+
+         ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+         });
+
          document.getElementById("contacto-tipo").value = "COMPRADOR";
          document.getElementById("contacto-estado").value = "ACTIVO";
       }
 
       /* =========================
-         META CONTACTOS
+         META
       ========================= */
       async function cargarMetaContactos() {
          try {
             const res = await fetch("/contactos/stats");
             const data = await res.json();
 
-            document.getElementById("count-contactos").innerText =
-               "Registros: " + (data.total ?? 0);
+            const set = (id, val) => {
+               const el = document.getElementById(id);
+               if (el) el.innerText = val;
+            };
 
-            document.getElementById("last-update-contactos").innerText =
+            set("count-contactos", "Registros: " + (data.total ?? 0));
+            set("last-update-contactos",
                data.ultima_actualizacion
                   ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
-                  : "-";
+                  : "-"
+            );
 
-            document.getElementById("inserted-contactos").innerText =
-               data.ingresados_hoy ?? 0;
-
-            document.getElementById("updated-contactos").innerText =
-               data.modificados_hoy ?? 0;
-
-            document.getElementById("deleted-contactos").innerText =
-               data.eliminados_hoy ?? 0;
+            set("inserted-contactos", data.ingresados_hoy ?? 0);
+            set("updated-contactos", data.modificados_hoy ?? 0);
+            set("deleted-contactos", data.eliminados_hoy ?? 0);
 
          } catch (e) {
-            console.log("ERROR META CONTACTOS:", e);
+            console.log(e);
          }
       }
 
