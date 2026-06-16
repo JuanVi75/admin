@@ -1379,7 +1379,7 @@
          FILTRO CLIENTE
       ========================= */
       function filtrarContactos(valor) {
-         filtroClienteActivo = valor ? String(valor) : "";
+         filtroClienteActivo = (valor ?? "").toString().trim();
          currentPageContactos = 1;
          renderTablaContactos();
       }
@@ -1389,10 +1389,17 @@
       ========================= */
       function renderTablaContactos() {
 
-         const clienteId = String(filtroClienteActivo || "");
+         const clienteId = (filtroClienteActivo ?? "").toString().trim();
+
+         const normalize = v =>
+            (v ?? "")
+               .toString()
+               .trim();
 
          const dataFiltrada = clienteId
-            ? contactosData.filter(c => String(c.cliente_id || "") === clienteId)
+            ? contactosData.filter(c =>
+               normalize(c.cliente_id) === normalize(clienteId)
+            )
             : contactosData;
 
          const start = (currentPageContactos - 1) * rowsPerPage;
@@ -1401,7 +1408,8 @@
          const pageData = dataFiltrada.slice(start, end);
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
-         const clienteActivo = clientesData.find(c => String(c.id) === clienteId);
+         const clienteActivo =
+            clientesData.find(c => normalize(c.id) === normalize(clienteId));
 
          let html = `
 <div class="departamentos-layout">
@@ -1435,9 +1443,9 @@
          pageData.forEach(c => {
 
             const clienteNombre =
-               clientesData.find(cl => String(cl.id) === String(c.cliente_id))?.cliente
-               || c.cliente_id
-               || "";
+               clientesData.find(cl =>
+                  normalize(cl.id) === normalize(c.cliente_id)
+               )?.cliente || c.cliente_id || "";
 
             html += `
 <tr onclick="selectContacto(
