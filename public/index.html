@@ -1336,50 +1336,16 @@
          const totalPages =
             Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
+         /* dropdown clientes (requiere clientesData ya cargado) */
+         const clientesUnicos = [...new Set(contactosData.map(c => c.cliente_id))];
+
          let html = `
 <div class="departamentos-layout">
 
+   <!-- TABLA -->
    <div class="table-container">
 
       <div class="title">CONTACTOS</div>
-
-      <div class="card">
-
-         <div class="title">FORMULARIO CONTACTOS</div>
-
-         <input class="btn" id="contacto-cliente" placeholder="Cliente ID">
-         <input class="btn" id="contacto-nombre" placeholder="Nombre">
-         <input class="btn" id="contacto-cargo" placeholder="Cargo">
-         <input class="btn" id="contacto-telefono" placeholder="Teléfono">
-         <input class="btn" id="contacto-email" placeholder="Email">
-
-         <select class="btn" id="contacto-tipo">
-            <option value="COMPRADOR">COMPRADOR</option>
-            <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
-            <option value="OTRO">OTRO</option>
-         </select>
-
-         <select class="btn" id="contacto-estado">
-            <option value="ACTIVO">ACTIVO</option>
-            <option value="INACTIVO">INACTIVO</option>
-         </select>
-
-         <!-- DROPDOWN FILTRO CLIENTE -->
-         <input class="btn"
-            placeholder="Filtrar por cliente ID"
-            value="${filtroClienteActivo}"
-            onkeyup="filtrarContactos(this.value)">
-
-         <div class="form-actions">
-
-            <button onclick="crearContacto()" class="btn primary">Crear</button>
-            <button onclick="modificarContacto()" class="btn warn">Modificar</button>
-            <button onclick="borrarContacto()" class="btn danger">Borrar</button>
-            <button onclick="limpiarContacto()" class="btn clean">Limpiar</button>
-
-         </div>
-
-      </div>
 
       <div class="table-wrapper">
       <table>
@@ -1404,7 +1370,16 @@
             const cargo = (c.cargo || "").replace(/'/g, "\\'");
 
             html += `
-<tr onclick="selectContacto('${c.id}','${c.cliente_id}','${nombre}','${cargo}','${c.telefono}','${c.email}','${c.tipo}','${c.estado}')">
+<tr onclick="selectContacto(
+   '${c.id}',
+   '${c.cliente_id}',
+   '${nombre}',
+   '${cargo}',
+   '${c.telefono}',
+   '${c.email}',
+   '${c.tipo}',
+   '${c.estado}'
+)">
    <td>${c.cliente_id || ''}</td>
    <td>${c.nombre || ''}</td>
    <td>${c.cargo || ''}</td>
@@ -1428,6 +1403,57 @@
          <span>${currentPageContactos} / ${totalPages}</span>
 
          <button onclick="nextPageContactos()" ${currentPageContactos >= totalPages ? 'disabled' : ''}>➡</button>
+
+      </div>
+
+   </div>
+
+
+   <!-- FORMULARIO LADO DERECHO -->
+   <div class="card">
+
+      <div class="title">FORMULARIO CONTACTOS</div>
+
+      <!-- DROPDOWN CLIENTES -->
+      <select class="btn" id="contacto-cliente">
+
+         <option value="">Seleccione cliente</option>`;
+
+         clientesUnicos.forEach(cli => {
+            html += `<option value="${cli}">${cli}</option>`;
+         });
+
+         html += `
+      </select>
+
+      <input class="btn" id="contacto-nombre" placeholder="Nombre">
+      <input class="btn" id="contacto-cargo" placeholder="Cargo">
+      <input class="btn" id="contacto-telefono" placeholder="Teléfono">
+      <input class="btn" id="contacto-email" placeholder="Email">
+
+      <select class="btn" id="contacto-tipo">
+         <option value="COMPRADOR">COMPRADOR</option>
+         <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
+         <option value="OTRO">OTRO</option>
+      </select>
+
+      <select class="btn" id="contacto-estado">
+         <option value="ACTIVO">ACTIVO</option>
+         <option value="INACTIVO">INACTIVO</option>
+      </select>
+
+      <!-- FILTRO CLIENTE -->
+      <input class="btn"
+         placeholder="Buscar cliente..."
+         value="${filtroClienteActivo}"
+         onkeyup="filtrarContactos(this.value)">
+
+      <div class="form-actions">
+
+         <button onclick="crearContacto()" class="btn primary">Crear</button>
+         <button onclick="modificarContacto()" class="btn warn">Modificar</button>
+         <button onclick="borrarContacto()" class="btn danger">Borrar</button>
+         <button onclick="limpiarContacto()" class="btn clean">Limpiar</button>
 
       </div>
 
