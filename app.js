@@ -15,11 +15,13 @@ const departamentosRoutes = require("./routes/departamentos.routes");
 const ciudadesRoutes = require("./routes/ciudades.routes");
 const sectoresRoutes = require("./routes/sectores.routes");
 const contactosRoutes = require("./routes/clienteContactos.routes");
+const clientesRoutes = require("./routes/clientes.routes");
 
 app.use("/departamentos", departamentosRoutes);
 app.use("/ciudades", ciudadesRoutes);
 app.use("/sectores", sectoresRoutes);
 app.use("/contactos", contactosRoutes);
+app.use("/clientes", clientesRoutes);
 
 /* HOME */
 app.get("/", (req, res) => {
