@@ -1382,18 +1382,15 @@
       }
 
       /* =========================
-         RENDER
+         RENDER CONTACTOS
       ========================= */
       function renderTablaContactos() {
 
          const clienteId = String(filtroClienteActivo || "").trim();
 
-         const normalize = (v) =>
-            String(v ?? "").trim();
-
          const dataFiltrada = clienteId
             ? contactosData.filter(c =>
-               normalize(c.cliente_id) === normalize(clienteId)
+               String(c.cliente_id || "").trim() === clienteId
             )
             : contactosData;
 
@@ -1404,7 +1401,7 @@
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
          const clienteActivo = clientesData.find(c =>
-            normalize(c.id) === normalize(clienteId)
+            String(c.id).trim() === clienteId
          );
 
          let html = `
@@ -1441,7 +1438,7 @@
 
             const clienteNombre =
                clientesData.find(cl =>
-                  normalize(cl.id) === normalize(c.cliente_id)
+                  String(cl.id).trim() === String(c.cliente_id || "").trim()
                )?.cliente || c.cliente_id || "";
 
             html += `
@@ -1457,13 +1454,12 @@
 )">
    <td>${clienteNombre}</td>
    <td>${c.nombre || ''}</td>
-   <td style="padding:10px 6px;">${c.cargo || ''}</td>
-   <td style="padding:10px 6px;">${c.telefono || ''}</td>
+   <td>${c.cargo || ''}</td>
+   <td>${c.telefono || ''}</td>
    <td>${c.email || ''}</td>
    <td>${c.tipo || ''}</td>
    <td>${c.estado || ''}</td>
-</tr>
-`;
+</tr>`;
          });
 
          html += `
@@ -1483,30 +1479,36 @@
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <select class="btn" id="contacto-cliente" onchange="filtrarContactos(this.value)">
+      <select class="btn" id="contacto-cliente"
+         onchange="filtrarContactos(this.value)"
+         style="margin-bottom:12px;">
+
          <option value="">-- TODOS LOS CLIENTES --</option>
+
          ${clientesData.map(cli => `
             <option value="${cli.id}">${cli.cliente}</option>
          `).join("")}
+
       </select>
 
-      <input class="btn" id="contacto-nombre" placeholder="Nombre">
-      <input class="btn" id="contacto-cargo" placeholder="Cargo" style="margin-top:10px;">
-      <input class="btn" id="contacto-telefono" placeholder="Teléfono" style="margin-top:10px;">
-      <input class="btn" id="contacto-email" placeholder="Email" style="margin-top:10px;">
+      <input class="btn" id="contacto-nombre" placeholder="Nombre" style="margin-bottom:10px;">
+      <input class="btn" id="contacto-cargo" placeholder="Cargo" style="margin-bottom:10px;">
+      <input class="btn" id="contacto-telefono" placeholder="Teléfono" style="margin-bottom:10px;">
+      <input class="btn" id="contacto-email" placeholder="Email" style="margin-bottom:10px;">
 
-      <select class="btn" id="contacto-tipo" style="margin-top:10px;">
+      <select class="btn" id="contacto-tipo" style="margin-bottom:10px;">
          <option value="COMPRADOR">COMPRADOR</option>
          <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
          <option value="OTRO">OTRO</option>
       </select>
 
-      <select class="btn" id="contacto-estado" style="margin-top:10px;">
+      <select class="btn" id="contacto-estado" style="margin-bottom:10px;">
          <option value="ACTIVO">ACTIVO</option>
          <option value="INACTIVO">INACTIVO</option>
       </select>
 
-      <div class="form-actions" style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+      <div class="form-actions"
+         style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
 
          <button onclick="crearContacto()" class="btn primary">Crear</button>
          <button onclick="modificarContacto()" class="btn warn">Modificar</button>
