@@ -982,9 +982,7 @@
 
          const dataFiltrada = filtro
             ? sectoresData.filter(s =>
-               (s.sector || "")
-                  .toLowerCase()
-                  .includes(filtro)
+               (s.sector || "").toLowerCase().includes(filtro)
             )
             : sectoresData;
 
@@ -996,65 +994,15 @@
          const totalPages =
             Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
+         /* OPCIONES DROPDOWN */
+         const sectoresUnicos = [...new Set(sectoresData.map(s => s.sector))];
+
          let html = `
 <div class="departamentos-layout">
 
    <div class="table-container">
 
       <div class="title">SECTORES</div>
-
-      <div class="card">
-
-         <div class="title">
-            FORMULARIO SECTORES
-         </div>
-
-         <input
-            class="btn"
-            id="filtro-sector"
-            placeholder="Buscar sector..."
-            value="${filtroSector || ''}"
-            onkeyup="filtrarSectores(this.value)">
-
-         <input
-            class="btn"
-            id="sector-nombre"
-            placeholder="Sector">
-
-         <input
-            class="btn"
-            id="sector-subcategoria"
-            placeholder="Subcategoría">
-
-         <div class="form-actions">
-
-            <button
-               onclick="crearSector()"
-               class="btn primary">
-               Crear
-            </button>
-
-            <button
-               onclick="modificarSector()"
-               class="btn warn">
-               Modificar
-            </button>
-
-            <button
-               onclick="borrarSector()"
-               class="btn danger">
-               Borrar
-            </button>
-
-            <button
-               onclick="limpiarSector()"
-               class="btn clean">
-               Limpiar
-            </button>
-
-         </div>
-
-      </div>
 
       <div class="table-wrapper">
       <table>
@@ -1070,11 +1018,8 @@
 
          pageData.forEach(s => {
 
-            const sector =
-               (s.sector || "").replace(/'/g, "\\'");
-
-            const subcategoria =
-               (s.subcategoria || "").replace(/'/g, "\\'");
+            const sector = (s.sector || "").replace(/'/g, "\\'");
+            const subcategoria = (s.subcategoria || "").replace(/'/g, "\\'");
 
             html += `
 <tr onclick="selectSector('${s.id}','${sector}','${subcategoria}')">
@@ -1091,21 +1036,41 @@
 
       <div class="pagination">
 
-         <button
-            onclick="prevPageSectores()"
-            ${currentPageSectores === 1 ? 'disabled' : ''}>
-            ⬅
-         </button>
+         <button onclick="prevPageSectores()" ${currentPageSectores === 1 ? 'disabled' : ''}>⬅</button>
 
-         <span>
-            ${currentPageSectores} / ${totalPages}
-         </span>
+         <span>${currentPageSectores} / ${totalPages}</span>
 
-         <button
-            onclick="nextPageSectores()"
-            ${currentPageSectores >= totalPages ? 'disabled' : ''}>
-            ➡
-         </button>
+         <button onclick="nextPageSectores()" ${currentPageSectores >= totalPages ? 'disabled' : ''}>➡</button>
+
+      </div>
+
+   </div>
+
+   <div class="card">
+
+      <div class="title">FORMULARIO SECTORES</div>
+
+      <!-- DROPDOWN FILTRO -->
+      <select class="btn" onchange="filtrarSectores(this.value)">
+
+         <option value="">Todos los sectores</option>`;
+
+         sectoresUnicos.forEach(sec => {
+            html += `<option value="${sec}" ${filtroSector === sec ? "selected" : ""}>${sec}</option>`;
+         });
+
+         html += `
+      </select>
+
+      <input class="btn" id="sector-nombre" placeholder="Sector">
+      <input class="btn" id="sector-subcategoria" placeholder="Subcategoría">
+
+      <div class="form-actions">
+
+         <button onclick="crearSector()" class="btn primary">Crear</button>
+         <button onclick="modificarSector()" class="btn warn">Modificar</button>
+         <button onclick="borrarSector()" class="btn danger">Borrar</button>
+         <button onclick="limpiarSector()" class="btn clean">Limpiar</button>
 
       </div>
 
