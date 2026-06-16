@@ -1320,12 +1320,12 @@
       ========================= */
       function renderTablaContactos() {
 
-         const filtro = (filtroClienteActivo || "").toLowerCase().trim();
+         const filtro = (filtroClienteActivo || "").toString().trim();
 
-         /* filtra por cliente_id */
+         /* FILTRO CORRECTO (si hay cliente seleccionado) */
          const dataFiltrada = filtro
             ? contactosData.filter(c =>
-               (c.cliente_id || "").toLowerCase() === filtro
+               String(c.cliente_id || "").trim() === filtro
             )
             : contactosData;
 
@@ -1364,19 +1364,16 @@
 
          pageData.forEach(c => {
 
-            const nombre = (c.nombre || "").replace(/'/g, "\\'");
-            const cargo = (c.cargo || "").replace(/'/g, "\\'");
-
             html += `
 <tr onclick="selectContacto(
    '${c.id}',
-   '${c.cliente_id}',
-   '${nombre}',
-   '${cargo}',
-   '${c.telefono}',
-   '${c.email}',
-   '${c.tipo}',
-   '${c.estado}'
+   '${c.cliente_id || ''}',
+   '${(c.nombre || '').replace(/'/g, "\\'")}',
+   '${(c.cargo || '').replace(/'/g, "\\'")}',
+   '${c.telefono || ''}',
+   '${c.email || ''}',
+   '${c.tipo || ''}',
+   '${c.estado || ''}'
 )">
    <td>${c.cliente_id || ''}</td>
    <td>${c.nombre || ''}</td>
@@ -1412,14 +1409,14 @@
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <!-- DROPDOWN CLIENTES (MUESTRA NOMBRE, USA ID) -->
       <select class="btn"
          id="contacto-cliente"
          onchange="filtrarContactos(this.value)">
 
-         <option value="">-- Filtrar por cliente --</option>`;
+         <option value="">-- Todos los clientes --</option>
+      `;
 
-         clientesData.forEach(cli => {
+         (clientesData || []).forEach(cli => {
             html += `
          <option value="${cli.id}">
             ${cli.cliente}
