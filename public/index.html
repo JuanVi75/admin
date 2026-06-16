@@ -1345,7 +1345,7 @@
       let filtroClienteActivo = "";
 
       /* =========================
-         INIT CONTACTOS
+         INIT
       ========================= */
       async function initContactos() {
          await cargarClientes();
@@ -1382,15 +1382,17 @@
       }
 
       /* =========================
-         RENDER CONTACTOS
+         RENDER
       ========================= */
       function renderTablaContactos() {
 
          const clienteId = String(filtroClienteActivo || "").trim();
 
+         const normalize = v => String(v ?? "").trim();
+
          const dataFiltrada = clienteId
             ? contactosData.filter(c =>
-               String(c.cliente_id || "").trim() === clienteId
+               normalize(c.cliente_id) === clienteId
             )
             : contactosData;
 
@@ -1401,7 +1403,7 @@
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
          const clienteActivo = clientesData.find(c =>
-            String(c.id).trim() === clienteId
+            normalize(c.id) === clienteId
          );
 
          let html = `
@@ -1438,7 +1440,7 @@
 
             const clienteNombre =
                clientesData.find(cl =>
-                  String(cl.id).trim() === String(c.cliente_id || "").trim()
+                  normalize(cl.id) === normalize(c.cliente_id)
                )?.cliente || c.cliente_id || "";
 
             html += `
@@ -1479,36 +1481,30 @@
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <select class="btn" id="contacto-cliente"
-         onchange="filtrarContactos(this.value)"
-         style="margin-bottom:12px;">
-
+      <select class="btn" id="contacto-cliente">
          <option value="">-- TODOS LOS CLIENTES --</option>
-
          ${clientesData.map(cli => `
             <option value="${cli.id}">${cli.cliente}</option>
          `).join("")}
-
       </select>
 
-      <input class="btn" id="contacto-nombre" placeholder="Nombre" style="margin-bottom:10px;">
-      <input class="btn" id="contacto-cargo" placeholder="Cargo" style="margin-bottom:10px;">
-      <input class="btn" id="contacto-telefono" placeholder="Teléfono" style="margin-bottom:10px;">
-      <input class="btn" id="contacto-email" placeholder="Email" style="margin-bottom:10px;">
+      <input class="btn" id="contacto-nombre" placeholder="Nombre">
+      <input class="btn" id="contacto-cargo" placeholder="Cargo">
+      <input class="btn" id="contacto-telefono" placeholder="Teléfono">
+      <input class="btn" id="contacto-email" placeholder="Email">
 
-      <select class="btn" id="contacto-tipo" style="margin-bottom:10px;">
+      <select class="btn" id="contacto-tipo">
          <option value="COMPRADOR">COMPRADOR</option>
          <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
          <option value="OTRO">OTRO</option>
       </select>
 
-      <select class="btn" id="contacto-estado" style="margin-bottom:10px;">
+      <select class="btn" id="contacto-estado">
          <option value="ACTIVO">ACTIVO</option>
          <option value="INACTIVO">INACTIVO</option>
       </select>
 
-      <div class="form-actions"
-         style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+      <div class="form-actions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
 
          <button onclick="crearContacto()" class="btn primary">Crear</button>
          <button onclick="modificarContacto()" class="btn warn">Modificar</button>
@@ -1522,11 +1518,19 @@
 </div>`;
 
          const panel = document.getElementById("panel");
-         if (panel) panel.innerHTML = html;
+         panel.innerHTML = html;
+
+         /* EVENTO DEL FILTRO (SIN INLINE, ESTABLE) */
+         const sel = document.getElementById("contacto-cliente");
+         if (sel) {
+            sel.onchange = (e) => {
+               filtrarContactos(e.target.value);
+            };
+         }
       }
 
       /* =========================
-         SELECT
+         SELECT CONTACTO
       ========================= */
       function selectContacto(id, cliente_id, nombre, cargo, telefono, email, tipo, estado) {
 
@@ -1550,6 +1554,7 @@
          CRUD
       ========================= */
       async function crearContacto() {
+
          const data = {
             cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
@@ -1596,9 +1601,7 @@
       async function borrarContacto() {
          if (!selectedContactoId) return;
 
-         await fetch(`/contactos/${selectedContactoId}`, {
-            method: "DELETE"
-         });
+         await fetch(`/contactos/${selectedContactoId}`, { method: "DELETE" });
 
          await cargarContactos();
          await cargarMetaContactos();
@@ -1612,18 +1615,11 @@
 
          selectedContactoId = null;
 
-         const ids = [
-            "contacto-cliente",
-            "contacto-nombre",
-            "contacto-cargo",
-            "contacto-telefono",
-            "contacto-email"
-         ];
-
-         ids.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = "";
-         });
+         ["contacto-cliente", "contacto-nombre", "contacto-cargo", "contacto-telefono", "contacto-email"]
+            .forEach(id => {
+               const el = document.getElementById(id);
+               if (el) el.value = "";
+            });
 
          document.getElementById("contacto-tipo").value = "COMPRADOR";
          document.getElementById("contacto-estado").value = "ACTIVO";
@@ -1637,25 +1633,17 @@
             const res = await fetch("/contactos/stats");
             const data = await res.json();
 
-            const set = (id, val) => {
-               const el = document.getElementById(id);
-               if (el) el.innerText = val;
-            };
-
-            set("count-contactos", "Registros: " + (data.total ?? 0));
-            set("last-update-contactos",
+            document.getElementById("count-contactos").innerText = "Registros: " + (data.total ?? 0);
+            document.getElementById("last-update-contactos").innerText =
                data.ultima_actualizacion
                   ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
-                  : "-"
-            );
+                  : "-";
 
-            set("inserted-contactos", data.ingresados_hoy ?? 0);
-            set("updated-contactos", data.modificados_hoy ?? 0);
-            set("deleted-contactos", data.eliminados_hoy ?? 0);
+            document.getElementById("inserted-contactos").innerText = data.ingresados_hoy ?? 0;
+            document.getElementById("updated-contactos").innerText = data.modificados_hoy ?? 0;
+            document.getElementById("deleted-contactos").innerText = data.eliminados_hoy ?? 0;
 
-         } catch (e) {
-            console.log(e);
-         }
+         } catch (e) { }
       }
 
       /* =========================
