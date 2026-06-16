@@ -1,7 +1,23 @@
 const Contactos = require("../models/clienteContactos.model");
 
 /* =========================
-   LISTAR
+   CLIENTES
+========================= */
+function listarClientes(req, res) {
+
+   Contactos.listarClientes((err, results) => {
+
+      if (err) {
+         console.error("CLIENTES LISTAR ERROR:", err);
+         return res.status(500).json({ error: "DB error clientes" });
+      }
+
+      res.json(results);
+   });
+}
+
+/* =========================
+   CONTACTOS
 ========================= */
 function listar(req, res) {
 
@@ -28,7 +44,10 @@ function crear(req, res) {
          return res.status(500).json({ error: "DB error contactos" });
       }
 
-      res.json({ ok: true });
+      res.json({
+         ok: true,
+         result
+      });
    });
 }
 
@@ -46,7 +65,10 @@ function modificar(req, res) {
          return res.status(500).json({ error: "DB error contactos" });
       }
 
-      res.json({ ok: true });
+      res.json({
+         ok: true,
+         result
+      });
    });
 }
 
@@ -64,7 +86,10 @@ function borrar(req, res) {
          return res.status(500).json({ error: "DB error contactos" });
       }
 
-      res.json({ ok: true });
+      res.json({
+         ok: true,
+         result
+      });
    });
 }
 
@@ -85,6 +110,7 @@ function stats(req, res) {
 }
 
 module.exports = {
+   listarClientes,
    listar,
    crear,
    modificar,
