@@ -5,61 +5,61 @@ const ClientesModel = require("../models/clientes.model");
 /* =========================
    LISTAR
 ========================= */
-async function listar(req, res) {
-   try {
-      const data = await ClientesModel.getAllClientes();
+function listar(req, res) {
+   ClientesModel.getAllClientes((err, data) => {
+      if (err) {
+         return res.status(500).json({ error: err.message });
+      }
       res.json(data);
-   } catch (err) {
-      res.status(500).json({ error: err.message });
-   }
+   });
 }
 
 /* =========================
    POR ID
 ========================= */
-async function obtener(req, res) {
-   try {
-      const data = await ClientesModel.getClienteById(req.params.id);
+function obtener(req, res) {
+   ClientesModel.getClienteById(req.params.id, (err, data) => {
+      if (err) {
+         return res.status(500).json({ error: err.message });
+      }
       res.json(data);
-   } catch (err) {
-      res.status(500).json({ error: err.message });
-   }
+   });
 }
 
 /* =========================
    CREAR
 ========================= */
-async function crear(req, res) {
-   try {
-      const result = await ClientesModel.createCliente(req.body);
+function crear(req, res) {
+   ClientesModel.createCliente(req.body, (err, result) => {
+      if (err) {
+         return res.status(500).json({ error: err.message });
+      }
       res.json({ message: "Cliente creado", result });
-   } catch (err) {
-      res.status(500).json({ error: err.message });
-   }
+   });
 }
 
 /* =========================
    ACTUALIZAR
 ========================= */
-async function actualizar(req, res) {
-   try {
-      const result = await ClientesModel.updateCliente(req.params.id, req.body);
+function actualizar(req, res) {
+   ClientesModel.updateCliente(req.params.id, req.body, (err, result) => {
+      if (err) {
+         return res.status(500).json({ error: err.message });
+      }
       res.json({ message: "Cliente actualizado", result });
-   } catch (err) {
-      res.status(500).json({ error: err.message });
-   }
+   });
 }
 
 /* =========================
    ELIMINAR
 ========================= */
-async function eliminar(req, res) {
-   try {
-      const result = await ClientesModel.deleteCliente(req.params.id);
+function eliminar(req, res) {
+   ClientesModel.deleteCliente(req.params.id, (err, result) => {
+      if (err) {
+         return res.status(500).json({ error: err.message });
+      }
       res.json({ message: "Cliente eliminado", result });
-   } catch (err) {
-      res.status(500).json({ error: err.message });
-   }
+   });
 }
 
 module.exports = {
