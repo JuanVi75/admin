@@ -1,27 +1,29 @@
 const db = require("../config/db");
 
 /* =========================
-   LISTAR
+   LISTAR (CON CLIENTES)
 ========================= */
 function listarContactos(callback) {
 
    const sql = `
       SELECT
-         id,
-         cliente_id,
-         nombre,
-         cargo,
-         telefono,
-         email,
-         tipo,
-         estado,
-         created_at,
-         updated_at,
-         deleted_at,
-         is_deleted
-      FROM cliente_contactos
-      WHERE is_deleted = 0
-      ORDER BY nombre ASC
+         cc.id,
+         cc.cliente_id,
+         c.cliente AS cliente_nombre,
+         cc.nombre,
+         cc.cargo,
+         cc.telefono,
+         cc.email,
+         cc.tipo,
+         cc.estado,
+         cc.created_at,
+         cc.updated_at,
+         cc.deleted_at,
+         cc.is_deleted
+      FROM cliente_contactos cc
+      LEFT JOIN clientes c ON c.id = cc.cliente_id
+      WHERE cc.is_deleted = 0
+      ORDER BY c.cliente ASC, cc.nombre ASC
    `;
 
    db.query(sql, (err, results) => {
