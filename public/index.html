@@ -1353,10 +1353,12 @@
       async function initContactos() {
          await cargarClientes();
          await cargarContactos();
+         renderTablaContactos();
+         cargarMetaContactos();
       }
 
       /* =========================
-         CARGAR CLIENTES
+         CLIENTES
       ========================= */
       async function cargarClientes() {
          const res = await fetch("/clientes");
@@ -1364,7 +1366,7 @@
       }
 
       /* =========================
-         CARGAR CONTACTOS
+         CONTACTOS
       ========================= */
       async function cargarContactos() {
          const res = await fetch("/contactos");
@@ -1375,23 +1377,25 @@
       }
 
       /* =========================
-         FILTRO POR CLIENTE (ID REAL)
+         FILTRO (POR ID CLIENTE)
       ========================= */
       function filtrarContactos(valor) {
-         filtroClienteActivo = String(valor || "").split(" - ")[0].trim();
+         filtroClienteActivo = valor ? String(valor) : "";
          currentPageContactos = 1;
          renderTablaContactos();
       }
 
       /* =========================
-         RENDER TABLA CONTACTOS
+         RENDER TABLA
       ========================= */
       function renderTablaContactos() {
 
-         const clienteId = String(filtroClienteActivo || "").trim();
+         const clienteId = String(filtroClienteActivo || "");
 
          const dataFiltrada = clienteId
-            ? contactosData.filter(c => String(c.cliente_id || "").trim() === clienteId)
+            ? contactosData.filter(c =>
+               String(c.cliente_id || "") === clienteId
+            )
             : contactosData;
 
          const start = (currentPageContactos - 1) * rowsPerPage;
@@ -1401,11 +1405,14 @@
 
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
-         const clienteActivo = clientesData.find(c => String(c.id) === clienteId);
+         const clienteActivo = clientesData.find(c =>
+            String(c.id) === clienteId
+         );
 
          let html = `
 <div class="departamentos-layout">
 
+   <!-- TABLA -->
    <div class="table-container">
 
       <div class="title">
@@ -1417,6 +1424,7 @@
 
       <div class="table-wrapper">
       <table>
+
          <thead>
             <tr>
                <th>Cliente</th>
@@ -1428,13 +1436,16 @@
                <th>Estado</th>
             </tr>
          </thead>
-         <tbody>`;
+
+         <tbody>
+   `;
 
          pageData.forEach(c => {
 
             const clienteNombre =
-               clientesData.find(cl => String(cl.id) === String(c.cliente_id))?.cliente
-               || c.cliente_id;
+               clientesData.find(cl =>
+                  String(cl.id) === String(c.cliente_id)
+               )?.cliente || c.cliente_id;
 
             html += `
 <tr onclick="selectContacto(
@@ -1454,7 +1465,8 @@
    <td>${c.email || ''}</td>
    <td>${c.tipo || ''}</td>
    <td>${c.estado || ''}</td>
-</tr>`;
+</tr>
+      `;
          });
 
          html += `
@@ -1475,17 +1487,22 @@
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <input list="clientes-lista"
-             class="btn"
-             id="contacto-cliente"
-             placeholder="Buscar cliente..."
-             onchange="filtrarContactos(this.value)">
+      <input 
+         class="btn"
+         id="contacto-cliente-buscar"
+         placeholder="Buscar cliente..."
+         oninput="buscarClientesDropdown(this.value)"
+      >
 
-      <datalist id="clientes-lista">
+      <select class="btn"
+         id="contacto-cliente"
+         onchange="filtrarContactos(this.value)">
+
+         <option value="">-- TODOS LOS CLIENTES --</option>
          ${clientesData.map(cli =>
-            `<option value="${cli.id} - ${cli.cliente}"></option>`
+            `<option value="${cli.id}">${cli.cliente}</option>`
          ).join("")}
-      </datalist>
+      </select>
 
       <input class="btn" id="contacto-nombre" placeholder="Nombre">
       <input class="btn" id="contacto-cargo" placeholder="Cargo">
@@ -1512,9 +1529,30 @@
 
    </div>
 
-</div>`;
+</div>
+   `;
 
          document.getElementById("panel").innerHTML = html;
+      }
+
+      /* =========================
+         BUSCADOR DROPDOWN CLIENTES
+      ========================= */
+      function buscarClientesDropdown(texto) {
+
+         const input = (texto || "").toLowerCase();
+
+         const select = document.getElementById("contacto-cliente");
+         if (!select) return;
+
+         select.innerHTML = `
+      <option value="">-- TODOS LOS CLIENTES --</option>
+      ${clientesData
+               .filter(c => (c.cliente || "").toLowerCase().includes(input))
+               .map(cli => `<option value="${cli.id}">${cli.cliente}</option>`)
+               .join("")
+            }
+   `;
       }
 
       /* =========================
@@ -1539,7 +1577,7 @@
       async function crearContacto() {
 
          const data = {
-            cliente_id: document.getElementById("contacto-cliente").value.split(" - ")[0].trim(),
+            cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
             cargo: document.getElementById("contacto-cargo").value.trim(),
             telefono: document.getElementById("contacto-telefono").value.trim(),
@@ -1566,7 +1604,7 @@
          if (!selectedContactoId) return;
 
          const data = {
-            cliente_id: document.getElementById("contacto-cliente").value.split(" - ")[0].trim(),
+            cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
             cargo: document.getElementById("contacto-cargo").value.trim(),
             telefono: document.getElementById("contacto-telefono").value.trim(),
@@ -1598,7 +1636,6 @@
 
          await cargarContactos();
          await cargarMetaContactos();
-
          limpiarContacto();
       }
 
@@ -1623,38 +1660,34 @@
       ========================= */
       async function cargarMetaContactos() {
 
-         try {
+         const res = await fetch("/contactos/stats");
+         const data = await res.json();
 
-            const res = await fetch("/contactos/stats");
-            const data = await res.json();
+         document.getElementById("count-contactos").innerText =
+            "Registros: " + (data.total ?? 0);
 
-            document.getElementById("count-contactos").innerText =
-               "Registros: " + (data.total ?? 0);
+         document.getElementById("last-update-contactos").innerText =
+            data.ultima_actualizacion
+               ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+               : "-";
 
-            document.getElementById("last-update-contactos").innerText =
-               data.ultima_actualizacion
-                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
-                  : "-";
+         document.getElementById("inserted-contactos").innerText =
+            data.ingresados_hoy ?? 0;
 
-            document.getElementById("inserted-contactos").innerText =
-               data.ingresados_hoy ?? 0;
+         document.getElementById("updated-contactos").innerText =
+            data.modificados_hoy ?? 0;
 
-            document.getElementById("updated-contactos").innerText =
-               data.modificados_hoy ?? 0;
-
-            document.getElementById("deleted-contactos").innerText =
-               data.eliminados_hoy ?? 0;
-
-         } catch (e) {
-            console.log("ERROR META CONTACTOS:", e);
-         }
+         document.getElementById("deleted-contactos").innerText =
+            data.eliminados_hoy ?? 0;
       }
 
       /* =========================
          PAGINACIÓN
       ========================= */
       function nextPageContactos() {
+
          const totalPages = Math.ceil(contactosData.length / rowsPerPage) || 1;
+
          if (currentPageContactos < totalPages) {
             currentPageContactos++;
             renderTablaContactos();
@@ -1662,6 +1695,7 @@
       }
 
       function prevPageContactos() {
+
          if (currentPageContactos > 1) {
             currentPageContactos--;
             renderTablaContactos();
@@ -1669,6 +1703,7 @@
       }
 
    </script>
+
 </body>
 
 </html>
