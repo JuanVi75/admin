@@ -285,20 +285,24 @@
 
    </div>
 
+   /*-------------------------------------------
+   VARIABLES GLOBALES
+   ---------------------------------------------*/
+
    <script>
-      /*-------------------------------------------
-         VARIABLES GLOBALES
-      ---------------------------------------------*/
+
       let selectedId = null;
       let currentPage = 1;
       let rowsPerPage = 16;
       let departamentosData = [];
    </script>
 
+   /*-------------------------------------------
+   GOLBALES
+   ---------------------------------------------*/
+
    <script>
-      /*-------------------------------------------
-         FUNCIONES GOLBALES
-      ---------------------------------------------*/
+
       window.onload = async () => {
          load('inicio');
 
@@ -339,6 +343,10 @@
       }
 
    </script>
+
+   /*-------------------------------------------
+   DEPARTAMENTOS
+   ---------------------------------------------*/
 
    <script>
       /*-------------------------------------------
@@ -506,6 +514,10 @@
          selectedId = null;
       }
    </script>
+
+   /*-------------------------------------------
+   CIUDADES
+   ---------------------------------------------*/
 
    <script>
       /*-------------------------------------------
@@ -901,6 +913,10 @@
 
    </script>
 
+   /*-------------------------------------------
+   SECTORES
+   ---------------------------------------------*/
+
    <script>
 
       /*-------------------------------------------
@@ -1232,6 +1248,10 @@
 
    </script>
 
+   /*-------------------------------------------
+   CONTACTOS
+   ---------------------------------------------*/
+
    <script>
 
       /* =========================
@@ -1243,12 +1263,9 @@
       let selectedContactoId = null;
       let filtroClienteActivo = "";
 
-      /*-------------------------------------------
-         FUNCIONES CONTACTOS
-      ---------------------------------------------*/
 
       /* =========================
-         CARGAR CLIENTES (OBLIGATORIO)
+         CARGAR CLIENTES
       ========================= */
       async function cargarClientes() {
          const res = await fetch("/clientes");
@@ -1306,7 +1323,6 @@
          let html = `
 <div class="departamentos-layout">
 
-   <!-- TABLA -->
    <div class="table-container">
 
       <div class="title">
@@ -1381,7 +1397,6 @@
 
    </div>
 
-   <!-- FORMULARIO -->
    <div class="card">
 
       <div class="title">FORMULARIO CONTACTOS</div>
@@ -1537,7 +1552,7 @@
       }
 
       /* =========================
-         STATS CONTACTOS
+         META CONTACTOS
       ========================= */
       async function cargarMetaContactos() {
 
