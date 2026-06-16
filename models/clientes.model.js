@@ -1,32 +1,42 @@
-// models/clientes.model.js
-
 const db = require("../config/db");
 
 /* =========================
    LISTAR TODOS
 ========================= */
-async function getAllClientes() {
-   const [rows] = await db.query(
-      "SELECT * FROM clientes ORDER BY cliente ASC"
-   );
-   return rows;
+function getAllClientes(callback) {
+
+   const sql = `
+      SELECT * 
+      FROM clientes 
+      ORDER BY cliente ASC
+   `;
+
+   db.query(sql, (err, rows) => {
+      callback(err, rows);
+   });
 }
 
 /* =========================
    OBTENER POR ID
 ========================= */
-async function getClienteById(id) {
-   const [rows] = await db.query(
-      "SELECT * FROM clientes WHERE id = ?",
-      [id]
-   );
-   return rows[0];
+function getClienteById(id, callback) {
+
+   const sql = `
+      SELECT * 
+      FROM clientes 
+      WHERE id = ?
+   `;
+
+   db.query(sql, [id], (err, rows) => {
+      callback(err, rows[0]);
+   });
 }
 
 /* =========================
    CREAR
 ========================= */
-async function createCliente(data) {
+function createCliente(data, callback) {
+
    const sql = `
       INSERT INTO clientes (
          id, cliente, direccion, telefono, ciudad, departamento,
@@ -54,14 +64,16 @@ async function createCliente(data) {
       data.estado || "ACTIVO"
    ];
 
-   const [result] = await db.query(sql, values);
-   return result;
+   db.query(sql, values, (err, result) => {
+      callback(err, result);
+   });
 }
 
 /* =========================
    ACTUALIZAR
 ========================= */
-async function updateCliente(id, data) {
+function updateCliente(id, data, callback) {
+
    const sql = `
       UPDATE clientes SET
          cliente = ?,
@@ -101,19 +113,24 @@ async function updateCliente(id, data) {
       id
    ];
 
-   const [result] = await db.query(sql, values);
-   return result;
+   db.query(sql, values, (err, result) => {
+      callback(err, result);
+   });
 }
 
 /* =========================
    ELIMINAR
 ========================= */
-async function deleteCliente(id) {
-   const [result] = await db.query(
-      "DELETE FROM clientes WHERE id = ?",
-      [id]
-   );
-   return result;
+function deleteCliente(id, callback) {
+
+   const sql = `
+      DELETE FROM clientes 
+      WHERE id = ?
+   `;
+
+   db.query(sql, [id], (err, result) => {
+      callback(err, result);
+   });
 }
 
 module.exports = {
