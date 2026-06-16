@@ -1320,12 +1320,12 @@
       ========================= */
       function renderTablaContactos() {
 
-         const filtro = (filtroClienteActivo || "").toString().trim();
+         const clienteId = (filtroClienteActivo || "").toString().trim();
 
-         /* FILTRO CORRECTO (si hay cliente seleccionado) */
-         const dataFiltrada = filtro
+         /* FILTRO POR CLIENTE */
+         const dataFiltrada = clienteId
             ? contactosData.filter(c =>
-               String(c.cliente_id || "").trim() === filtro
+               String(c.cliente_id || "").trim() === clienteId
             )
             : contactosData;
 
@@ -1337,13 +1337,24 @@
          const totalPages =
             Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
+         /* CLIENTE ACTIVO (NOMBRE) */
+         const clienteActivo = clientesData.find(c => c.id === clienteId);
+
          let html = `
 <div class="departamentos-layout">
 
    <!-- TABLA -->
    <div class="table-container">
 
-      <div class="title">CONTACTOS</div>
+      <div class="title">
+         CONTACTOS
+         <div class="small">
+            ${clienteActivo
+               ? clienteActivo.cliente
+               : "TODOS LOS CLIENTES"
+            }
+         </div>
+      </div>
 
       <div class="table-wrapper">
       <table>
@@ -1375,7 +1386,7 @@
    '${c.tipo || ''}',
    '${c.estado || ''}'
 )">
-   <td>${c.cliente_id || ''}</td>
+   <td>${c.cliente_nombre || c.cliente_id || ''}</td>
    <td>${c.nombre || ''}</td>
    <td>${c.cargo || ''}</td>
    <td>${c.telefono || ''}</td>
@@ -1409,12 +1420,13 @@
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
+      <!-- SELECT CLIENTE (FILTRO REAL) -->
       <select class="btn"
          id="contacto-cliente"
          onchange="filtrarContactos(this.value)">
 
-         <option value="">-- Todos los clientes --</option>
-      `;
+         <option value="">-- TODOS LOS CLIENTES --</option>
+`;
 
          (clientesData || []).forEach(cli => {
             html += `
