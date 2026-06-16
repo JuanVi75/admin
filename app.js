@@ -28,6 +28,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
+/* HANDLE 404 (opcional pero recomendado) */
+app.use((req, res) => {
+  res.status(404).json({ error: "Ruta no encontrada" });
+});
+
 /* SERVER */
 const PORT = process.env.PORT || 3000;
 
