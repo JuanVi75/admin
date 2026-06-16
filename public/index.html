@@ -1368,6 +1368,11 @@
          try {
             const res = await fetch("/clientes");
             clientesData = await res.json();
+
+            console.log("CLIENTES OK:", clientesData);
+
+            renderTablaContactos(); // 👈 ESTE ES EL FIX REAL
+
          } catch (e) {
             console.error("ERROR CLIENTES:", e);
             clientesData = [];
