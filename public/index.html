@@ -1003,15 +1003,57 @@
 
       <div class="title">SECTORES</div>
 
-      <div style="padding:10px 0;">
+      <div class="card">
+
+         <div class="title">
+            FORMULARIO SECTORES
+         </div>
+
          <input
-            id="filtro-sector"
             class="btn"
-            type="text"
-            placeholder="Filtrar por sector..."
-            value="${filtroSector}"
-            onkeyup="filtrarSectores(this.value)"
-            style="width:100%;">
+            id="filtro-sector"
+            placeholder="Buscar sector..."
+            value="${filtroSector || ''}"
+            onkeyup="filtrarSectores(this.value)">
+
+         <input
+            class="btn"
+            id="sector-nombre"
+            placeholder="Sector">
+
+         <input
+            class="btn"
+            id="sector-subcategoria"
+            placeholder="Subcategoría">
+
+         <div class="form-actions">
+
+            <button
+               onclick="crearSector()"
+               class="btn primary">
+               Crear
+            </button>
+
+            <button
+               onclick="modificarSector()"
+               class="btn warn">
+               Modificar
+            </button>
+
+            <button
+               onclick="borrarSector()"
+               class="btn danger">
+               Borrar
+            </button>
+
+            <button
+               onclick="limpiarSector()"
+               class="btn clean">
+               Limpiar
+            </button>
+
+         </div>
+
       </div>
 
       <div class="table-wrapper">
@@ -1025,6 +1067,7 @@
          </thead>
 
          <tbody>`;
+
          pageData.forEach(s => {
 
             const sector =
@@ -1062,52 +1105,6 @@
             onclick="nextPageSectores()"
             ${currentPageSectores >= totalPages ? 'disabled' : ''}>
             ➡
-         </button>
-
-      </div>
-
-   </div>
-
-   <div class="card">
-
-      <div class="title">
-         FORMULARIO SECTORES
-      </div>
-
-      <input
-         class="btn"
-         id="sector-nombre"
-         placeholder="Sector">
-
-      <input
-         class="btn"
-         id="sector-subcategoria"
-         placeholder="Subcategoría">
-
-      <div class="form-actions">
-
-         <button
-            onclick="crearSector()"
-            class="btn primary">
-            Crear
-         </button>
-
-         <button
-            onclick="modificarSector()"
-            class="btn warn">
-            Modificar
-         </button>
-
-         <button
-            onclick="borrarSector()"
-            class="btn danger">
-            Borrar
-         </button>
-
-         <button
-            onclick="limpiarSector()"
-            class="btn clean">
-            Limpiar
          </button>
 
       </div>
