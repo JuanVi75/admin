@@ -1401,22 +1401,23 @@
       }
 
       /* =========================
-         NORMALIZADOR CRÍTICO
+         NORMALIZADOR
       ========================= */
       function norm(v) {
          return String(v ?? "").trim();
       }
 
       /* =========================
-         RENDER TABLA
+         RENDER TABLA (FILTRO ARREGLADO)
       ========================= */
       function renderTablaContactos() {
 
          const clienteId = norm(filtroClienteActivo);
 
-         // 🔴 FIX REAL: asegurar comparación estricta string-string
          const dataFiltrada = clienteId
-            ? contactosData.filter(c => norm(c.cliente_id) === clienteId)
+            ? contactosData.filter(c =>
+               String(c.cliente_id ?? "").trim() === clienteId
+            )
             : contactosData;
 
          const start = (currentPageContactos - 1) * rowsPerPage;
@@ -1426,7 +1427,9 @@
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
          const clienteActivo =
-            clientesData.find(c => norm(c.id) === clienteId);
+            clientesData.find(c =>
+               String(c.id ?? "").trim() === clienteId
+            );
 
          let html = `
 <div class="departamentos-layout">
@@ -1461,9 +1464,9 @@
          pageData.forEach(c => {
 
             const clienteNombre =
-               clientesData.find(cl => norm(cl.id) === norm(c.cliente_id))?.cliente
-               || c.cliente_id
-               || "";
+               clientesData.find(cl =>
+                  String(cl.id ?? "").trim() === String(c.cliente_id ?? "").trim()
+               )?.cliente || c.cliente_id || "";
 
             html += `
 <tr onclick="selectContacto(
@@ -1591,6 +1594,7 @@
          MODIFICAR CONTACTO
       ========================= */
       async function modificarContacto() {
+
          if (!selectedContactoId) return;
 
          const data = {
@@ -1617,6 +1621,7 @@
          BORRAR CONTACTO
       ========================= */
       async function borrarContacto() {
+
          if (!selectedContactoId) return;
 
          await fetch(`/contactos/${selectedContactoId}`, {
@@ -1650,6 +1655,7 @@
          META CONTACTOS
       ========================= */
       async function cargarMetaContactos() {
+
          try {
             const res = await fetch("/contactos/stats");
             const data = await res.json();
