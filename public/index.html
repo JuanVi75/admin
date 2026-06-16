@@ -1363,10 +1363,6 @@
          try {
             const res = await fetch("/clientes");
             clientesData = await res.json();
-
-            // DEBUG silencioso (puedes quitarlo luego)
-            console.log("CLIENTES OK:", clientesData);
-
          } catch (e) {
             console.error("ERROR CLIENTES:", e);
             clientesData = [];
@@ -1381,8 +1377,6 @@
             const res = await fetch("/contactos");
             contactosData = await res.json();
 
-            console.log("CONTACTOS OK:", contactosData);
-
             currentPageContactos = 1;
             renderTablaContactos();
 
@@ -1393,23 +1387,23 @@
       }
 
       /* =========================
-         FILTRO
-      ========================= */
-      function filtrarContactos(valor) {
-         filtroClienteActivo = String(valor || "").trim();
-         currentPageContactos = 1;
-         renderTablaContactos();
-      }
-
-      /* =========================
-         NORMALIZADOR
+         NORMALIZADOR (CLAVE)
       ========================= */
       function norm(v) {
          return String(v ?? "").trim();
       }
 
       /* =========================
-         RENDER TABLA
+         FILTRO (ARREGLADO)
+      ========================= */
+      function filtrarContactos(valor) {
+         filtroClienteActivo = norm(valor);
+         currentPageContactos = 1;
+         renderTablaContactos();
+      }
+
+      /* =========================
+         RENDER TABLA CONTACTOS
       ========================= */
       function renderTablaContactos() {
 
@@ -1482,8 +1476,7 @@
    <td>${c.email || ''}</td>
    <td>${c.tipo || ''}</td>
    <td>${c.estado || ''}</td>
-</tr>
-`;
+</tr>`;
          });
 
          html += `
@@ -1526,7 +1519,7 @@
          <option value="INACTIVO">INACTIVO</option>
       </select>
 
-      <div class="form-actions">
+      <div class="form-actions" style="display:flex; gap:10px; flex-wrap:wrap;">
          <button onclick="crearContacto()" class="btn primary">Crear</button>
          <button onclick="modificarContacto()" class="btn warn">Modificar</button>
          <button onclick="borrarContacto()" class="btn danger">Borrar</button>
@@ -1542,7 +1535,7 @@
       }
 
       /* =========================
-         SELECT
+         SELECT CONTACTO
       ========================= */
       function selectContacto(id, cliente_id, nombre, cargo, telefono, email, tipo, estado) {
 
@@ -1566,7 +1559,6 @@
          CREAR CONTACTO
       ========================= */
       async function crearContacto() {
-
          const data = {
             cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
@@ -1591,7 +1583,6 @@
          MODIFICAR CONTACTO
       ========================= */
       async function modificarContacto() {
-
          if (!selectedContactoId) return;
 
          const data = {
@@ -1618,7 +1609,6 @@
          BORRAR CONTACTO
       ========================= */
       async function borrarContacto() {
-
          if (!selectedContactoId) return;
 
          await fetch(`/contactos/${selectedContactoId}`, {
@@ -1652,7 +1642,6 @@
          META CONTACTOS
       ========================= */
       async function cargarMetaContactos() {
-
          try {
             const res = await fetch("/contactos/stats");
             const data = await res.json();
@@ -1677,6 +1666,10 @@
             console.error(e);
          }
       }
+
+      /* =========================
+         PAGINACIÓN
+      ========================= */
       function nextPageContactos() {
          const totalPages = Math.ceil(contactosData.length / rowsPerPage) || 1;
          if (currentPageContactos < totalPages) {
