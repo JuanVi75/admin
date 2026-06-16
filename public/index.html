@@ -1348,6 +1348,11 @@
       let filtroClienteActivo = "";
 
       /* =========================
+         CONFIG PAGINACIÓN (FIX CRÍTICO)
+      ========================= */
+      //const rowsPerPage = window.rowsPerPage || 10;
+
+      /* =========================
          INIT CONTACTOS
       ========================= */
       async function initContactos() {
@@ -1363,9 +1368,6 @@
          try {
             const res = await fetch("/clientes");
             clientesData = await res.json();
-
-            console.log("CLIENTES OK:", clientesData);
-
          } catch (e) {
             console.error("ERROR CLIENTES:", e);
             clientesData = [];
@@ -1379,8 +1381,6 @@
          try {
             const res = await fetch("/contactos");
             contactosData = await res.json();
-
-            console.log("CONTACTOS OK:", contactosData);
 
             currentPageContactos = 1;
             renderTablaContactos();
@@ -1408,16 +1408,14 @@
       }
 
       /* =========================
-         RENDER TABLA (FILTRO ARREGLADO)
+         RENDER TABLA
       ========================= */
       function renderTablaContactos() {
 
          const clienteId = norm(filtroClienteActivo);
 
          const dataFiltrada = clienteId
-            ? contactosData.filter(c =>
-               String(c.cliente_id ?? "").trim() === clienteId
-            )
+            ? contactosData.filter(c => norm(c.cliente_id) === clienteId)
             : contactosData;
 
          const start = (currentPageContactos - 1) * rowsPerPage;
@@ -1427,9 +1425,7 @@
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
          const clienteActivo =
-            clientesData.find(c =>
-               String(c.id ?? "").trim() === clienteId
-            );
+            clientesData.find(c => norm(c.id) === clienteId);
 
          let html = `
 <div class="departamentos-layout">
@@ -1464,9 +1460,9 @@
          pageData.forEach(c => {
 
             const clienteNombre =
-               clientesData.find(cl =>
-                  String(cl.id ?? "").trim() === String(c.cliente_id ?? "").trim()
-               )?.cliente || c.cliente_id || "";
+               clientesData.find(cl => norm(cl.id) === norm(c.cliente_id))?.cliente
+               || c.cliente_id
+               || "";
 
             html += `
 <tr onclick="selectContacto(
@@ -1509,7 +1505,7 @@
       <select class="btn" id="contacto-cliente" onchange="filtrarContactos(this.value)">
          <option value="">-- TODOS LOS CLIENTES --</option>
          ${clientesData.map(cli => `
-            <option value="${cli.id}">${cli.cliente}</option>
+            <option value="${String(cli.id).trim()}">${cli.cliente}</option>
          `).join("")}
       </select>
 
@@ -1542,7 +1538,8 @@
 
 </div>`;
 
-         document.getElementById("panel").innerHTML = html;
+         const panel = document.getElementById("panel");
+         if (panel) panel.innerHTML = html;
       }
 
       /* =========================
@@ -1570,6 +1567,7 @@
          CREAR CONTACTO
       ========================= */
       async function crearContacto() {
+
          const data = {
             cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
@@ -1655,7 +1653,6 @@
          META CONTACTOS
       ========================= */
       async function cargarMetaContactos() {
-
          try {
             const res = await fetch("/contactos/stats");
             const data = await res.json();
