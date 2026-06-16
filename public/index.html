@@ -1322,9 +1322,10 @@
 
          const filtro = (filtroClienteActivo || "").toLowerCase().trim();
 
+         /* filtra por cliente_id */
          const dataFiltrada = filtro
             ? contactosData.filter(c =>
-               (c.cliente_id || "").toLowerCase().includes(filtro)
+               (c.cliente_id || "").toLowerCase() === filtro
             )
             : contactosData;
 
@@ -1335,9 +1336,6 @@
 
          const totalPages =
             Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
-
-         /* dropdown clientes (requiere clientesData ya cargado) */
-         const clientesUnicos = [...new Set(contactosData.map(c => c.cliente_id))];
 
          let html = `
 <div class="departamentos-layout">
@@ -1409,18 +1407,23 @@
    </div>
 
 
-   <!-- FORMULARIO LADO DERECHO -->
+   <!-- FORMULARIO -->
    <div class="card">
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <!-- DROPDOWN CLIENTES -->
-      <select class="btn" id="contacto-cliente">
+      <!-- DROPDOWN CLIENTES (MUESTRA NOMBRE, USA ID) -->
+      <select class="btn"
+         id="contacto-cliente"
+         onchange="filtrarContactos(this.value)">
 
-         <option value="">Seleccione cliente</option>`;
+         <option value="">-- Filtrar por cliente --</option>`;
 
-         clientesUnicos.forEach(cli => {
-            html += `<option value="${cli}">${cli}</option>`;
+         clientesData.forEach(cli => {
+            html += `
+         <option value="${cli.id}">
+            ${cli.cliente}
+         </option>`;
          });
 
          html += `
@@ -1441,12 +1444,6 @@
          <option value="ACTIVO">ACTIVO</option>
          <option value="INACTIVO">INACTIVO</option>
       </select>
-
-      <!-- FILTRO CLIENTE -->
-      <input class="btn"
-         placeholder="Buscar cliente..."
-         value="${filtroClienteActivo}"
-         onkeyup="filtrarContactos(this.value)">
 
       <div class="form-actions">
 
