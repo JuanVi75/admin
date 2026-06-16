@@ -1,6 +1,6 @@
 // models/clientes.model.js
 
-const db = require("../db"); // ajusta a tu conexión real
+const db = require("../config/db");
 
 /* =========================
    LISTAR TODOS
