@@ -1347,6 +1347,12 @@
       let selectedContactoId = null;
       let filtroClienteActivo = "";
 
+      async function initContactos() {
+
+         await cargarClientes();   // PRIMERO CLIENTES
+         await cargarContactos();  // DESPUÉS CONTACTOS
+
+      }
 
       /* =========================
          CARGAR CLIENTES
@@ -1374,7 +1380,7 @@
       ========================= */
       function filtrarContactos(valor) {
 
-         filtroClienteActivo = valor || "";
+         filtroClienteActivo = valor ? String(valor) : "";
          currentPageContactos = 1;
 
          renderTablaContactos();
@@ -1385,11 +1391,11 @@
       ========================= */
       function renderTablaContactos() {
 
-         const clienteId = (filtroClienteActivo || "").toString().trim();
+         const clienteId = String(filtroClienteActivo || "");
 
          const dataFiltrada = clienteId
             ? contactosData.filter(c =>
-               String(c.cliente_id || "").trim() === String(clienteId)
+               String(c.cliente_id || "") === clienteId
             )
             : contactosData;
 
@@ -1398,11 +1404,11 @@
 
          const pageData = dataFiltrada.slice(start, end);
 
-         const totalPages =
-            Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
+         const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
-         const clienteActivo =
-            clientesData.find(c => String(c.id) === String(clienteId));
+         const clienteActivo = clientesData.find(c =>
+            String(c.id) === clienteId
+         );
 
          let html = `
 <div class="departamentos-layout">
@@ -1418,7 +1424,6 @@
 
       <div class="table-wrapper">
       <table>
-
          <thead>
             <tr>
                <th>Cliente</th>
@@ -1430,15 +1435,13 @@
                <th>Estado</th>
             </tr>
          </thead>
-
          <tbody>`;
 
          pageData.forEach(c => {
 
-            const clienteNombre =
-               clientesData.find(cl => String(cl.id) === String(c.cliente_id))?.cliente
-               || c.cliente_id
-               || "";
+            const clienteNombre = clientesData.find(cl =>
+               String(cl.id) === String(c.cliente_id)
+            )?.cliente || c.cliente_id;
 
             html += `
 <tr onclick="selectContacto(
@@ -1467,13 +1470,9 @@
       </div>
 
       <div class="pagination">
-
          <button onclick="prevPageContactos()" ${currentPageContactos === 1 ? 'disabled' : ''}>⬅</button>
-
          <span>${currentPageContactos} / ${totalPages}</span>
-
          <button onclick="nextPageContactos()" ${currentPageContactos >= totalPages ? 'disabled' : ''}>➡</button>
-
       </div>
 
    </div>
@@ -1482,44 +1481,17 @@
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <select class="btn"
-         id="contacto-cliente"
-         onchange="filtrarContactos(this.value)">
-
+      <select class="btn" id="contacto-cliente" onchange="filtrarContactos(this.value)">
          <option value="">-- TODOS LOS CLIENTES --</option>
-`;
-
-         (clientesData || []).forEach(cli => {
-            html += `<option value="${cli.id}">${cli.cliente}</option>`;
-         });
-
-         html += `
+         ${clientesData.map(cli =>
+            `<option value="${cli.id}">${cli.cliente}</option>`
+         ).join("")}
       </select>
 
       <input class="btn" id="contacto-nombre" placeholder="Nombre">
       <input class="btn" id="contacto-cargo" placeholder="Cargo">
       <input class="btn" id="contacto-telefono" placeholder="Teléfono">
       <input class="btn" id="contacto-email" placeholder="Email">
-
-      <select class="btn" id="contacto-tipo">
-         <option value="COMPRADOR">COMPRADOR</option>
-         <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
-         <option value="OTRO">OTRO</option>
-      </select>
-
-      <select class="btn" id="contacto-estado">
-         <option value="ACTIVO">ACTIVO</option>
-         <option value="INACTIVO">INACTIVO</option>
-      </select>
-
-      <div class="form-actions">
-
-         <button onclick="crearContacto()" class="btn primary">Crear</button>
-         <button onclick="modificarContacto()" class="btn warn">Modificar</button>
-         <button onclick="borrarContacto()" class="btn danger">Borrar</button>
-         <button onclick="limpiarContacto()" class="btn clean">Limpiar</button>
-
-      </div>
 
    </div>
 
