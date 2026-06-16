@@ -1338,6 +1338,9 @@
 
    <script>
 
+      /* =========================
+         VARIABLES CONTACTOS
+      ========================= */
       let contactosData = [];
       let clientesData = [];
       let currentPageContactos = 1;
@@ -1345,7 +1348,7 @@
       let filtroClienteActivo = "";
 
       /* =========================
-         INIT
+         INIT CONTACTOS
       ========================= */
       async function initContactos() {
          await cargarClientes();
@@ -1373,7 +1376,7 @@
       }
 
       /* =========================
-         FILTRO
+         FILTRO CLIENTE
       ========================= */
       function filtrarContactos(valor) {
          filtroClienteActivo = String(valor || "").trim();
@@ -1382,18 +1385,21 @@
       }
 
       /* =========================
-         RENDER
+         NORMALIZADOR (CLAVE REAL DEL PROBLEMA)
+      ========================= */
+      function norm(v) {
+         return String(v ?? "").trim();
+      }
+
+      /* =========================
+         RENDER CONTACTOS (ÚNICO)
       ========================= */
       function renderTablaContactos() {
 
-         const clienteId = String(filtroClienteActivo || "").trim();
-
-         const normalize = v => String(v ?? "").trim();
+         const clienteId = norm(filtroClienteActivo);
 
          const dataFiltrada = clienteId
-            ? contactosData.filter(c =>
-               normalize(c.cliente_id) === clienteId
-            )
+            ? contactosData.filter(c => norm(c.cliente_id) === clienteId)
             : contactosData;
 
          const start = (currentPageContactos - 1) * rowsPerPage;
@@ -1402,9 +1408,7 @@
          const pageData = dataFiltrada.slice(start, end);
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
-         const clienteActivo = clientesData.find(c =>
-            normalize(c.id) === clienteId
-         );
+         const clienteActivo = clientesData.find(c => norm(c.id) === clienteId);
 
          let html = `
 <div class="departamentos-layout">
@@ -1433,15 +1437,14 @@
             </tr>
          </thead>
 
-         <tbody>
-`;
+         <tbody>`;
 
          pageData.forEach(c => {
 
             const clienteNombre =
-               clientesData.find(cl =>
-                  normalize(cl.id) === normalize(c.cliente_id)
-               )?.cliente || c.cliente_id || "";
+               clientesData.find(cl => norm(cl.id) === norm(c.cliente_id))?.cliente
+               || c.cliente_id
+               || "";
 
             html += `
 <tr onclick="selectContacto(
@@ -1481,11 +1484,11 @@
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <select class="btn" id="contacto-cliente">
+      <select class="btn" id="contacto-cliente" onchange="filtrarContactos(this.value)">
          <option value="">-- TODOS LOS CLIENTES --</option>
-         ${clientesData.map(cli => `
-            <option value="${cli.id}">${cli.cliente}</option>
-         `).join("")}
+         ${clientesData.map(cli =>
+            `<option value="${cli.id}">${cli.cliente}</option>`
+         ).join("")}
       </select>
 
       <input class="btn" id="contacto-nombre" placeholder="Nombre">
@@ -1504,7 +1507,7 @@
          <option value="INACTIVO">INACTIVO</option>
       </select>
 
-      <div class="form-actions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+      <div class="form-actions">
 
          <button onclick="crearContacto()" class="btn primary">Crear</button>
          <button onclick="modificarContacto()" class="btn warn">Modificar</button>
@@ -1518,15 +1521,7 @@
 </div>`;
 
          const panel = document.getElementById("panel");
-         panel.innerHTML = html;
-
-         /* EVENTO DEL FILTRO (SIN INLINE, ESTABLE) */
-         const sel = document.getElementById("contacto-cliente");
-         if (sel) {
-            sel.onchange = (e) => {
-               filtrarContactos(e.target.value);
-            };
-         }
+         if (panel) panel.innerHTML = html;
       }
 
       /* =========================
@@ -1554,7 +1549,6 @@
          CRUD
       ========================= */
       async function crearContacto() {
-
          const data = {
             cliente_id: document.getElementById("contacto-cliente").value.trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
@@ -1576,6 +1570,7 @@
       }
 
       async function modificarContacto() {
+
          if (!selectedContactoId) return;
 
          const data = {
@@ -1599,12 +1594,16 @@
       }
 
       async function borrarContacto() {
+
          if (!selectedContactoId) return;
 
-         await fetch(`/contactos/${selectedContactoId}`, { method: "DELETE" });
+         await fetch(`/contactos/${selectedContactoId}`, {
+            method: "DELETE"
+         });
 
          await cargarContactos();
          await cargarMetaContactos();
+
          limpiarContacto();
       }
 
@@ -1615,11 +1614,18 @@
 
          selectedContactoId = null;
 
-         ["contacto-cliente", "contacto-nombre", "contacto-cargo", "contacto-telefono", "contacto-email"]
-            .forEach(id => {
-               const el = document.getElementById(id);
-               if (el) el.value = "";
-            });
+         const ids = [
+            "contacto-cliente",
+            "contacto-nombre",
+            "contacto-cargo",
+            "contacto-telefono",
+            "contacto-email"
+         ];
+
+         ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+         });
 
          document.getElementById("contacto-tipo").value = "COMPRADOR";
          document.getElementById("contacto-estado").value = "ACTIVO";
@@ -1633,17 +1639,25 @@
             const res = await fetch("/contactos/stats");
             const data = await res.json();
 
-            document.getElementById("count-contactos").innerText = "Registros: " + (data.total ?? 0);
-            document.getElementById("last-update-contactos").innerText =
+            const set = (id, val) => {
+               const el = document.getElementById(id);
+               if (el) el.innerText = val;
+            };
+
+            set("count-contactos", "Registros: " + (data.total ?? 0));
+            set("last-update-contactos",
                data.ultima_actualizacion
                   ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
-                  : "-";
+                  : "-"
+            );
 
-            document.getElementById("inserted-contactos").innerText = data.ingresados_hoy ?? 0;
-            document.getElementById("updated-contactos").innerText = data.modificados_hoy ?? 0;
-            document.getElementById("deleted-contactos").innerText = data.eliminados_hoy ?? 0;
+            set("inserted-contactos", data.ingresados_hoy ?? 0);
+            set("updated-contactos", data.modificados_hoy ?? 0);
+            set("deleted-contactos", data.eliminados_hoy ?? 0);
 
-         } catch (e) { }
+         } catch (e) {
+            console.log(e);
+         }
       }
 
       /* =========================
