@@ -306,20 +306,20 @@
          }
 
          if (page === 'departamentos') {
-            cargarDepartamentos();
-            cargarMetaDepartamentos();
+            await cargarDepartamentos();
+            await cargarMetaDepartamentos();
          }
 
          if (page === 'ciudades') {
-            cargarCiudades();
+            await cargarCiudades();
             renderTablaCiudades();
-            cargarMetaCiudades();
+            await cargarMetaCiudades();
          }
 
          if (page === 'sectores') {
-            cargarSectores();
+            await cargarSectores();
             renderTablaSectores();
-            cargarMetaSectores();
+            await cargarMetaSectores();
 
          }
 
@@ -897,7 +897,7 @@
       /* =========================
          VARIABLES
       ========================= */
-      let sectoresData = sectoresData || [];
+      //let sectoresData = sectoresData || [];
       let currentPageSectores = 1;
       let selectedSectorId = null;
       let filtroSector = "";
