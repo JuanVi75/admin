@@ -251,8 +251,14 @@
          </div>
 
          <div class="card">
-            <div class="title">Contactos</div>
-            <div class="small">Registros: 0</div>
+            <div class="title">CONTACTOS</div>
+            <div class="small" id="count-contactos">Registros: ...</div>
+            <div class="meta">
+               Última actualización: <b id="last-update-contactos">-</b><br>
+               Ingresados Hoy: <b id="inserted-contactos">0</b><br>
+               Modificados Hoy: <b id="updated-contactos">0</b><br>
+               Eliminados Hoy: <b id="deleted-contactos">0</b>
+            </div>
          </div>
 
          <div class="card">
@@ -303,6 +309,7 @@
             cargarMetaDepartamentos();
             cargarMetaCiudades();
             cargarMetaSectores();
+            cargarMetaContactos();
          }
 
          if (page === 'departamentos') {
@@ -321,6 +328,12 @@
             renderTablaSectores();
             await cargarMetaSectores();
 
+         }
+
+         if (page === 'contactos') {
+            await cargarContactos();
+            renderTablaContactos();
+            await cargarMetaContactos();
          }
 
       }
@@ -500,7 +513,7 @@
       ---------------------------------------------*/
 
       /* =========================
-         VARIABLES
+         VARIABLES CIUDADES
       ========================= */
       let ciudadesData = [];
       let ciudadesFiltradas = [];
@@ -895,7 +908,7 @@
       ---------------------------------------------*/
 
       /* =========================
-         VARIABLES
+         VARIABLES SECTORES
       ========================= */
       let sectoresData = [];
       let currentPageSectores = 1;
@@ -1215,6 +1228,339 @@
             renderTablaSectores();
          }
 
+      }
+
+   </script>
+
+   <script>
+
+      /* =========================
+         VARIABLES CONTACTOS
+      ========================= */
+      let contactosData = [];
+      let currentPageContactos = 1;
+      let selectedContactoId = null;
+      let filtroClienteActivo = "";
+
+      /*-------------------------------------------
+         FUNCIONES CONTACTOS
+      ---------------------------------------------*/
+
+
+      /* =========================
+         CARGAR CONTACTOS
+      ========================= */
+      async function cargarContactos() {
+
+         const res = await fetch("/contactos");
+         contactosData = await res.json();
+
+         currentPageContactos = 1;
+
+         renderTablaContactos();
+      }
+
+      async function cargarMetaContactos() {
+
+         try {
+
+            const res = await fetch("/contactos/stats");
+            const data = await res.json();
+
+            document.getElementById("count-contactos").innerText =
+               "Registros: " + (data.total ?? 0);
+
+            document.getElementById("last-update-contactos").innerText =
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+                  : "-";
+
+            document.getElementById("inserted-contactos").innerText =
+               data.ingresados_hoy ?? 0;
+
+            document.getElementById("updated-contactos").innerText =
+               data.modificados_hoy ?? 0;
+
+            document.getElementById("deleted-contactos").innerText =
+               data.eliminados_hoy ?? 0;
+
+            const ins = data.ingresados_hoy ?? 0;
+            const upd = data.modificados_hoy ?? 0;
+            const del = data.eliminados_hoy ?? 0;
+
+            let partes = [];
+
+            if (ins > 0) partes.push(`Contactos: ${ins} creados`);
+            if (upd > 0) partes.push(`Contactos: ${upd} modificados`);
+            if (del > 0) partes.push(`Contactos: ${del} eliminados`);
+
+            if (partes.length > 0) {
+               registrarActividad(partes.join(" | "));
+            }
+
+         } catch (e) {
+            console.log("ERROR META CONTACTOS:", e);
+         }
+      }
+
+      /* =========================
+         FILTRO POR CLIENTE
+      ========================= */
+      function filtrarContactos(valor) {
+
+         filtroClienteActivo = valor || "";
+         currentPageContactos = 1;
+
+         renderTablaContactos();
+      }
+
+
+      /* =========================
+         RENDER TABLA CONTACTOS
+      ========================= */
+      function renderTablaContactos() {
+
+         const filtro = (filtroClienteActivo || "").toLowerCase().trim();
+
+         const dataFiltrada = filtro
+            ? contactosData.filter(c =>
+               (c.cliente_id || "").toLowerCase().includes(filtro)
+            )
+            : contactosData;
+
+         const start = (currentPageContactos - 1) * rowsPerPage;
+         const end = start + rowsPerPage;
+
+         const pageData = dataFiltrada.slice(start, end);
+
+         const totalPages =
+            Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
+
+         let html = `
+<div class="departamentos-layout">
+
+   <div class="table-container">
+
+      <div class="title">CONTACTOS</div>
+
+      <div class="card">
+
+         <div class="title">FORMULARIO CONTACTOS</div>
+
+         <input class="btn" id="contacto-cliente" placeholder="Cliente ID">
+         <input class="btn" id="contacto-nombre" placeholder="Nombre">
+         <input class="btn" id="contacto-cargo" placeholder="Cargo">
+         <input class="btn" id="contacto-telefono" placeholder="Teléfono">
+         <input class="btn" id="contacto-email" placeholder="Email">
+
+         <select class="btn" id="contacto-tipo">
+            <option value="COMPRADOR">COMPRADOR</option>
+            <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
+            <option value="OTRO">OTRO</option>
+         </select>
+
+         <select class="btn" id="contacto-estado">
+            <option value="ACTIVO">ACTIVO</option>
+            <option value="INACTIVO">INACTIVO</option>
+         </select>
+
+         <!-- DROPDOWN FILTRO CLIENTE -->
+         <input class="btn"
+            placeholder="Filtrar por cliente ID"
+            value="${filtroClienteActivo}"
+            onkeyup="filtrarContactos(this.value)">
+
+         <div class="form-actions">
+
+            <button onclick="crearContacto()" class="btn primary">Crear</button>
+            <button onclick="modificarContacto()" class="btn warn">Modificar</button>
+            <button onclick="borrarContacto()" class="btn danger">Borrar</button>
+            <button onclick="limpiarContacto()" class="btn clean">Limpiar</button>
+
+         </div>
+
+      </div>
+
+      <div class="table-wrapper">
+      <table>
+
+         <thead>
+            <tr>
+               <th>Cliente</th>
+               <th>Nombre</th>
+               <th>Cargo</th>
+               <th>Teléfono</th>
+               <th>Email</th>
+               <th>Tipo</th>
+               <th>Estado</th>
+            </tr>
+         </thead>
+
+         <tbody>`;
+
+         pageData.forEach(c => {
+
+            const nombre = (c.nombre || "").replace(/'/g, "\\'");
+            const cargo = (c.cargo || "").replace(/'/g, "\\'");
+
+            html += `
+<tr onclick="selectContacto('${c.id}','${c.cliente_id}','${nombre}','${cargo}','${c.telefono}','${c.email}','${c.tipo}','${c.estado}')">
+   <td>${c.cliente_id || ''}</td>
+   <td>${c.nombre || ''}</td>
+   <td>${c.cargo || ''}</td>
+   <td>${c.telefono || ''}</td>
+   <td>${c.email || ''}</td>
+   <td>${c.tipo || ''}</td>
+   <td>${c.estado || ''}</td>
+</tr>`;
+         });
+
+         html += `
+         </tbody>
+
+      </table>
+      </div>
+
+      <div class="pagination">
+
+         <button onclick="prevPageContactos()" ${currentPageContactos === 1 ? 'disabled' : ''}>⬅</button>
+
+         <span>${currentPageContactos} / ${totalPages}</span>
+
+         <button onclick="nextPageContactos()" ${currentPageContactos >= totalPages ? 'disabled' : ''}>➡</button>
+
+      </div>
+
+   </div>
+
+</div>`;
+
+         document.getElementById("panel").innerHTML = html;
+      }
+
+
+      /* =========================
+         SELECT CONTACTO
+      ========================= */
+      function selectContacto(id, cliente_id, nombre, cargo, telefono, email, tipo, estado) {
+
+         selectedContactoId = id;
+
+         document.getElementById("contacto-cliente").value = cliente_id;
+         document.getElementById("contacto-nombre").value = nombre;
+         document.getElementById("contacto-cargo").value = cargo;
+         document.getElementById("contacto-telefono").value = telefono;
+         document.getElementById("contacto-email").value = email;
+         document.getElementById("contacto-tipo").value = tipo;
+         document.getElementById("contacto-estado").value = estado;
+      }
+
+
+      /* =========================
+         CREAR
+      ========================= */
+      async function crearContacto() {
+
+         const data = {
+            cliente_id: document.getElementById("contacto-cliente").value.trim(),
+            nombre: document.getElementById("contacto-nombre").value.trim(),
+            cargo: document.getElementById("contacto-cargo").value.trim(),
+            telefono: document.getElementById("contacto-telefono").value.trim(),
+            email: document.getElementById("contacto-email").value.trim(),
+            tipo: document.getElementById("contacto-tipo").value,
+            estado: document.getElementById("contacto-estado").value
+         };
+
+         await fetch("/contactos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+         });
+
+         await cargarContactos();
+      }
+
+
+      /* =========================
+         MODIFICAR
+      ========================= */
+      async function modificarContacto() {
+
+         if (!selectedContactoId) return;
+
+         const data = {
+            cliente_id: document.getElementById("contacto-cliente").value.trim(),
+            nombre: document.getElementById("contacto-nombre").value.trim(),
+            cargo: document.getElementById("contacto-cargo").value.trim(),
+            telefono: document.getElementById("contacto-telefono").value.trim(),
+            email: document.getElementById("contacto-email").value.trim(),
+            tipo: document.getElementById("contacto-tipo").value,
+            estado: document.getElementById("contacto-estado").value
+         };
+
+         await fetch(`/contactos/${selectedContactoId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+         });
+
+         await cargarContactos();
+      }
+
+
+      /* =========================
+         BORRAR
+      ========================= */
+      async function borrarContacto() {
+
+         if (!selectedContactoId) return;
+
+         await fetch(`/contactos/${selectedContactoId}`, {
+            method: "DELETE"
+         });
+
+         await cargarContactos();
+         limpiarContacto();
+      }
+
+
+      /* =========================
+         LIMPIAR
+      ========================= */
+      function limpiarContacto() {
+
+         selectedContactoId = null;
+
+         document.getElementById("contacto-cliente").value = "";
+         document.getElementById("contacto-nombre").value = "";
+         document.getElementById("contacto-cargo").value = "";
+         document.getElementById("contacto-telefono").value = "";
+         document.getElementById("contacto-email").value = "";
+         document.getElementById("contacto-tipo").value = "COMPRADOR";
+         document.getElementById("contacto-estado").value = "ACTIVO";
+      }
+
+
+      /* =========================
+         PAGINACIÓN
+      ========================= */
+      function nextPageContactos() {
+
+         const totalPages =
+            Math.ceil(contactosData.length / rowsPerPage) || 1;
+
+         if (currentPageContactos < totalPages) {
+            currentPageContactos++;
+            renderTablaContactos();
+         }
+      }
+
+      function prevPageContactos() {
+
+         if (currentPageContactos > 1) {
+            currentPageContactos--;
+            renderTablaContactos();
+         }
       }
 
    </script>
