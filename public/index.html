@@ -1003,13 +1003,16 @@
 
       <div class="title">SECTORES</div>
 
-      <input
-         class="btn"
-         type="text"
-         placeholder="Filtrar por sector..."
-         value="${filtroSector || ''}"
-         oninput="filtrarSectores(this.value)"
-      >
+      <div style="padding:10px 0;">
+         <input
+            id="filtro-sector"
+            class="btn"
+            type="text"
+            placeholder="Filtrar por sector..."
+            value="${filtroSector}"
+            onkeyup="filtrarSectores(this.value)"
+            style="width:100%;">
+      </div>
 
       <div class="table-wrapper">
       <table>
@@ -1022,7 +1025,6 @@
          </thead>
 
          <tbody>`;
-
          pageData.forEach(s => {
 
             const sector =
