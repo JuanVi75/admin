@@ -1,7 +1,26 @@
 const db = require("../config/db");
 
 /* =========================
-   LISTAR (CON CLIENTES)
+   CLIENTES
+========================= */
+function listarClientes(callback) {
+
+   const sql = `
+      SELECT
+         id,
+         cliente
+      FROM clientes
+      WHERE estado = 'ACTIVO'
+      ORDER BY cliente ASC
+   `;
+
+   db.query(sql, (err, results) => {
+      callback(err, results);
+   });
+}
+
+/* =========================
+   LISTAR CONTACTOS
 ========================= */
 function listarContactos(callback) {
 
@@ -14,14 +33,10 @@ function listarContactos(callback) {
          cc.cargo,
          cc.telefono,
          cc.email,
-         cc.tipo,
-         cc.estado,
-         cc.created_at,
-         cc.updated_at,
-         cc.deleted_at,
-         cc.is_deleted
+         cc.tipo
       FROM cliente_contactos cc
-      LEFT JOIN clientes c ON c.id = cc.cliente_id
+      LEFT JOIN clientes c
+         ON c.id = cc.cliente_id
       WHERE cc.is_deleted = 0
       ORDER BY c.cliente ASC, cc.nombre ASC
    `;
@@ -42,8 +57,7 @@ function crearContacto(data, callback) {
       cargo,
       telefono,
       email,
-      tipo,
-      estado
+      tipo
    } = data;
 
    const sql = `
@@ -58,20 +72,28 @@ function crearContacto(data, callback) {
          created_at,
          is_deleted
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, '2026-06-01 00:00:00', 0)
+      VALUES (
+         ?, ?, ?, ?, ?, ?,
+         'ACTIVO',
+         NOW(),
+         0
+      )
    `;
 
-   db.query(sql, [
-      cliente_id,
-      nombre,
-      cargo,
-      telefono,
-      email,
-      tipo,
-      estado
-   ], (err, result) => {
-      callback(err, result);
-   });
+   db.query(
+      sql,
+      [
+         cliente_id,
+         nombre,
+         cargo,
+         telefono,
+         email,
+         tipo
+      ],
+      (err, result) => {
+         callback(err, result);
+      }
+   );
 }
 
 /* =========================
@@ -85,8 +107,7 @@ function modificarContacto(id, data, callback) {
       cargo,
       telefono,
       email,
-      tipo,
-      estado
+      tipo
    } = data;
 
    const sql = `
@@ -98,28 +119,30 @@ function modificarContacto(id, data, callback) {
          telefono = ?,
          email = ?,
          tipo = ?,
-         estado = ?,
          updated_at = NOW()
       WHERE id = ?
-        AND is_deleted = 0
+      AND is_deleted = 0
    `;
 
-   db.query(sql, [
-      cliente_id,
-      nombre,
-      cargo,
-      telefono,
-      email,
-      tipo,
-      estado,
-      id
-   ], (err, result) => {
-      callback(err, result);
-   });
+   db.query(
+      sql,
+      [
+         cliente_id,
+         nombre,
+         cargo,
+         telefono,
+         email,
+         tipo,
+         id
+      ],
+      (err, result) => {
+         callback(err, result);
+      }
+   );
 }
 
 /* =========================
-   BORRAR (LOGICO)
+   BORRAR
 ========================= */
 function borrarContacto(id, callback) {
 
@@ -145,20 +168,38 @@ function stats(callback) {
       SELECT
          COUNT(*) AS total,
 
-         SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) AS ingresados_hoy,
+         SUM(
+            CASE
+               WHEN DATE(created_at) = CURDATE()
+               THEN 1
+               ELSE 0
+            END
+         ) AS ingresados_hoy,
 
-         SUM(CASE WHEN DATE(updated_at) = CURDATE() THEN 1 ELSE 0 END) AS modificados_hoy,
+         SUM(
+            CASE
+               WHEN DATE(updated_at) = CURDATE()
+               THEN 1
+               ELSE 0
+            END
+         ) AS modificados_hoy,
 
-         SUM(CASE WHEN DATE(deleted_at) = CURDATE() THEN 1 ELSE 0 END) AS eliminados_hoy,
+         SUM(
+            CASE
+               WHEN DATE(deleted_at) = CURDATE()
+               THEN 1
+               ELSE 0
+            END
+         ) AS eliminados_hoy,
 
          GREATEST(
-            COALESCE(MAX(created_at), '1970-01-01'),
-            COALESCE(MAX(updated_at), '1970-01-01'),
-            COALESCE(MAX(deleted_at), '1970-01-01')
+            COALESCE(MAX(created_at),'1970-01-01'),
+            COALESCE(MAX(updated_at),'1970-01-01'),
+            COALESCE(MAX(deleted_at),'1970-01-01')
          ) AS ultima_actualizacion
 
       FROM cliente_contactos
-      WHERE is_deleted = 0;
+      WHERE is_deleted = 0
    `;
 
    db.query(sql, (err, result) => {
@@ -167,6 +208,7 @@ function stats(callback) {
 }
 
 module.exports = {
+   listarClientes,
    listarContactos,
    crearContacto,
    modificarContacto,
