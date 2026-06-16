@@ -1347,11 +1347,12 @@
       let selectedContactoId = null;
       let filtroClienteActivo = "";
 
+      /* =========================
+         INIT
+      ========================= */
       async function initContactos() {
-
-         await cargarClientes();   // PRIMERO CLIENTES
-         await cargarContactos();  // DESPUÉS CONTACTOS
-
+         await cargarClientes();
+         await cargarContactos();
       }
 
       /* =========================
@@ -1366,23 +1367,19 @@
          CARGAR CONTACTOS
       ========================= */
       async function cargarContactos() {
-
          const res = await fetch("/contactos");
          contactosData = await res.json();
 
          currentPageContactos = 1;
-
          renderTablaContactos();
       }
 
       /* =========================
-         FILTRO POR CLIENTE
+         FILTRO POR CLIENTE (ID REAL)
       ========================= */
       function filtrarContactos(valor) {
-
-         filtroClienteActivo = valor ? String(valor) : "";
+         filtroClienteActivo = String(valor || "").split(" - ")[0].trim();
          currentPageContactos = 1;
-
          renderTablaContactos();
       }
 
@@ -1391,12 +1388,10 @@
       ========================= */
       function renderTablaContactos() {
 
-         const clienteId = String(filtroClienteActivo || "");
+         const clienteId = String(filtroClienteActivo || "").trim();
 
          const dataFiltrada = clienteId
-            ? contactosData.filter(c =>
-               String(c.cliente_id || "") === clienteId
-            )
+            ? contactosData.filter(c => String(c.cliente_id || "").trim() === clienteId)
             : contactosData;
 
          const start = (currentPageContactos - 1) * rowsPerPage;
@@ -1406,9 +1401,7 @@
 
          const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
 
-         const clienteActivo = clientesData.find(c =>
-            String(c.id) === clienteId
-         );
+         const clienteActivo = clientesData.find(c => String(c.id) === clienteId);
 
          let html = `
 <div class="departamentos-layout">
@@ -1439,9 +1432,9 @@
 
          pageData.forEach(c => {
 
-            const clienteNombre = clientesData.find(cl =>
-               String(cl.id) === String(c.cliente_id)
-            )?.cliente || c.cliente_id;
+            const clienteNombre =
+               clientesData.find(cl => String(cl.id) === String(c.cliente_id))?.cliente
+               || c.cliente_id;
 
             html += `
 <tr onclick="selectContacto(
@@ -1477,21 +1470,45 @@
 
    </div>
 
+   <!-- FORMULARIO -->
    <div class="card">
 
       <div class="title">FORMULARIO CONTACTOS</div>
 
-      <select class="btn" id="contacto-cliente" onchange="filtrarContactos(this.value)">
-         <option value="">-- TODOS LOS CLIENTES --</option>
+      <input list="clientes-lista"
+             class="btn"
+             id="contacto-cliente"
+             placeholder="Buscar cliente..."
+             onchange="filtrarContactos(this.value)">
+
+      <datalist id="clientes-lista">
          ${clientesData.map(cli =>
-            `<option value="${cli.id}">${cli.cliente}</option>`
+            `<option value="${cli.id} - ${cli.cliente}"></option>`
          ).join("")}
-      </select>
+      </datalist>
 
       <input class="btn" id="contacto-nombre" placeholder="Nombre">
       <input class="btn" id="contacto-cargo" placeholder="Cargo">
       <input class="btn" id="contacto-telefono" placeholder="Teléfono">
       <input class="btn" id="contacto-email" placeholder="Email">
+
+      <select class="btn" id="contacto-tipo">
+         <option value="COMPRADOR">COMPRADOR</option>
+         <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
+         <option value="OTRO">OTRO</option>
+      </select>
+
+      <select class="btn" id="contacto-estado">
+         <option value="ACTIVO">ACTIVO</option>
+         <option value="INACTIVO">INACTIVO</option>
+      </select>
+
+      <div class="form-actions">
+         <button onclick="crearContacto()" class="btn primary">Crear</button>
+         <button onclick="modificarContacto()" class="btn warn">Modificar</button>
+         <button onclick="borrarContacto()" class="btn danger">Borrar</button>
+         <button onclick="limpiarContacto()" class="btn clean">Limpiar</button>
+      </div>
 
    </div>
 
@@ -1522,7 +1539,7 @@
       async function crearContacto() {
 
          const data = {
-            cliente_id: document.getElementById("contacto-cliente").value.trim(),
+            cliente_id: document.getElementById("contacto-cliente").value.split(" - ")[0].trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
             cargo: document.getElementById("contacto-cargo").value.trim(),
             telefono: document.getElementById("contacto-telefono").value.trim(),
@@ -1549,7 +1566,7 @@
          if (!selectedContactoId) return;
 
          const data = {
-            cliente_id: document.getElementById("contacto-cliente").value.trim(),
+            cliente_id: document.getElementById("contacto-cliente").value.split(" - ")[0].trim(),
             nombre: document.getElementById("contacto-nombre").value.trim(),
             cargo: document.getElementById("contacto-cargo").value.trim(),
             telefono: document.getElementById("contacto-telefono").value.trim(),
@@ -1637,10 +1654,7 @@
          PAGINACIÓN
       ========================= */
       function nextPageContactos() {
-
-         const totalPages =
-            Math.ceil(contactosData.length / rowsPerPage) || 1;
-
+         const totalPages = Math.ceil(contactosData.length / rowsPerPage) || 1;
          if (currentPageContactos < totalPages) {
             currentPageContactos++;
             renderTablaContactos();
@@ -1648,7 +1662,6 @@
       }
 
       function prevPageContactos() {
-
          if (currentPageContactos > 1) {
             currentPageContactos--;
             renderTablaContactos();
@@ -1656,7 +1669,6 @@
       }
 
    </script>
-
 </body>
 
 </html>
