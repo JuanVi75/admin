@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 /* =========================
-   LISTAR USUARIOS
+   LISTAR USUARIOS (CON PASSWORD)
 ========================= */
 function listarUsuarios(callback) {
 
@@ -11,6 +11,7 @@ function listarUsuarios(callback) {
          usuario,
          nombre,
          email,
+         password,
          rol,
          estado,
          fecha_creacion,
@@ -64,7 +65,7 @@ function crearUsuario(data, callback) {
 }
 
 /* =========================
-   MODIFICAR USUARIO
+   MODIFICAR USUARIO (CON PASSWORD)
 ========================= */
 function modificarUsuario(id, data, callback) {
 
@@ -72,6 +73,7 @@ function modificarUsuario(id, data, callback) {
       usuario,
       nombre,
       email,
+      password,
       rol,
       estado
    } = data;
@@ -82,6 +84,7 @@ function modificarUsuario(id, data, callback) {
          usuario = ?,
          nombre = ?,
          email = ?,
+         password = ?,
          rol = ?,
          estado = ?,
          updated_at = NOW()
@@ -91,7 +94,7 @@ function modificarUsuario(id, data, callback) {
 
    db.query(
       sql,
-      [usuario, nombre, email, rol, estado, id],
+      [usuario, nombre, email, password, rol, estado, id],
       (err, result) => {
          callback(err, result);
       }
@@ -147,6 +150,7 @@ function stats(callback) {
       });
    });
 }
+
 module.exports = {
    listarUsuarios,
    crearUsuario,
