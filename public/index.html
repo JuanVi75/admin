@@ -1768,7 +1768,6 @@
             sucursalesData = await res.json();
 
             currentPageSucursales = 1;
-            //renderTablaSucursales();
 
          } catch (e) {
             console.error("ERROR SUCURSALES:", e);
@@ -1782,10 +1781,6 @@
       function filtrarSucursales(valor) {
          filtroClienteSucursal = String(valor || "").trim();
          currentPageSucursales = 1;
-
-         // 🔴 FIX: mantener selección visual
-         const select = document.getElementById("sucursal-cliente");
-         if (select) select.value = filtroClienteSucursal;
 
          renderTablaSucursales();
       }
@@ -1923,7 +1918,12 @@
 
 </div>`;
 
-         document.getElementById("panel").innerHTML = html;
+         const panel = document.getElementById("panel");
+         panel.innerHTML = html;
+
+         // 🔴 FIX CLAVE: restaurar select después del render
+         const select = document.getElementById("sucursal-cliente");
+         if (select) select.value = filtroClienteSucursal;
       }
 
       /* =========================
