@@ -263,7 +263,11 @@
 
          <div class="card">
             <div class="title">Sucursales</div>
-            <div class="small">Registros: 0</div>
+            <div class="small" id="count-sucursales">Registros: 0</div>
+            <div class="small" id="last-update-sucursales">Última actualización: -</div>
+            <div class="small">Ingresados hoy: <span id="inserted-sucursales">0</span></div>
+            <div class="small">Modificados hoy: <span id="updated-sucursales">0</span></div>
+            <div class="small">Eliminados hoy: <span id="deleted-sucursales">0</span></div>
          </div>
 
          <div class="card">
@@ -316,6 +320,7 @@
             cargarMetaCiudades();
             cargarMetaSectores();
             cargarMetaContactos();
+            cargarMetaSucursales();
          }
 
          if (page === 'departamentos') {
@@ -338,6 +343,10 @@
 
          if (page === 'contactos') {
             await initContactos();
+         }
+
+         if (page === 'sucursales') {
+            await initSucursales();
          }
 
       }
@@ -1713,6 +1722,353 @@
       }
 
    </script>
+
+   <script>
+
+      /* =========================
+         VARIABLES SUCURSALES
+      ========================= */
+      let sucursalesData = [];
+      let clientesDataSuc = [];
+      let currentPageSucursales = 1;
+      let selectedSucursalId = null;
+      let filtroClienteSucursal = "";
+
+      /* =========================
+         INIT SUCURSALES
+      ========================= */
+      async function initSucursales() {
+         await cargarClientesSuc();
+         await cargarSucursales();
+         await cargarMetaSucursales();
+         renderTablaSucursales();
+      }
+
+      /* =========================
+         CLIENTES
+      ========================= */
+      async function cargarClientesSuc() {
+         try {
+            const res = await fetch("/sucursales/clientes");
+            clientesDataSuc = await res.json();
+         } catch (e) {
+            console.error("ERROR CLIENTES SUCURSALES:", e);
+            clientesDataSuc = [];
+         }
+      }
+
+      /* =========================
+         SUCURSALES
+      ========================= */
+      async function cargarSucursales() {
+         try {
+            const res = await fetch("/sucursales");
+            sucursalesData = await res.json();
+
+            currentPageSucursales = 1;
+            renderTablaSucursales();
+
+         } catch (e) {
+            console.error("ERROR SUCURSALES:", e);
+            sucursalesData = [];
+         }
+      }
+
+      /* =========================
+         FILTRO
+      ========================= */
+      function filtrarSucursales(valor) {
+         filtroClienteSucursal = String(valor || "").trim();
+         currentPageSucursales = 1;
+         renderTablaSucursales();
+      }
+
+      /* =========================
+         NORMALIZADOR
+      ========================= */
+      function norm(v) {
+         return String(v ?? "").trim();
+      }
+
+      /* =========================
+         RENDER TABLA
+      ========================= */
+      function renderTablaSucursales() {
+
+         const clienteId = norm(filtroClienteSucursal);
+
+         const dataFiltrada = clienteId
+            ? sucursalesData.filter(s => norm(s.cliente_id) === clienteId)
+            : sucursalesData;
+
+         const start = (currentPageSucursales - 1) * rowsPerPage;
+         const end = start + rowsPerPage;
+
+         const pageData = dataFiltrada.slice(start, end);
+         const totalPages = Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
+
+         const clienteActivo =
+            clientesDataSuc.find(c => norm(c.id) === clienteId);
+
+         let html = `
+<div class="departamentos-layout">
+
+   <div class="table-container">
+
+      <div class="title">
+         SUCURSALES
+         <div class="small">
+            ${clienteActivo ? clienteActivo.cliente : "TODOS LOS CLIENTES"}
+         </div>
+      </div>
+
+      <div class="table-wrapper">
+      <table>
+
+         <thead>
+            <tr>
+               <th>Cliente</th>
+               <th>Nombre</th>
+               <th>Ciudad</th>
+               <th>Dirección</th>
+               <th>Teléfono</th>
+               <th>Contacto</th>
+               <th>Estado</th>
+            </tr>
+         </thead>
+
+         <tbody>
+`;
+
+         pageData.forEach(s => {
+
+            const clienteNombre =
+               clientesDataSuc.find(cl => norm(cl.id) === norm(s.cliente_id))?.cliente
+               || s.cliente_id
+               || "";
+
+            html += `
+<tr onclick="selectSucursal(
+   '${s.id}',
+   '${s.cliente_id || ''}',
+   '${(s.nombre || '').replace(/'/g, "\\'")}',
+   '${(s.ciudad || '').replace(/'/g, "\\'")}',
+   '${(s.direccion || '').replace(/'/g, "\\'")}',
+   '${s.telefono || ''}',
+   '${(s.contacto || '').replace(/'/g, "\\'")}',
+   '${s.estado || ''}'
+)">
+   <td>${clienteNombre}</td>
+   <td>${s.nombre || ''}</td>
+   <td>${s.ciudad || ''}</td>
+   <td>${s.direccion || ''}</td>
+   <td>${s.telefono || ''}</td>
+   <td>${s.contacto || ''}</td>
+   <td>${s.estado || ''}</td>
+</tr>`;
+         });
+
+         html += `
+         </tbody>
+      </table>
+      </div>
+
+      <div class="pagination">
+         <button onclick="prevPageSucursales()" ${currentPageSucursales === 1 ? "disabled" : ""}>⬅</button>
+         <span>${currentPageSucursales} / ${totalPages}</span>
+         <button onclick="nextPageSucursales()" ${currentPageSucursales >= totalPages ? "disabled" : ""}>➡</button>
+      </div>
+
+   </div>
+
+   <div class="card">
+
+      <div class="title">FORMULARIO SUCURSALES</div>
+
+      <select class="btn" id="sucursal-cliente" onchange="filtrarSucursales(this.value)">
+         <option value="">-- TODOS LOS CLIENTES --</option>
+         ${clientesDataSuc.map(cli => `
+            <option value="${String(cli.id).trim()}">${cli.cliente}</option>
+         `).join("")}
+      </select>
+
+      <input class="btn" id="sucursal-nombre" placeholder="Nombre">
+      <input class="btn" id="sucursal-ciudad" placeholder="Ciudad">
+      <input class="btn" id="sucursal-direccion" placeholder="Dirección">
+      <input class="btn" id="sucursal-telefono" placeholder="Teléfono">
+      <input class="btn" id="sucursal-contacto" placeholder="Contacto">
+
+      <select class="btn" id="sucursal-estado">
+         <option value="ACTIVO">ACTIVO</option>
+         <option value="INACTIVO">INACTIVO</option>
+      </select>
+
+      <div class="form-actions">
+
+         <button onclick="crearSucursal()" class="btn primary">Crear</button>
+         <button onclick="modificarSucursal()" class="btn warn">Modificar</button>
+         <button onclick="borrarSucursal()" class="btn danger">Borrar</button>
+         <button onclick="limpiarSucursal()" class="btn clean">Limpiar</button>
+
+      </div>
+
+   </div>
+
+</div>`;
+
+         document.getElementById("panel").innerHTML = html;
+      }
+
+      /* =========================
+         SELECT SUCURSAL
+      ========================= */
+      function selectSucursal(id, cliente_id, nombre, ciudad, direccion, telefono, contacto, estado) {
+
+         selectedSucursalId = id;
+
+         const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || "";
+         };
+
+         set("sucursal-cliente", cliente_id);
+         set("sucursal-nombre", nombre);
+         set("sucursal-ciudad", ciudad);
+         set("sucursal-direccion", direccion);
+         set("sucursal-telefono", telefono);
+         set("sucursal-contacto", contacto);
+         set("sucursal-estado", estado);
+      }
+
+      /* =========================
+         CRUD
+      ========================= */
+      async function crearSucursal() {
+
+         const data = {
+            cliente_id: document.getElementById("sucursal-cliente").value.trim(),
+            nombre: document.getElementById("sucursal-nombre").value.trim(),
+            ciudad: document.getElementById("sucursal-ciudad").value.trim(),
+            direccion: document.getElementById("sucursal-direccion").value.trim(),
+            telefono: document.getElementById("sucursal-telefono").value.trim(),
+            contacto: document.getElementById("sucursal-contacto").value.trim(),
+            estado: document.getElementById("sucursal-estado").value
+         };
+
+         await fetch("/sucursales", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+         });
+
+         await cargarSucursales();
+         await cargarMetaSucursales();
+         limpiarSucursal();
+      }
+
+      async function modificarSucursal() {
+
+         if (!selectedSucursalId) return;
+
+         const data = {
+            cliente_id: document.getElementById("sucursal-cliente").value.trim(),
+            nombre: document.getElementById("sucursal-nombre").value.trim(),
+            ciudad: document.getElementById("sucursal-ciudad").value.trim(),
+            direccion: document.getElementById("sucursal-direccion").value.trim(),
+            telefono: document.getElementById("sucursal-telefono").value.trim(),
+            contacto: document.getElementById("sucursal-contacto").value.trim(),
+            estado: document.getElementById("sucursal-estado").value
+         };
+
+         await fetch(`/sucursales/${selectedSucursalId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+         });
+
+         await cargarSucursales();
+         await cargarMetaSucursales();
+         limpiarSucursal();
+      }
+
+      async function borrarSucursal() {
+
+         if (!selectedSucursalId) return;
+
+         await fetch(`/sucursales/${selectedSucursalId}`, {
+            method: "DELETE"
+         });
+
+         await cargarSucursales();
+         await cargarMetaSucursales();
+         limpiarSucursal();
+      }
+
+      /* =========================
+         LIMPIAR
+      ========================= */
+      function limpiarSucursal() {
+
+         selectedSucursalId = null;
+
+         document.getElementById("sucursal-cliente").value = "";
+         document.getElementById("sucursal-nombre").value = "";
+         document.getElementById("sucursal-ciudad").value = "";
+         document.getElementById("sucursal-direccion").value = "";
+         document.getElementById("sucursal-telefono").value = "";
+         document.getElementById("sucursal-contacto").value = "";
+         document.getElementById("sucursal-estado").value = "ACTIVO";
+      }
+
+      /* =========================
+         META
+      ========================= */
+      async function cargarMetaSucursales() {
+         try {
+            const res = await fetch("/sucursales/stats");
+            const data = await res.json();
+
+            const set = (id, val) => {
+               const el = document.getElementById(id);
+               if (el) el.innerText = val;
+            };
+
+            set("count-sucursales", "Registros: " + (data.total ?? 0));
+            set("last-update-sucursales",
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+                  : "-"
+            );
+
+            set("inserted-sucursales", data.ingresados_hoy ?? 0);
+            set("updated-sucursales", data.modificados_hoy ?? 0);
+            set("deleted-sucursales", data.eliminados_hoy ?? 0);
+
+         } catch (e) {
+            console.error(e);
+         }
+      }
+
+      /* =========================
+         PAGINACIÓN
+      ========================= */
+      function nextPageSucursales() {
+         const totalPages = Math.ceil(sucursalesData.length / rowsPerPage) || 1;
+         if (currentPageSucursales < totalPages) {
+            currentPageSucursales++;
+            renderTablaSucursales();
+         }
+      }
+
+      function prevPageSucursales() {
+         if (currentPageSucursales > 1) {
+            currentPageSucursales--;
+            renderTablaSucursales();
+         }
+      }
+
+   </script>
+
 
 </body>
 
