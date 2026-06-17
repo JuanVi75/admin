@@ -60,38 +60,100 @@ function crearContacto(data, callback) {
       tipo
    } = data;
 
-   const sql = `
-      INSERT INTO cliente_contactos (
-         cliente_id,
-         nombre,
-         cargo,
-         telefono,
-         email,
-         tipo,
-         estado,
-         created_at,
-         is_deleted
-      )
-      VALUES (
-         ?, ?, ?, ?, ?, ?,
-         'ACTIVO',
-         NOW(),
-         0
-      )
+   // 🔴 1. BUSCAR DUPLICADO EXACTO (ignorando mayúsculas/minúsculas)
+   const checkSql = `
+      SELECT id, is_deleted
+      FROM cliente_contactos
+      WHERE cliente_id = ?
+        AND LOWER(nombre) = LOWER(?)
+        AND LOWER(cargo) = LOWER(?)
+        AND LOWER(telefono) = LOWER(?)
+        AND LOWER(email) = LOWER(?)
+        AND LOWER(tipo) = LOWER(?)
+      LIMIT 1
    `;
 
    db.query(
-      sql,
-      [
-         cliente_id,
-         nombre,
-         cargo,
-         telefono,
-         email,
-         tipo
-      ],
-      (err, result) => {
-         callback(err, result);
+      checkSql,
+      [cliente_id, nombre, cargo, telefono, email, tipo],
+      (err, rows) => {
+
+         if (err) return callback(err);
+
+         // 🔴 2. SI EXISTE
+         if (rows.length > 0) {
+
+            const existing = rows[0];
+
+            // CASO A: estaba eliminado → REACTIVAR
+            if (existing.is_deleted == 1) {
+
+               const reactivateSql = `
+                  UPDATE cliente_contactos
+                  SET is_deleted = 0,
+                      estado = 'ACTIVO',
+                      updated_at = NOW()
+                  WHERE id = ?
+               `;
+
+               return db.query(reactivateSql, [existing.id], (err2, result) => {
+                  if (err2) return callback(err2, null);
+
+                  return callback(null, {
+                     action: "reactivated",
+                     id: existing.id
+                  });
+               });
+            }
+
+            // CASO B: ya existe activo
+            return callback(null, {
+               action: "exists",
+               id: existing.id
+            });
+         }
+
+         // 🔴 3. SI NO EXISTE → INSERTAR
+         const insertSql = `
+            INSERT INTO cliente_contactos (
+               cliente_id,
+               nombre,
+               cargo,
+               telefono,
+               email,
+               tipo,
+               estado,
+               created_at,
+               is_deleted
+            )
+            VALUES (
+               ?, ?, ?, ?, ?, ?,
+               'ACTIVO',
+               NOW(),
+               0
+            )
+         `;
+
+         db.query(
+            insertSql,
+            [
+               cliente_id,
+               nombre,
+               cargo,
+               telefono,
+               email,
+               tipo
+            ],
+            (err2, result) => {
+
+               if (err2) return callback(err2, null);
+
+               return callback(null, {
+                  action: "created",
+                  id: result.insertId
+               });
+            }
+         );
       }
    );
 }
