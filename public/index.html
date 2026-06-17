@@ -1275,11 +1275,6 @@
       let filtroClienteActivo = "";
 
       /* =========================
-         CONFIG PAGINACIÓN (FIX CRÍTICO)
-      ========================= */
-      //const rowsPerPage = window.rowsPerPage || 10;
-
-      /* =========================
          INIT CONTACTOS
       ========================= */
       async function initContactos() {
@@ -1950,65 +1945,126 @@
       /* =========================
          CRUD
       ========================= */
+
       async function crearSucursal() {
 
-         const data = {
-            cliente_id: document.getElementById("sucursal-cliente").value.trim(),
-            nombre: document.getElementById("sucursal-nombre").value.trim(),
-            ciudad: document.getElementById("sucursal-ciudad").value.trim(),
-            direccion: document.getElementById("sucursal-direccion").value.trim(),
-            telefono: document.getElementById("sucursal-telefono").value.trim(),
-            contacto: document.getElementById("sucursal-contacto").value.trim(),
-            estado: document.getElementById("sucursal-estado").value
-         };
+         try {
 
-         await fetch("/sucursales", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-         });
+            const data = {
+               cliente_id: document.getElementById("sucursal-cliente").value.trim(),
+               nombre: document.getElementById("sucursal-nombre").value.trim(),
+               ciudad: document.getElementById("sucursal-ciudad").value.trim(),
+               direccion: document.getElementById("sucursal-direccion").value.trim(),
+               telefono: document.getElementById("sucursal-telefono").value.trim(),
+               contacto: document.getElementById("sucursal-contacto").value.trim(),
+               estado: document.getElementById("sucursal-estado").value
+            };
 
-         await cargarSucursales();
-         await cargarMetaSucursales();
-         limpiarSucursal();
+            const res = await fetch("/sucursales", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+               throw new Error(result?.error || "Error al crear la sucursal");
+            }
+
+            alert("Sucursal creada con éxito");
+
+            await cargarSucursales();
+            await cargarMetaSucursales();
+
+            limpiarSucursal();
+            selectedSucursalId = null;
+
+         } catch (error) {
+
+            console.error(error);
+            alert("Error al crear la sucursal");
+         }
       }
 
       async function modificarSucursal() {
 
-         if (!selectedSucursalId) return;
+         if (!selectedSucursalId) {
+            alert("Selecciona una sucursal primero");
+            return;
+         }
 
-         const data = {
-            cliente_id: document.getElementById("sucursal-cliente").value.trim(),
-            nombre: document.getElementById("sucursal-nombre").value.trim(),
-            ciudad: document.getElementById("sucursal-ciudad").value.trim(),
-            direccion: document.getElementById("sucursal-direccion").value.trim(),
-            telefono: document.getElementById("sucursal-telefono").value.trim(),
-            contacto: document.getElementById("sucursal-contacto").value.trim(),
-            estado: document.getElementById("sucursal-estado").value
-         };
+         try {
 
-         await fetch(`/sucursales/${selectedSucursalId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-         });
+            const data = {
+               cliente_id: document.getElementById("sucursal-cliente").value.trim(),
+               nombre: document.getElementById("sucursal-nombre").value.trim(),
+               ciudad: document.getElementById("sucursal-ciudad").value.trim(),
+               direccion: document.getElementById("sucursal-direccion").value.trim(),
+               telefono: document.getElementById("sucursal-telefono").value.trim(),
+               contacto: document.getElementById("sucursal-contacto").value.trim(),
+               estado: document.getElementById("sucursal-estado").value
+            };
 
-         await cargarSucursales();
-         await cargarMetaSucursales();
-         limpiarSucursal();
+            const res = await fetch(`/sucursales/${selectedSucursalId}`, {
+               method: "PUT",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify(data)
+            });
+
+            if (!res.ok) {
+               throw new Error("Error al modificar la sucursal");
+            }
+
+            await res.json();
+
+            alert("Sucursal modificada con éxito");
+
+            await cargarSucursales();
+            await cargarMetaSucursales();
+
+            limpiarSucursal();
+            selectedSucursalId = null;
+
+         } catch (error) {
+
+            console.error(error);
+            alert("Error al modificar la sucursal");
+         }
       }
 
       async function borrarSucursal() {
 
-         if (!selectedSucursalId) return;
+         if (!selectedSucursalId) {
+            alert("Selecciona una sucursal primero");
+            return;
+         }
 
-         await fetch(`/sucursales/${selectedSucursalId}`, {
-            method: "DELETE"
-         });
+         try {
 
-         await cargarSucursales();
-         await cargarMetaSucursales();
-         limpiarSucursal();
+            const res = await fetch(`/sucursales/${selectedSucursalId}`, {
+               method: "DELETE"
+            });
+
+            if (!res.ok) {
+               throw new Error("Error al eliminar la sucursal");
+            }
+
+            await res.json();
+
+            alert("Sucursal eliminada con éxito");
+
+            await cargarSucursales();
+            await cargarMetaSucursales();
+
+            limpiarSucursal();
+            selectedSucursalId = null;
+
+         } catch (error) {
+
+            console.error(error);
+            alert("Error al eliminar la sucursal");
+         }
       }
 
       /* =========================
@@ -2024,7 +2080,18 @@
          document.getElementById("sucursal-direccion").value = "";
          document.getElementById("sucursal-telefono").value = "";
          document.getElementById("sucursal-contacto").value = "";
+
          document.getElementById("sucursal-estado").value = "ACTIVO";
+
+         // reset filtro
+         filtroClienteSucursal = "";
+
+         const filtro = document.getElementById("sucursal-cliente");
+         if (filtro) filtro.value = "";
+
+         renderTablaSucursales();
+
+         alert("Formulario limpiado");
       }
 
       /* =========================
