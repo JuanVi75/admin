@@ -129,19 +129,17 @@ function stats(callback) {
          SUM(CASE WHEN DATE(updated_at)=CURDATE() THEN 1 ELSE 0 END) AS modificados_hoy,
          SUM(CASE WHEN DATE(deleted_at)=CURDATE() THEN 1 ELSE 0 END) AS eliminados_hoy,
 
-         COALESCE(
-            MAX(fecha_creacion),
-            '2026-06-01'
+         (
+            SELECT MAX(fecha_creacion)
+            FROM usuarios
+            WHERE is_deleted = 0
          ) AS ultima_actualizacion
 
-      FROM usuarios
-      WHERE is_deleted = 0
    `;
 
    db.query(sql, (err, result) => {
       callback(err, result[0]);
    });
-}
 }
 
 module.exports = {
