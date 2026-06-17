@@ -1395,7 +1395,12 @@
       function filtrarContactos(valor) {
          filtroClienteActivo = String(valor || "").trim();
          currentPageContactos = 1;
+
          renderTablaContactos();
+
+         // 🔴 RESTAURAR SELECCIÓN VISUAL
+         const sel = document.getElementById("contacto-cliente");
+         if (sel) sel.value = filtroClienteActivo;
       }
 
       /* =========================
