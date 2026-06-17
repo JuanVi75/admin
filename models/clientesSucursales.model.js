@@ -20,25 +20,26 @@ function listarClientes(callback) {
 }
 
 /* =========================
-   LISTAR CONTACTOS
+   LISTAR SUCURSALES
 ========================= */
-function listarContactos(callback) {
+function listarSucursales(callback) {
 
    const sql = `
       SELECT
-         cc.id,
-         cc.cliente_id,
+         cs.id,
+         cs.cliente_id,
          c.cliente AS cliente_nombre,
-         cc.nombre,
-         cc.cargo,
-         cc.telefono,
-         cc.email,
-         cc.tipo
-      FROM cliente_contactos cc
+         cs.nombre,
+         cs.ciudad,
+         cs.direccion,
+         cs.telefono,
+         cs.contacto,
+         cs.estado
+      FROM cliente_sucursales cs
       LEFT JOIN clientes c
-         ON c.id = cc.cliente_id
-      WHERE cc.is_deleted = 0
-      ORDER BY c.cliente ASC, cc.nombre ASC
+         ON c.id = cs.cliente_id
+      WHERE cs.is_deleted = 0
+      ORDER BY c.cliente ASC, cs.nombre ASC
    `;
 
    db.query(sql, (err, results) => {
@@ -47,57 +48,55 @@ function listarContactos(callback) {
 }
 
 /* =========================
-   CREAR
+   CREAR (CON DUPLICADO + REACTIVAR)
 ========================= */
-function crearContacto(data, callback) {
+function crearSucursal(data, callback) {
 
    const {
       cliente_id,
       nombre,
-      cargo,
+      ciudad,
+      direccion,
       telefono,
-      email,
-      tipo
+      contacto
    } = data;
 
-   // 🔴 1. BUSCAR DUPLICADO EXACTO (ignorando mayúsculas/minúsculas)
    const checkSql = `
       SELECT id, is_deleted
-      FROM cliente_contactos
+      FROM cliente_sucursales
       WHERE cliente_id = ?
         AND LOWER(nombre) = LOWER(?)
-        AND LOWER(cargo) = LOWER(?)
-        AND LOWER(telefono) = LOWER(?)
-        AND LOWER(email) = LOWER(?)
-        AND LOWER(tipo) = LOWER(?)
+        AND LOWER(COALESCE(ciudad,'')) = LOWER(COALESCE(?,''))
+        AND LOWER(COALESCE(direccion,'')) = LOWER(COALESCE(?,''))
+        AND LOWER(COALESCE(telefono,'')) = LOWER(COALESCE(?,''))
+        AND LOWER(COALESCE(contacto,'')) = LOWER(COALESCE(?,''))
       LIMIT 1
    `;
 
    db.query(
       checkSql,
-      [cliente_id, nombre, cargo, telefono, email, tipo],
+      [cliente_id, nombre, ciudad, direccion, telefono, contacto],
       (err, rows) => {
 
          if (err) return callback(err);
 
-         // 🔴 2. SI EXISTE
          if (rows.length > 0) {
 
             const existing = rows[0];
 
-            // CASO A: estaba eliminado → REACTIVAR
+            // REACTIVAR SI ESTABA BORRADO
             if (existing.is_deleted == 1) {
 
                const reactivateSql = `
-                  UPDATE cliente_contactos
+                  UPDATE cliente_sucursales
                   SET is_deleted = 0,
                       estado = 'ACTIVO',
                       updated_at = NOW()
                   WHERE id = ?
                `;
 
-               return db.query(reactivateSql, [existing.id], (err2, result) => {
-                  if (err2) return callback(err2, null);
+               return db.query(reactivateSql, [existing.id], (err2) => {
+                  if (err2) return callback(err2);
 
                   return callback(null, {
                      action: "reactivated",
@@ -106,22 +105,20 @@ function crearContacto(data, callback) {
                });
             }
 
-            // CASO B: ya existe activo
             return callback(null, {
                action: "exists",
                id: existing.id
             });
          }
 
-         // 🔴 3. SI NO EXISTE → INSERTAR
          const insertSql = `
-            INSERT INTO cliente_contactos (
+            INSERT INTO cliente_sucursales (
                cliente_id,
                nombre,
-               cargo,
+               ciudad,
+               direccion,
                telefono,
-               email,
-               tipo,
+               contacto,
                estado,
                created_at,
                is_deleted
@@ -139,14 +136,14 @@ function crearContacto(data, callback) {
             [
                cliente_id,
                nombre,
-               cargo,
+               ciudad,
+               direccion,
                telefono,
-               email,
-               tipo
+               contacto
             ],
             (err2, result) => {
 
-               if (err2) return callback(err2, null);
+               if (err2) return callback(err2);
 
                return callback(null, {
                   action: "created",
@@ -161,26 +158,28 @@ function crearContacto(data, callback) {
 /* =========================
    MODIFICAR
 ========================= */
-function modificarContacto(id, data, callback) {
+function modificarSucursal(id, data, callback) {
 
    const {
       cliente_id,
       nombre,
-      cargo,
+      ciudad,
+      direccion,
       telefono,
-      email,
-      tipo
+      contacto,
+      estado
    } = data;
 
    const sql = `
-      UPDATE cliente_contactos
+      UPDATE cliente_sucursales
       SET
          cliente_id = ?,
          nombre = ?,
-         cargo = ?,
+         ciudad = ?,
+         direccion = ?,
          telefono = ?,
-         email = ?,
-         tipo = ?,
+         contacto = ?,
+         estado = ?,
          updated_at = NOW()
       WHERE id = ?
       AND is_deleted = 0
@@ -191,10 +190,11 @@ function modificarContacto(id, data, callback) {
       [
          cliente_id,
          nombre,
-         cargo,
+         ciudad,
+         direccion,
          telefono,
-         email,
-         tipo,
+         contacto,
+         estado,
          id
       ],
       (err, result) => {
@@ -204,12 +204,12 @@ function modificarContacto(id, data, callback) {
 }
 
 /* =========================
-   BORRAR
+   BORRAR (SOFT DELETE)
 ========================= */
-function borrarContacto(id, callback) {
+function borrarSucursal(id, callback) {
 
    const sql = `
-      UPDATE cliente_contactos
+      UPDATE cliente_sucursales
       SET
          is_deleted = 1,
          deleted_at = NOW()
@@ -233,24 +233,21 @@ function stats(callback) {
          SUM(
             CASE
                WHEN DATE(created_at) = CURDATE()
-               THEN 1
-               ELSE 0
+               THEN 1 ELSE 0
             END
          ) AS ingresados_hoy,
 
          SUM(
             CASE
                WHEN DATE(updated_at) = CURDATE()
-               THEN 1
-               ELSE 0
+               THEN 1 ELSE 0
             END
          ) AS modificados_hoy,
 
          SUM(
             CASE
                WHEN DATE(deleted_at) = CURDATE()
-               THEN 1
-               ELSE 0
+               THEN 1 ELSE 0
             END
          ) AS eliminados_hoy,
 
@@ -260,7 +257,7 @@ function stats(callback) {
             COALESCE(MAX(deleted_at),'2026-06-01')
          ) AS ultima_actualizacion
 
-      FROM cliente_contactos
+      FROM cliente_sucursales
       WHERE is_deleted = 0
    `;
 
@@ -271,9 +268,9 @@ function stats(callback) {
 
 module.exports = {
    listarClientes,
-   listarContactos,
-   crearContacto,
-   modificarContacto,
-   borrarContacto,
+   listarSucursales,
+   crearSucursal,
+   modificarSucursal,
+   borrarSucursal,
    stats
 };
