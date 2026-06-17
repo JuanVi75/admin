@@ -129,10 +129,13 @@ function stats(callback) {
          SUM(CASE WHEN DATE(updated_at)=CURDATE() THEN 1 ELSE 0 END) AS modificados_hoy,
          SUM(CASE WHEN DATE(deleted_at)=CURDATE() THEN 1 ELSE 0 END) AS eliminados_hoy,
 
-         GREATEST(
-            COALESCE(MAX(fecha_creacion),'2026-06-01'),
-            COALESCE(MAX(updated_at),'2026-06-01'),
-            COALESCE(MAX(deleted_at),'2026-06-01')
+         COALESCE(
+            GREATEST(
+               MAX(fecha_creacion),
+               MAX(updated_at),
+               MAX(deleted_at)
+            ),
+            '2026-06-01'
          ) AS ultima_actualizacion
 
       FROM usuarios
