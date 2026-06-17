@@ -387,146 +387,64 @@
          renderTabla();
       }
 
-      function renderTablaContactos() {
+      function renderTabla() {
 
-         const clienteId = (filtroClienteActivo || "").toString().trim();
-
-         const dataFiltrada = clienteId
-            ? contactosData.filter(c =>
-               String(c.cliente_id || "").trim() === clienteId
-            )
-            : contactosData;
-
-         const start = (currentPageContactos - 1) * rowsPerPage;
+         const start = (currentPage - 1) * rowsPerPage;
          const end = start + rowsPerPage;
 
-         const pageData = dataFiltrada.slice(start, end);
-
-         const totalPages =
-            Math.max(1, Math.ceil(dataFiltrada.length / rowsPerPage));
-
-         const clienteActivo =
-            clientesData.find(c => c.id === clienteId);
+         const pageData = departamentosData.slice(start, end);
+         const totalPages = Math.ceil(departamentosData.length / rowsPerPage);
 
          let html = `
-<div class="departamentos-layout">
+         <div class="departamentos-layout">
 
-   <div class="table-container">
+            <div class="table-container">
 
-      <div class="title">
-         CONTACTOS
-         <div class="small">
-            ${clienteActivo ? clienteActivo.cliente : "TODOS LOS CLIENTES"}
-         </div>
-      </div>
+               <div class="title">DEPARTAMENTOS</div>
 
-      <div class="table-wrapper">
-      <table>
+               <div class="table-wrapper">
+               <table>
+                  <thead>
+                     <tr><th>ID</th><th>Departamento</th></tr>
+                  </thead>
+                  <tbody>`;
 
-         <thead>
-            <tr>
-               <th>Cliente</th>
-               <th>Nombre</th>
-               <th>Cargo</th>
-               <th>Teléfono</th>
-               <th>Email</th>
-               <th>Tipo</th>
-               <th>Estado</th>
-            </tr>
-         </thead>
-
-         <tbody>`;
-
-         pageData.forEach(c => {
-
-            const nombre = (c.nombre || "").replace(/'/g, "\\'");
-            const cargo = (c.cargo || "").replace(/'/g, "\\'");
-
-            const clienteNombre =
-               clientesData.find(cl => cl.id === c.cliente_id)?.cliente
-               || c.cliente_id
-               || "";
-
-            html += `
-<tr onclick="selectContacto(
-   '${c.id}',
-   '${c.cliente_id || ''}',
-   '${nombre}',
-   '${cargo}',
-   '${c.telefono || ''}',
-   '${c.email || ''}',
-   '${c.tipo || ''}',
-   '${c.estado || ''}'
-)">
-   <td>${clienteNombre}</td>
-   <td>${c.nombre || ''}</td>
-   <td>${c.cargo || ''}</td>
-   <td>${c.telefono || ''}</td>
-   <td>${c.email || ''}</td>
-   <td>${c.tipo || ''}</td>
-   <td>${c.estado || ''}</td>
-</tr>`;
+         pageData.forEach(d => {
+            html += `<tr onclick="selectRow(${d.id}, '${d.depto}')">
+                        <td>${d.id}</td>
+                        <td>${d.depto}</td>
+                     </tr>`;
          });
 
          html += `
-         </tbody>
-      </table>
-      </div>
+                  </tbody>
+               </table>
+               </div>
 
-      <div class="pagination">
+               <div class="pagination">
+                  <button class="page-btn" onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>⬅</button>
+                  <span>Página ${currentPage} / ${totalPages}</span>
+                  <button class="page-btn" onclick="nextPage()" ${currentPage >= totalPages ? 'disabled' : ''}>➡</button>
+               </div>
 
-         <button onclick="prevPageContactos()" ${currentPageContactos === 1 ? 'disabled' : ''}>⬅</button>
+            </div>
 
-         <span>${currentPageContactos} / ${totalPages}</span>
+            <div class="card">
+               <div class="title">FORMULARIO</div>
 
-         <button onclick="nextPageContactos()" ${currentPageContactos >= totalPages ? 'disabled' : ''}>➡</button>
+               <input class="btn" id="dep-id" placeholder="ID">
+               <input class="btn" id="dep-name" placeholder="Departamento">
 
-      </div>
+               <div class="form-actions">
+                  <button class="btn primary" onclick="crear()">Crear</button>
+                  <button class="btn warn" onclick="modificar()">Modificar</button>
+                  <button class="btn danger" onclick="borrar()">Borrar</button>
+                  <button class="btn clean" onclick="limpiarForm()">Limpiar</button>
+               </div>
 
-   </div>
+            </div>
 
-   <div class="card">
-
-      <div class="title">FORMULARIO CONTACTOS</div>
-
-      <input
-         class="btn"
-         id="buscador-cliente"
-         placeholder="Buscar cliente..."
-         oninput="buscarClienteContacto(this.value)"
-         list="lista-clientes-contactos"
-      />
-
-      <datalist id="lista-clientes-contactos"></datalist>
-
-      <input class="btn" id="contacto-nombre" placeholder="Nombre">
-      <input class="btn" id="contacto-cargo" placeholder="Cargo">
-      <input class="btn" id="contacto-telefono" placeholder="Teléfono">
-      <input class="btn" id="contacto-email" placeholder="Email">
-
-      <select class="btn" id="contacto-tipo">
-         <option value="COMPRADOR">COMPRADOR</option>
-         <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
-         <option value="OTRO">OTRO</option>
-      </select>
-
-      <select class="btn" id="contacto-estado">
-         <option value="ACTIVO">ACTIVO</option>
-         <option value="INACTIVO">INACTIVO</option>
-      </select>
-
-      <div class="form-actions">
-
-         <button onclick="crearContacto()" class="btn primary">Crear</button>
-         <button onclick="modificarContacto()" class="btn warn">Modificar</button>
-         <button onclick="borrarContacto()" class="btn danger">Borrar</button>
-         <button onclick="limpiarContacto()" class="btn clean">Limpiar</button>
-
-      </div>
-
-   </div>
-
-</div>`;
+         </div>`;
 
          document.getElementById("panel").innerHTML = html;
       }
