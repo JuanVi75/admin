@@ -1600,13 +1600,22 @@
                body: JSON.stringify(data)
             });
 
-            if (!res.ok) {
-               throw new Error("Error al crear el contacto");
-            }
-
             const result = await res.json();
 
-            alert("Contacto creado con éxito");
+            if (!res.ok) {
+               throw new Error(result?.error || "Error al crear el contacto");
+            }
+
+            // 🔴 MENSAJE INTELIGENTE SEGÚN RESPUESTA BACKEND
+            if (result?.action === "reactivated") {
+               alert("Contacto reactivado correctamente");
+            } else if (result?.action === "created") {
+               alert("Contacto creado con éxito");
+            } else if (result?.action === "exists") {
+               alert("El contacto ya existe");
+            } else {
+               alert("Operación completada");
+            }
 
             await cargarContactos();
             await cargarMetaContactos();
