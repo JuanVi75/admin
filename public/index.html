@@ -1473,7 +1473,7 @@
    '${c.tipo || ''}',
    '${c.estado || ''}'
 )">
-   <td>${clienteNombre}</td>
+   <td>${c.cliente_id || ''}</td>
    <td>${c.nombre || ''}</td>
    <td>${c.cargo || ''}</td>
    <td>${c.telefono || ''}</td>
@@ -1552,6 +1552,14 @@
             if (el) el.value = val || "";
          };
 
+         // 🔴 1. Guardar estado del filtro (cliente activo)
+         filtroClienteActivo = String(cliente_id || "").trim();
+
+         // 🔴 2. Sincronizar el SELECT del filtro con el cliente del contacto
+         const selectCliente = document.getElementById("contacto-cliente");
+         if (selectCliente) selectCliente.value = filtroClienteActivo;
+
+         // 🔴 3. Rellenar formulario
          set("contacto-cliente", cliente_id);
          set("contacto-nombre", nombre);
          set("contacto-cargo", cargo);
@@ -1559,6 +1567,9 @@
          set("contacto-email", email);
          set("contacto-tipo", tipo);
          set("contacto-estado", estado);
+
+         // 🔴 4. Mantener tabla coherente con el filtro actual
+         renderTablaContactos();
       }
 
       /* =========================
