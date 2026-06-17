@@ -338,9 +338,6 @@
 
          if (page === 'contactos') {
             await initContactos();
-            //await cargarContactos();
-            //renderTablaContactos();
-            //await cargarMetaContactos();
          }
 
       }
@@ -1370,9 +1367,6 @@
          try {
             const res = await fetch("/contactos/clientes");
             clientesData = await res.json();
-
-            console.log("CLIENTES OK:", clientesData);
-
          } catch (e) {
             console.error("ERROR CLIENTES:", e);
             clientesData = [];
@@ -1388,7 +1382,6 @@
             contactosData = await res.json();
 
             currentPageContactos = 1;
-            renderTablaContactos();
 
          } catch (e) {
             console.error("ERROR CONTACTOS:", e);
@@ -1573,24 +1566,44 @@
       ========================= */
       async function crearContacto() {
 
-         const data = {
-            cliente_id: document.getElementById("contacto-cliente").value.trim(),
-            nombre: document.getElementById("contacto-nombre").value.trim(),
-            cargo: document.getElementById("contacto-cargo").value.trim(),
-            telefono: document.getElementById("contacto-telefono").value.trim(),
-            email: document.getElementById("contacto-email").value.trim(),
-            tipo: document.getElementById("contacto-tipo").value,
-            estado: document.getElementById("contacto-estado").value
-         };
+         try {
 
-         await fetch("/contactos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-         });
+            const data = {
+               cliente_id: document.getElementById("contacto-cliente").value.trim(),
+               nombre: document.getElementById("contacto-nombre").value.trim(),
+               cargo: document.getElementById("contacto-cargo").value.trim(),
+               telefono: document.getElementById("contacto-telefono").value.trim(),
+               email: document.getElementById("contacto-email").value.trim(),
+               tipo: document.getElementById("contacto-tipo").value,
+               estado: document.getElementById("contacto-estado").value
+            };
 
-         await cargarContactos();
-         await cargarMetaContactos();
+            const res = await fetch("/contactos", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify(data)
+            });
+
+            if (!res.ok) {
+               throw new Error("Error al crear el contacto");
+            }
+
+            const result = await res.json();
+
+            alert("Contacto creado con éxito");
+
+            await cargarContactos();
+            await cargarMetaContactos();
+
+            limpiarContacto();
+            selectedContactoId = null;
+
+         } catch (error) {
+
+            console.error(error);
+            alert("Error al crear el contacto");
+
+         }
       }
 
       /* =========================
@@ -1598,26 +1611,49 @@
       ========================= */
       async function modificarContacto() {
 
-         if (!selectedContactoId) return;
+         if (!selectedContactoId) {
+            alert("Selecciona un contacto primero");
+            return;
+         }
 
-         const data = {
-            cliente_id: document.getElementById("contacto-cliente").value.trim(),
-            nombre: document.getElementById("contacto-nombre").value.trim(),
-            cargo: document.getElementById("contacto-cargo").value.trim(),
-            telefono: document.getElementById("contacto-telefono").value.trim(),
-            email: document.getElementById("contacto-email").value.trim(),
-            tipo: document.getElementById("contacto-tipo").value,
-            estado: document.getElementById("contacto-estado").value
-         };
+         try {
 
-         await fetch(`/contactos/${selectedContactoId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-         });
+            const data = {
+               cliente_id: document.getElementById("contacto-cliente").value.trim(),
+               nombre: document.getElementById("contacto-nombre").value.trim(),
+               cargo: document.getElementById("contacto-cargo").value.trim(),
+               telefono: document.getElementById("contacto-telefono").value.trim(),
+               email: document.getElementById("contacto-email").value.trim(),
+               tipo: document.getElementById("contacto-tipo").value,
+               estado: document.getElementById("contacto-estado").value
+            };
 
-         await cargarContactos();
-         await cargarMetaContactos();
+            const res = await fetch(`/contactos/${selectedContactoId}`, {
+               method: "PUT",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify(data)
+            });
+
+            if (!res.ok) {
+               throw new Error("Error al modificar el contacto");
+            }
+
+            await res.json();
+
+            alert("Contacto modificado con éxito");
+
+            await cargarContactos();
+            await cargarMetaContactos();
+
+            limpiarContacto();
+            selectedContactoId = null;
+
+         } catch (error) {
+
+            console.error(error);
+            alert("Error al modificar el contacto");
+
+         }
       }
 
       /* =========================
@@ -1625,16 +1661,36 @@
       ========================= */
       async function borrarContacto() {
 
-         if (!selectedContactoId) return;
+         if (!selectedContactoId) {
+            alert("Selecciona un contacto primero");
+            return;
+         }
 
-         await fetch(`/contactos/${selectedContactoId}`, {
-            method: "DELETE"
-         });
+         try {
 
-         await cargarContactos();
-         await cargarMetaContactos();
+            const res = await fetch(`/contactos/${selectedContactoId}`, {
+               method: "DELETE"
+            });
 
-         limpiarContacto();
+            if (!res.ok) {
+               throw new Error("Error al borrar el contacto");
+            }
+
+            await res.json();
+
+            alert("Contacto eliminado con éxito");
+
+            await cargarContactos();
+            await cargarMetaContactos();
+
+            limpiarContacto();
+            selectedContactoId = null;
+
+         } catch (error) {
+
+            console.error(error);
+            alert("Error al eliminar el contacto");
+         }
       }
 
       /* =========================
@@ -1644,6 +1700,7 @@
 
          selectedContactoId = null;
 
+         // reset formulario
          document.getElementById("contacto-cliente").value = "";
          document.getElementById("contacto-nombre").value = "";
          document.getElementById("contacto-cargo").value = "";
@@ -1652,6 +1709,17 @@
 
          document.getElementById("contacto-tipo").value = "COMPRADOR";
          document.getElementById("contacto-estado").value = "ACTIVO";
+
+         // reset filtro (IMPORTANTE)
+         filtroClienteActivo = "";
+
+         const filtro = document.getElementById("contacto-cliente");
+         if (filtro) filtro.value = "";
+
+         // recargar tabla sin filtro
+         renderTablaContactos();
+
+         alert("Formulario limpiado");
       }
 
       /* =========================
