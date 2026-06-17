@@ -129,19 +129,24 @@ function stats(callback) {
          SUM(CASE WHEN DATE(updated_at)=CURDATE() THEN 1 ELSE 0 END) AS modificados_hoy,
          SUM(CASE WHEN DATE(deleted_at)=CURDATE() THEN 1 ELSE 0 END) AS eliminados_hoy,
 
-         (
-            SELECT MAX(fecha_creacion)
-            FROM usuarios
-            WHERE is_deleted = 0
-         ) AS ultima_actualizacion
+         MAX(fecha_creacion) AS ultima_actualizacion
 
+      FROM usuarios
+      WHERE is_deleted = 0
    `;
 
    db.query(sql, (err, result) => {
-      callback(err, result[0]);
+      if (err) {
+         console.error("STATS ERROR:", err);
+         return callback(err);
+      }
+
+      callback(null, {
+         ...result[0],
+         ultima_actualizacion: result[0]?.ultima_actualizacion || "2026-06-01"
+      });
    });
 }
-
 module.exports = {
    listarUsuarios,
    crearUsuario,
