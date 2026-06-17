@@ -394,12 +394,7 @@
          if (ins > 0) partes.push(`Departamentos: ${ins} creados`);
          if (upd > 0) partes.push(`Departamentos: ${upd} modificados`);
          if (del > 0) partes.push(`Departamentos: ${del} eliminados`);
-
-         if (partes.length === 0) {
-            registrarActividad("Sin cambios en departamentos");
-         } else {
-            registrarActividad(partes.join(" | "));
-         }
+        
       }
 
       async function cargarDepartamentos() {
