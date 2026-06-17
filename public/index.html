@@ -2197,24 +2197,29 @@
       function renderTablaUsuarios() {
 
          let html = `
-<div class="table-container">
+<div class="departamentos-layout">
 
-   <div class="title">USUARIOS</div>
+   <!-- =========================
+        TABLA
+   ========================== -->
+   <div class="table-container">
 
-   <div class="table-wrapper">
-   <table>
+      <div class="title">USUARIOS</div>
 
-      <thead>
-         <tr>
-            <th>Usuario</th>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Estado</th>
-         </tr>
-      </thead>
+      <div class="table-wrapper">
+      <table>
 
-      <tbody>
+         <thead>
+            <tr>
+               <th>Usuario</th>
+               <th>Nombre</th>
+               <th>Email</th>
+               <th>Rol</th>
+               <th>Estado</th>
+            </tr>
+         </thead>
+
+         <tbody>
 `;
 
          (usuariosData || []).forEach(u => {
@@ -2237,8 +2242,44 @@
          });
 
          html += `
-      </tbody>
-   </table>
+         </tbody>
+      </table>
+      </div>
+
+   </div>
+
+   <!-- =========================
+        FORMULARIO CRUD
+   ========================== -->
+   <div class="card">
+
+      <div class="title">FORMULARIO USUARIOS</div>
+
+      <input class="btn" id="usuario-usuario" placeholder="Usuario">
+      <input class="btn" id="usuario-nombre" placeholder="Nombre">
+      <input class="btn" id="usuario-email" placeholder="Email">
+
+      <input class="btn" id="usuario-password" type="password" placeholder="Password">
+
+      <select class="btn" id="usuario-rol">
+         <option value="ADMIN">ADMIN</option>
+         <option value="USER">USER</option>
+      </select>
+
+      <select class="btn" id="usuario-estado">
+         <option value="ACTIVO">ACTIVO</option>
+         <option value="INACTIVO">INACTIVO</option>
+      </select>
+
+      <div class="form-actions">
+
+         <button onclick="crearUsuario()" class="btn primary">Crear</button>
+         <button onclick="modificarUsuario()" class="btn warn">Modificar</button>
+         <button onclick="borrarUsuario()" class="btn danger">Borrar</button>
+         <button onclick="limpiarUsuario()" class="btn clean">Limpiar</button>
+
+      </div>
+
    </div>
 
 </div>
@@ -2392,24 +2433,26 @@
             const res = await fetch("/usuarios/stats");
             const data = await res.json();
 
-            document.getElementById("count-usuarios").innerText =
-               `Registros: ${data.total || 0}`;
+            const set = (id, val) => {
+               const el = document.getElementById(id);
+               if (el) el.innerText = val;
+            };
 
-            document.getElementById("last-update-usuarios").innerText =
-               data.ultima_actualizacion || "-";
+            set("count-usuarios", "Registros: " + (data.total ?? 0));
 
-            document.getElementById("inserted-usuarios").innerText =
-               data.ingresados_hoy || 0;
+            set("last-update-usuarios",
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion).toISOString().split("T")[0]
+                  : "-"
+            );
 
-            document.getElementById("updated-usuarios").innerText =
-               data.modificados_hoy || 0;
+            set("inserted-usuarios", data.ingresados_hoy ?? 0);
+            set("updated-usuarios", data.modificados_hoy ?? 0);
+            set("deleted-usuarios", data.eliminados_hoy ?? 0);
 
-            document.getElementById("deleted-usuarios").innerText =
-               data.eliminados_hoy || 0;
+         } catch (e) {
 
-         } catch (error) {
-
-            console.error("ERROR META USUARIOS:", error);
+            console.error("ERROR META USUARIOS:", e);
          }
       }
 
