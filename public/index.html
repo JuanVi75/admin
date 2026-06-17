@@ -2211,9 +2211,11 @@
 
          <thead>
             <tr>
+               <th>ID</th>
                <th>Usuario</th>
                <th>Nombre</th>
                <th>Email</th>
+               <th>Password</th>
                <th>Rol</th>
                <th>Estado</th>
             </tr>
@@ -2230,12 +2232,23 @@
    '${(u.usuario || '').replace(/'/g, "\\'")}',
    '${(u.nombre || '').replace(/'/g, "\\'")}',
    '${(u.email || '').replace(/'/g, "\\'")}',
+   '${(u.password || '').replace(/'/g, "\\'")}',
    '${u.rol || ''}',
    '${u.estado || ''}'
 )">
+   <td>${u.id || ''}</td>
    <td>${u.usuario || ''}</td>
    <td>${u.nombre || ''}</td>
    <td>${u.email || ''}</td>
+
+   <td>
+      <span id="pwd-${u.id}">••••••••</span>
+      <button class="btn small"
+         onclick="event.stopPropagation(); togglePassword('${u.id}', '${(u.password || '').replace(/'/g, "\\'")}')">
+         👁
+      </button>
+   </td>
+
    <td>${u.rol || ''}</td>
    <td>${u.estado || ''}</td>
 </tr>`;
@@ -2453,6 +2466,24 @@
          } catch (e) {
 
             console.error("ERROR META USUARIOS:", e);
+         }
+      }
+
+      function togglePassword(id, password) {
+
+         const el = document.getElementById(`pwd-${id}`);
+
+         if (!el) return;
+
+         if (el.dataset.visible === "1") {
+
+            el.innerText = "••••••••";
+            el.dataset.visible = "0";
+
+         } else {
+
+            el.innerText = password || "";
+            el.dataset.visible = "1";
          }
       }
 
