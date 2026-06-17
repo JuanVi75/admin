@@ -274,7 +274,13 @@
 
          <div class="card">
             <div class="title">Usuarios</div>
-            <div class="small">Registros: 0</div>
+            <div class="small" id="count-sucursales">Registros: ...</div>
+            <div class="meta">
+               Última actualización: <b id="last-update-usuarios">-</b><br>
+               Ingresados Hoy: <b id="inserted-usuarios">0</b><br>
+               Modificados Hoy: <b id="updated-usuarios">0</b><br>
+               Eliminados Hoy: <b id="deleted-usuarios">0</b>
+            </div>
          </div>
 
          <div class="card">
@@ -323,6 +329,7 @@
             cargarMetaSectores();
             cargarMetaContactos();
             cargarMetaSucursales();
+            cargarMetaUsuarios();
          }
 
          if (page === 'departamentos') {
@@ -349,6 +356,10 @@
 
          if (page === 'sucursales') {
             await initSucursales();
+         }
+
+         if (page === "usuarios") {
+            await initUsuarios();
          }
 
       }
@@ -2143,6 +2154,266 @@
 
    </script>
 
+   <script>
+
+      /* =========================
+         VARIABLES
+      ========================= */
+      let usuariosData = [];
+      let selectedUsuarioId = null;
+
+      /* =========================
+         INIT
+      ========================= */
+      async function initUsuarios() {
+
+         await cargarUsuarios();
+         await cargarMetaUsuarios();
+      }
+
+      /* =========================
+         CARGAR USUARIOS
+      ========================= */
+      async function cargarUsuarios() {
+
+         try {
+
+            const res = await fetch("/usuarios");
+            usuariosData = await res.json();
+
+            renderTablaUsuarios();
+
+         } catch (error) {
+
+            console.error("ERROR USUARIOS:", error);
+            usuariosData = [];
+            renderTablaUsuarios();
+         }
+      }
+
+      /* =========================
+         RENDER TABLA
+      ========================= */
+      function renderTablaUsuarios() {
+
+         let html = `
+<div class="table-container">
+
+   <div class="title">USUARIOS</div>
+
+   <div class="table-wrapper">
+   <table>
+
+      <thead>
+         <tr>
+            <th>Usuario</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+         </tr>
+      </thead>
+
+      <tbody>
+`;
+
+         (usuariosData || []).forEach(u => {
+
+            html += `
+<tr onclick="selectUsuario(
+   '${u.id}',
+   '${(u.usuario || '').replace(/'/g, "\\'")}',
+   '${(u.nombre || '').replace(/'/g, "\\'")}',
+   '${(u.email || '').replace(/'/g, "\\'")}',
+   '${u.rol || ''}',
+   '${u.estado || ''}'
+)">
+   <td>${u.usuario || ''}</td>
+   <td>${u.nombre || ''}</td>
+   <td>${u.email || ''}</td>
+   <td>${u.rol || ''}</td>
+   <td>${u.estado || ''}</td>
+</tr>`;
+         });
+
+         html += `
+      </tbody>
+   </table>
+   </div>
+
+</div>
+`;
+
+         document.getElementById("panel").innerHTML = html;
+      }
+
+      /* =========================
+         SELECT USUARIO
+      ========================= */
+      function selectUsuario(id, usuario, nombre, email, rol, estado) {
+
+         selectedUsuarioId = id;
+
+         document.getElementById("usuario-usuario").value = usuario || "";
+         document.getElementById("usuario-nombre").value = nombre || "";
+         document.getElementById("usuario-email").value = email || "";
+         document.getElementById("usuario-rol").value = rol || "";
+         document.getElementById("usuario-estado").value = estado || "ACTIVO";
+      }
+
+      /* =========================
+         CREAR
+      ========================= */
+      async function crearUsuario() {
+
+         try {
+
+            const data = {
+               usuario: document.getElementById("usuario-usuario").value.trim(),
+               nombre: document.getElementById("usuario-nombre").value.trim(),
+               email: document.getElementById("usuario-email").value.trim(),
+               rol: document.getElementById("usuario-rol").value,
+               estado: document.getElementById("usuario-estado").value
+            };
+
+            const res = await fetch("/usuarios", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) throw new Error(result?.error || "Error");
+
+            alert("Usuario creado con éxito");
+
+            await cargarUsuarios();
+            limpiarUsuario();
+
+         } catch (err) {
+
+            console.error(err);
+            alert("Error al crear usuario");
+         }
+      }
+
+      /* =========================
+         MODIFICAR
+      ========================= */
+      async function modificarUsuario() {
+
+         if (!selectedUsuarioId) {
+            alert("Selecciona un usuario");
+            return;
+         }
+
+         try {
+
+            const data = {
+               usuario: document.getElementById("usuario-usuario").value.trim(),
+               nombre: document.getElementById("usuario-nombre").value.trim(),
+               email: document.getElementById("usuario-email").value.trim(),
+               rol: document.getElementById("usuario-rol").value,
+               estado: document.getElementById("usuario-estado").value
+            };
+
+            const res = await fetch(`/usuarios/${selectedUsuarioId}`, {
+               method: "PUT",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify(data)
+            });
+
+            if (!res.ok) throw new Error("Error");
+
+            alert("Usuario modificado con éxito");
+
+            await cargarUsuarios();
+            limpiarUsuario();
+
+         } catch (err) {
+
+            console.error(err);
+            alert("Error al modificar usuario");
+         }
+      }
+
+      /* =========================
+         BORRAR
+      ========================= */
+      async function borrarUsuario() {
+
+         if (!selectedUsuarioId) {
+            alert("Selecciona un usuario");
+            return;
+         }
+
+         try {
+
+            const res = await fetch(`/usuarios/${selectedUsuarioId}`, {
+               method: "DELETE"
+            });
+
+            if (!res.ok) throw new Error("Error");
+
+            alert("Usuario eliminado con éxito");
+
+            await cargarUsuarios();
+            limpiarUsuario();
+
+         } catch (err) {
+
+            console.error(err);
+            alert("Error al eliminar usuario");
+         }
+      }
+
+      /* =========================
+         LIMPIAR
+      ========================= */
+      function limpiarUsuario() {
+
+         selectedUsuarioId = null;
+
+         document.getElementById("usuario-usuario").value = "";
+         document.getElementById("usuario-nombre").value = "";
+         document.getElementById("usuario-email").value = "";
+         document.getElementById("usuario-rol").value = "";
+         document.getElementById("usuario-estado").value = "ACTIVO";
+      }
+
+      /* =========================
+         META USUARIOS (STATS)
+      ========================= */
+      async function cargarMetaUsuarios() {
+
+         try {
+
+            const res = await fetch("/usuarios/stats");
+            const data = await res.json();
+
+            document.getElementById("count-usuarios").innerText =
+               `Registros: ${data.total || 0}`;
+
+            document.getElementById("last-update-usuarios").innerText =
+               data.ultima_actualizacion || "-";
+
+            document.getElementById("inserted-usuarios").innerText =
+               data.ingresados_hoy || 0;
+
+            document.getElementById("updated-usuarios").innerText =
+               data.modificados_hoy || 0;
+
+            document.getElementById("deleted-usuarios").innerText =
+               data.eliminados_hoy || 0;
+
+         } catch (error) {
+
+            console.error("ERROR META USUARIOS:", error);
+         }
+      }
+
+   </script>
 
 </body>
 
