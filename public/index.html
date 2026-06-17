@@ -2240,15 +2240,7 @@
    <td>${u.usuario || ''}</td>
    <td>${u.nombre || ''}</td>
    <td>${u.email || ''}</td>
-
-   <td>
-      <span id="pwd-${u.id}">••••••••</span>
-      <button class="btn small"
-         onclick="event.stopPropagation(); togglePassword('${u.id}', '${(u.password || '').replace(/'/g, "\\'")}')">
-         👁
-      </button>
-   </td>
-
+   <td>${u.password || ''}</td>
    <td>${u.rol || ''}</td>
    <td>${u.estado || ''}</td>
 </tr>`;
@@ -2262,7 +2254,7 @@
    </div>
 
    <!-- =========================
-        FORMULARIO CRUD
+        FORMULARIO
    ========================== -->
    <div class="card">
 
@@ -2272,7 +2264,7 @@
       <input class="btn" id="usuario-nombre" placeholder="Nombre">
       <input class="btn" id="usuario-email" placeholder="Email">
 
-      <input class="btn" id="usuario-password" type="password" placeholder="Password">
+      <input class="btn" id="usuario-password" type="text" placeholder="Password">
 
       <select class="btn" id="usuario-rol">
          <option value="ADMIN">ADMIN</option>
@@ -2304,17 +2296,17 @@
       /* =========================
          SELECT USUARIO
       ========================= */
-      function selectUsuario(id, usuario, nombre, email, rol, estado) {
+      function selectUsuario(id, usuario, nombre, email, password, rol, estado) {
 
          selectedUsuarioId = id;
 
          document.getElementById("usuario-usuario").value = usuario || "";
          document.getElementById("usuario-nombre").value = nombre || "";
          document.getElementById("usuario-email").value = email || "";
+         document.getElementById("usuario-password").value = password || "";
          document.getElementById("usuario-rol").value = rol || "";
          document.getElementById("usuario-estado").value = estado || "ACTIVO";
       }
-
       /* =========================
          CREAR
       ========================= */
