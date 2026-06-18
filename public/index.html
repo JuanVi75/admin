@@ -330,6 +330,7 @@
             cargarMetaContactos();
             cargarMetaSucursales();
             cargarMetaUsuarios();
+            cargarMetaWhatsappMensajes();
          }
 
          if (page === 'departamentos') {
@@ -360,6 +361,10 @@
 
          if (page === "usuarios") {
             await initUsuarios();
+         }
+
+         if (page === "mensajes") {
+            await initWhatsappMensajes();
          }
 
       }
@@ -394,7 +399,7 @@
          if (ins > 0) partes.push(`Departamentos: ${ins} creados`);
          if (upd > 0) partes.push(`Departamentos: ${upd} modificados`);
          if (del > 0) partes.push(`Departamentos: ${del} eliminados`);
-        
+
       }
 
       async function cargarDepartamentos() {
@@ -2472,6 +2477,535 @@
             el.innerText = password || "";
             el.dataset.visible = "1";
          }
+      }
+
+   </script>
+
+   <script>
+
+      /* =========================
+         VARIABLES
+      ========================= */
+      let mensajesData = [];
+      let selectedMensajeId = null;
+
+      /* =========================
+         INIT
+      ========================= */
+      async function initWhatsappMensajes() {
+
+         await cargarMensajesWhatsapp();
+         await cargarMetaWhatsappMensajes();
+
+         renderTablaWhatsappMensajes();
+      }
+
+      /* =========================
+         CARGAR
+      ========================= */
+      async function cargarMensajesWhatsapp() {
+
+         try {
+
+            const res = await fetch("/whatsapp-mensajes");
+            mensajesData = await res.json();
+
+         } catch (error) {
+
+            console.error("ERROR MENSAJES:", error);
+            mensajesData = [];
+         }
+      }
+
+      /* =========================
+         META
+      ========================= */
+      async function cargarMetaWhatsappMensajes() {
+
+         try {
+
+            const res = await fetch("/whatsapp-mensajes/stats");
+            const data = await res.json();
+
+            const set = (id, value) => {
+               const el = document.getElementById(id);
+               if (el) el.innerText = value;
+            };
+
+            set(
+               "count-whatsapp-mensajes",
+               "Registros: " + (data.total ?? 0)
+            );
+
+            set(
+               "last-update-whatsapp-mensajes",
+               data.ultima_actualizacion
+                  ? new Date(data.ultima_actualizacion)
+                     .toISOString()
+                     .split("T")[0]
+                  : "-"
+            );
+
+            set(
+               "inserted-whatsapp-mensajes",
+               data.ingresados_hoy ?? 0
+            );
+
+            set(
+               "updated-whatsapp-mensajes",
+               data.modificados_hoy ?? 0
+            );
+
+            set(
+               "deleted-whatsapp-mensajes",
+               data.eliminados_hoy ?? 0
+            );
+
+         } catch (error) {
+
+            console.error(
+               "ERROR META MENSAJES:",
+               error
+            );
+         }
+      }
+
+      /* =========================
+         RENDER
+      ========================= */
+      function renderTablaWhatsappMensajes() {
+
+         let html = `
+<div class="departamentos-layout">
+
+   <div class="table-container">
+
+      <div class="title">
+         MENSAJES WHATSAPP
+      </div>
+
+      <div class="table-wrapper">
+
+      <table>
+
+         <thead>
+            <tr>
+               <th>Nombre</th>
+               <th>Target</th>
+               <th>Etapa</th>
+               <th>Estado</th>
+               <th>Creado Por</th>
+               <th>Fecha</th>
+            </tr>
+         </thead>
+
+         <tbody>
+`;
+
+         (mensajesData || []).forEach(m => {
+
+            html += `
+<tr onclick="selectMensaje(
+   '${m.id}',
+   '${(m.nombre || '').replace(/'/g, "\\'")}',
+   '${(m.mensaje || '').replace(/'/g, "\\'")}',
+   '${m.target || ''}',
+   '${m.etapa || ''}',
+   '${m.estado || ''}',
+   '${(m.creado_por || '').replace(/'/g, "\\'")}'
+)">
+   <td>${m.nombre || ''}</td>
+   <td>${m.target || ''}</td>
+   <td>${m.etapa || ''}</td>
+   <td>${m.estado || ''}</td>
+   <td>${m.creado_por || ''}</td>
+   <td>
+      ${m.fecha_creacion
+                  ? new Date(m.fecha_creacion)
+                     .toISOString()
+                     .split("T")[0]
+                  : ""}
+   </td>
+</tr>
+`;
+         });
+
+         html += `
+         </tbody>
+
+      </table>
+
+      </div>
+
+   </div>
+
+   <div class="card">
+
+      <div class="title">
+         FORMULARIO MENSAJES
+      </div>
+
+      <input
+         class="btn"
+         id="mensaje-nombre"
+         placeholder="Nombre interno"
+      >
+
+      <select
+         class="btn"
+         id="mensaje-target"
+      >
+         <option value="">
+            -- TARGET --
+         </option>
+
+         <option value="INSTITUCIONES EDUCATIVAS">
+            INSTITUCIONES EDUCATIVAS
+         </option>
+
+         <option value="CONSTRUCTORAS">
+            CONSTRUCTORAS
+         </option>
+
+         <option value="INFRAESTRUCTURA">
+            INFRAESTRUCTURA
+         </option>
+
+         <option value="UNIDADES RESIDENCIALES">
+            UNIDADES RESIDENCIALES
+         </option>
+
+         <option value="BODEGAS">
+            BODEGAS
+         </option>
+
+         <option value="FINCAS">
+            FINCAS
+         </option>
+
+      </select>
+
+      <select
+         class="btn"
+         id="mensaje-etapa"
+      >
+         <option value="">
+            -- ETAPA --
+         </option>
+
+         <option value="ATRACCION">
+            ATRACCION
+         </option>
+
+         <option value="INTERES">
+            INTERES
+         </option>
+
+         <option value="VALIDACION">
+            VALIDACION
+         </option>
+
+         <option value="CIERRE">
+            CIERRE
+         </option>
+
+      </select>
+
+      <textarea
+         class="btn"
+         id="mensaje-texto"
+         rows="12"
+         placeholder="Mensaje WhatsApp"
+      ></textarea>
+
+      <select
+         class="btn"
+         id="mensaje-estado"
+      >
+         <option value="ACTIVO">
+            ACTIVO
+         </option>
+
+         <option value="INACTIVO">
+            INACTIVO
+         </option>
+      </select>
+
+      <input
+         class="btn"
+         id="mensaje-creado-por"
+         placeholder="Creado por"
+      >
+
+      <div class="form-actions">
+
+         <button
+            onclick="crearMensaje()"
+            class="btn primary"
+         >
+            Crear
+         </button>
+
+         <button
+            onclick="modificarMensaje()"
+            class="btn warn"
+         >
+            Modificar
+         </button>
+
+         <button
+            onclick="borrarMensaje()"
+            class="btn danger"
+         >
+            Borrar
+         </button>
+
+         <button
+            onclick="limpiarMensaje()"
+            class="btn clean"
+         >
+            Limpiar
+         </button>
+
+      </div>
+
+   </div>
+
+</div>
+`;
+
+         document.getElementById("panel").innerHTML = html;
+      }
+
+      /* =========================
+         SELECT
+      ========================= */
+      function selectMensaje(
+         id,
+         nombre,
+         mensaje,
+         target,
+         etapa,
+         estado,
+         creado_por
+      ) {
+
+         selectedMensajeId = id;
+
+         document.getElementById("mensaje-nombre").value = nombre;
+         document.getElementById("mensaje-texto").value = mensaje;
+         document.getElementById("mensaje-target").value = target;
+         document.getElementById("mensaje-etapa").value = etapa;
+         document.getElementById("mensaje-estado").value = estado;
+         document.getElementById("mensaje-creado-por").value = creado_por;
+      }
+
+      /* =========================
+         CREAR
+      ========================= */
+      async function crearMensaje() {
+
+         try {
+
+            const data = {
+
+               nombre:
+                  document.getElementById("mensaje-nombre")
+                     .value.trim(),
+
+               mensaje:
+                  document.getElementById("mensaje-texto")
+                     .value.trim(),
+
+               target:
+                  document.getElementById("mensaje-target")
+                     .value,
+
+               etapa:
+                  document.getElementById("mensaje-etapa")
+                     .value,
+
+               estado:
+                  document.getElementById("mensaje-estado")
+                     .value,
+
+               creado_por:
+                  document.getElementById("mensaje-creado-por")
+                     .value.trim()
+            };
+
+            const res = await fetch(
+               "/whatsapp-mensajes",
+               {
+                  method: "POST",
+                  headers: {
+                     "Content-Type":
+                        "application/json"
+                  },
+                  body: JSON.stringify(data)
+               }
+            );
+
+            const result = await res.json();
+
+            if (!res.ok) {
+               throw new Error(
+                  result?.error || "Error"
+               );
+            }
+
+            alert(
+               "Mensaje creado con éxito"
+            );
+
+            await cargarMensajesWhatsapp();
+            await cargarMetaWhatsappMensajes();
+
+            limpiarMensaje();
+            renderTablaWhatsappMensajes();
+
+         } catch (error) {
+
+            console.error(error);
+            alert(
+               "Error al crear mensaje"
+            );
+         }
+      }
+
+      /* =========================
+         MODIFICAR
+      ========================= */
+      async function modificarMensaje() {
+
+         if (!selectedMensajeId) {
+
+            alert(
+               "Selecciona un mensaje"
+            );
+            return;
+         }
+
+         try {
+
+            const data = {
+
+               nombre:
+                  document.getElementById("mensaje-nombre")
+                     .value.trim(),
+
+               mensaje:
+                  document.getElementById("mensaje-texto")
+                     .value.trim(),
+
+               target:
+                  document.getElementById("mensaje-target")
+                     .value,
+
+               etapa:
+                  document.getElementById("mensaje-etapa")
+                     .value,
+
+               estado:
+                  document.getElementById("mensaje-estado")
+                     .value
+            };
+
+            const res = await fetch(
+               `/whatsapp-mensajes/${selectedMensajeId}`,
+               {
+                  method: "PUT",
+                  headers: {
+                     "Content-Type":
+                        "application/json"
+                  },
+                  body: JSON.stringify(data)
+               }
+            );
+
+            if (!res.ok) {
+               throw new Error("Error");
+            }
+
+            alert(
+               "Mensaje modificado"
+            );
+
+            await cargarMensajesWhatsapp();
+            await cargarMetaWhatsappMensajes();
+
+            limpiarMensaje();
+            renderTablaWhatsappMensajes();
+
+         } catch (error) {
+
+            console.error(error);
+            alert(
+               "Error al modificar mensaje"
+            );
+         }
+      }
+
+      /* =========================
+         BORRAR
+      ========================= */
+      async function borrarMensaje() {
+
+         if (!selectedMensajeId) {
+
+            alert(
+               "Selecciona un mensaje"
+            );
+            return;
+         }
+
+         try {
+
+            const res = await fetch(
+               `/whatsapp-mensajes/${selectedMensajeId}`,
+               {
+                  method: "DELETE"
+               }
+            );
+
+            if (!res.ok) {
+               throw new Error("Error");
+            }
+
+            alert(
+               "Mensaje eliminado"
+            );
+
+            await cargarMensajesWhatsapp();
+            await cargarMetaWhatsappMensajes();
+
+            limpiarMensaje();
+            renderTablaWhatsappMensajes();
+
+         } catch (error) {
+
+            console.error(error);
+            alert(
+               "Error al eliminar mensaje"
+            );
+         }
+      }
+
+      /* =========================
+         LIMPIAR
+      ========================= */
+      function limpiarMensaje() {
+
+         selectedMensajeId = null;
+
+         document.getElementById("mensaje-nombre").value = "";
+         document.getElementById("mensaje-texto").value = "";
+         document.getElementById("mensaje-target").value = "";
+         document.getElementById("mensaje-etapa").value = "";
+         document.getElementById("mensaje-estado").value = "ACTIVO";
+         document.getElementById("mensaje-creado-por").value = "";
+
+         alert("Formulario limpiado");
       }
 
    </script>
