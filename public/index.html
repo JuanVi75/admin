@@ -2614,7 +2614,10 @@
 <tr onclick="selectMensaje(
    '${m.id}',
    '${(m.nombre || '').replace(/'/g, "\\'")}',
-   '${(m.mensaje || '').replace(/'/g, "\\'")}',
+   \`${(m.mensaje || '')
+                  .replace(/`/g, "")
+                  .replace(/\r?\n/g, "\\n")
+               }\`,
    '${m.target || ''}',
    '${m.etapa || ''}',
    '${m.estado || ''}',
@@ -2651,127 +2654,41 @@
          FORMULARIO MENSAJES
       </div>
 
-      <input
-         class="btn"
-         id="mensaje-nombre"
-         placeholder="Nombre interno"
-      >
+      <input class="btn" id="mensaje-nombre" placeholder="Nombre interno">
 
-      <select
-         class="btn"
-         id="mensaje-target"
-      >
-         <option value="">
-            -- TARGET --
-         </option>
-
-         <option value="INSTITUCIONES EDUCATIVAS">
-            INSTITUCIONES EDUCATIVAS
-         </option>
-
-         <option value="CONSTRUCTORAS">
-            CONSTRUCTORAS
-         </option>
-
-         <option value="INFRAESTRUCTURA">
-            INFRAESTRUCTURA
-         </option>
-
-         <option value="UNIDADES RESIDENCIALES">
-            UNIDADES RESIDENCIALES
-         </option>
-
-         <option value="BODEGAS">
-            BODEGAS
-         </option>
-
-         <option value="FINCAS">
-            FINCAS
-         </option>
-
+      <select class="btn" id="mensaje-target">
+         <option value="">-- TARGET --</option>
+         <option value="INSTITUCIONES EDUCATIVAS">INSTITUCIONES EDUCATIVAS</option>
+         <option value="CONSTRUCTORAS">CONSTRUCTORAS</option>
+         <option value="INFRAESTRUCTURA">INFRAESTRUCTURA</option>
+         <option value="UNIDADES RESIDENCIALES">UNIDADES RESIDENCIALES</option>
+         <option value="BODEGAS">BODEGAS</option>
+         <option value="FINCAS">FINCAS</option>
       </select>
 
-      <select
-         class="btn"
-         id="mensaje-etapa"
-      >
-         <option value="">
-            -- ETAPA --
-         </option>
-
-         <option value="ATRACCION">
-            ATRACCION
-         </option>
-
-         <option value="INTERES">
-            INTERES
-         </option>
-
-         <option value="VALIDACION">
-            VALIDACION
-         </option>
-
-         <option value="CIERRE">
-            CIERRE
-         </option>
-
+      <select class="btn" id="mensaje-etapa">
+         <option value="">-- ETAPA --</option>
+         <option value="ATRACCION">ATRACCION</option>
+         <option value="INTERES">INTERES</option>
+         <option value="VALIDACION">VALIDACION</option>
+         <option value="CIERRE">CIERRE</option>
       </select>
 
-      <textarea
-         class="btn"
-         id="mensaje-texto"
-         rows="12"
-         placeholder="Mensaje WhatsApp"
-      ></textarea>
+      <textarea class="btn" id="mensaje-texto" rows="12" placeholder="Mensaje WhatsApp"></textarea>
 
-      <select
-         class="btn"
-         id="mensaje-estado"
-      >
-         <option value="ACTIVO">
-            ACTIVO
-         </option>
-
-         <option value="INACTIVO">
-            INACTIVO
-         </option>
+      <select class="btn" id="mensaje-estado">
+         <option value="ACTIVO">ACTIVO</option>
+         <option value="INACTIVO">INACTIVO</option>
       </select>
 
-      <input
-         class="btn"
-         id="mensaje-creado-por"
-         placeholder="Creado por"
-      >
+      <input class="btn" id="mensaje-creado-por" placeholder="Creado por">
 
       <div class="form-actions">
 
-         <button
-            onclick="crearMensaje()"
-            class="btn primary"
-         >
-            Crear
-         </button>
-
-         <button
-            onclick="modificarMensaje()"
-            class="btn warn"
-         >
-            Modificar
-         </button>
-
-         <button
-            onclick="borrarMensaje()"
-            class="btn danger"
-         >
-            Borrar
-         </button>
-
-         <button
-            onclick="limpiarMensaje()"
-            class="btn clean"
-         >
-            Limpiar
-         </button>
+         <button onclick="crearMensaje()" class="btn primary">Crear</button>
+         <button onclick="modificarMensaje()" class="btn warn">Modificar</button>
+         <button onclick="borrarMensaje()" class="btn danger">Borrar</button>
+         <button onclick="limpiarMensaje()" class="btn clean">Limpiar</button>
 
       </div>
 
